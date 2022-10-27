@@ -1,13 +1,11 @@
 ---
 bycon_definition_files:
   - config
+  - argument_definitions
   - filter_definitions
   - dataset_definitions
   - interval_definitions
-  - handover_definitions
   - variant_definitions
-  - remap_definitions
-  - text_patterns
   - datatable_mappings
 defaults:
   genome_binning: 1Mb
