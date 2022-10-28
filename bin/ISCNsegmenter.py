@@ -3,10 +3,6 @@
 import re, json, yaml
 from os import path, environ, pardir
 import sys, datetime
-import argparse
-import statistics
-from progress.bar import Bar
-import base36, time
 
 # bycon is supposed to be in the same parent directory
 dir_path = path.dirname( path.abspath(__file__) )
@@ -73,7 +69,6 @@ Output will be written to {}""".format(outputfile) )
     iscn_no = len(iscn_samples)
     print("=> The samplefile contains {} samples".format(iscn_no))
 
-
     pgxseg = open(outputfile, "w")
 
     for c, s in enumerate(iscn_samples):
@@ -83,7 +78,9 @@ Output will be written to {}""".format(outputfile) )
         h_line = "#sample=>biosample_id={}".format(bs_id)
         hd_id = s.get("histological_diagnosis_id", "NA")
         hd_l = s.get("histological_diagnosis_label", "NA")
-        h_line = '{};group_id={};group_label={}\n'.format(h_line, hd_id, hd_l)
+        icdom_id = s.get("icdo_morphology_id", "NA") 
+        icdom_l = s.get("icdo_morphology_label", "NA") 
+        h_line = '{};group_id={};group_label={};NCIT::id={};NCIT::label={};icdom::id={};icdom::label={}\n'.format(h_line, icdom_id, icdom_l, hd_id, hd_l, icdom_id, icdom_l)
         pgxseg.write( h_line )
 
     pgxseg.write( pgxseg_header_line() )
@@ -91,6 +88,7 @@ Output will be written to {}""".format(outputfile) )
         bs_id = s["biosample_id"]
         cs_id = s["assay_id"]
 
+        print(s[iscn_field])
         variants, v_e = variants_from_revish(bs_id, cs_id, technique, s[iscn_field], byc)
         
         for v in variants:
