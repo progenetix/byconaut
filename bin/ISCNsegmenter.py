@@ -16,6 +16,7 @@ from byconaut import *
 
 """
 bin/ISCNsegmenter.py -i imports/ccghtest.tab -o exports/cghvars.tsv
+bin/ISCNsegmenter.py -i imports/progenetix-from-filemaker-ISCN-samples-cCGH.tsv -o exports/progenetix-from-filemaker-ISCN-samples-cCGH-icdom-grouping.pgxseg -g icdo_topography_id
 """
 
 ################################################################################
@@ -66,7 +67,7 @@ Output will be written to {}""".format(outputfile) )
 
     outputfile += ".pgxseg"
 
-    iscn_samples, fieldnames = read_inputfile_csv(inputfile, int(byc["args"].limit))
+    iscn_samples, fieldnames = read_tsv_to_dictlist(inputfile, int(byc["args"].limit))
 
     if not iscn_field in fieldnames:
         print('The samplefile header does not contain the "{}" column => quitting'.format(iscn_field))
@@ -75,15 +76,24 @@ Output will be written to {}""".format(outputfile) )
         print('The samplefile header does not contain the provided "{}" `group_by` parameter\n    => continuing but be ¡¡¡WARNED!!!'.format(group_parameter))
 
     iscn_no = len(iscn_samples)
+    s_w_v_no = 0
     print("=> The samplefile contains {} samples".format(iscn_no))
 
     pgxseg = open(outputfile, "w")
+    pgxseg.write( "#meta=>biosample_count={}\n".format(iscn_no) )
 
     for c, s in enumerate(iscn_samples):
-        bs_id = s.get("biosample_id", "sample-{}".format(c+1))
-        cs_id = s.get("assay_id", "exp-{}".format(c+1))
-        s.update({"biosample_id": bs_id, "assay_id": cs_id})
-        h_line = "#sample=>biosample_id={}".format(bs_id)
+
+        update_bs ={
+            "id": s.get("biosample_id", "sample-{}".format(c+1)),
+            "callset_id": s.get("assay_id", "exp-{}".format(c+1)),
+            "individual_id": s.get("individual_id", "ind-{}".format(c+1)),
+        }
+        update_bs = import_datatable_dict_line(byc, update_bs, fieldnames, s, "biosample")
+
+        # TODO: have one meta line generation method in bycon & use this here
+        # already created the biosample object etc.
+        h_line = "#sample=>biosample_id={}".format(update_bs["id"])
         g_id = s.get(group_parameter, "")
         if len(g_id) < 1:
             g_id = "NA"
@@ -94,7 +104,7 @@ Output will be written to {}""".format(outputfile) )
 
         for h_p in byc["datatable_mappings"]["io_params"]["biosample"].keys():
             if h_p in fieldnames:
-                f_v = s.get(h_p, "")
+                f_v = update_bs.get(h_p, "")
                 if len(f_v) < 1:
                     f_v = "NA"
                 h_line += ';{}={}'.format(h_p, f_v)
@@ -102,16 +112,21 @@ Output will be written to {}""".format(outputfile) )
         pgxseg.write( "{}\n".format(h_line) )
 
     pgxseg.write( pgxseg_header_line() )
+
     for s in iscn_samples:
-        bs_id = s["biosample_id"]
-        cs_id = s["assay_id"]
 
-        print(s[iscn_field])
+        bs_id = s.get("biosample_id", "sample-{}".format(c+1)),
+        cs_id = s.get("assay_id", "exp-{}".format(c+1))
+
         variants, v_e = variants_from_revish(bs_id, cs_id, technique, s[iscn_field], byc)
-        
-        for v in variants:
-            pgxseg.write(pgxseg_variant_line(v, byc)+"\n")
 
+        if len(variants) > 0:
+            s_w_v_no += 1
+        
+            for v in variants:
+                pgxseg.write(pgxseg_variant_line(v, byc)+"\n")
+
+    print("=> {} samples had variants".format(s_w_v_no))
     print("Wrote to {}".format(outputfile))
 
     exit()

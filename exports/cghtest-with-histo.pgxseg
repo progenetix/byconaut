@@ -1,13 +1,13 @@
-#sample=>biosample_id=cgh01;group_id=NCIT:C3222;group_label=Medulloblastoma
-#sample=>biosample_id=cgh02;group_id=NCIT:C3222;group_label=Medulloblastoma
-#sample=>biosample_id=cgh03;group_id=NCIT:C3222;group_label=Medulloblastoma
-#sample=>biosample_id=cgh04;group_id=NCIT:C3222;group_label=Medulloblastoma
-#sample=>biosample_id=cgh05;group_id=NCIT:C80280;group_label=Diffuse Large B-Cell Lymphoma, Not Otherwise Specified
-#sample=>biosample_id=cgh06;group_id=NCIT:C80280;group_label=Diffuse Large B-Cell Lymphoma, Not Otherwise Specified
-#sample=>biosample_id=cgh07;group_id=NCIT:C80280;group_label=Diffuse Large B-Cell Lymphoma, Not Otherwise Specified
-#sample=>biosample_id=cgh08;group_id=NCIT:C80280;group_label=Diffuse Large B-Cell Lymphoma, Not Otherwise Specified
-#sample=>biosample_id=cgh09;group_id=NCIT:C3222;group_label=Medulloblastoma
-#sample=>biosample_id=cgh10;group_id=NCIT:C3222;group_label=Medulloblastoma
+#sample=>biosample_id=cgh01;group_id=NA;group_label=NA;biosample_id=cgh01;histological_diagnosis_id=NCIT:C3222;histological_diagnosis_label=Medulloblastoma
+#sample=>biosample_id=cgh02;group_id=NA;group_label=NA;biosample_id=cgh02;histological_diagnosis_id=NCIT:C3222;histological_diagnosis_label=Medulloblastoma
+#sample=>biosample_id=cgh03;group_id=NA;group_label=NA;biosample_id=cgh03;histological_diagnosis_id=NCIT:C3222;histological_diagnosis_label=Medulloblastoma
+#sample=>biosample_id=cgh04;group_id=NA;group_label=NA;biosample_id=cgh04;histological_diagnosis_id=NCIT:C3222;histological_diagnosis_label=Medulloblastoma
+#sample=>biosample_id=cgh05;group_id=NA;group_label=NA;biosample_id=cgh05;histological_diagnosis_id=NCIT:C80280;histological_diagnosis_label=Diffuse Large B-Cell Lymphoma, Not Otherwise Specified
+#sample=>biosample_id=cgh06;group_id=NA;group_label=NA;biosample_id=cgh06;histological_diagnosis_id=NCIT:C80280;histological_diagnosis_label=Diffuse Large B-Cell Lymphoma, Not Otherwise Specified
+#sample=>biosample_id=cgh07;group_id=NA;group_label=NA;biosample_id=cgh07;histological_diagnosis_id=NCIT:C80280;histological_diagnosis_label=Diffuse Large B-Cell Lymphoma, Not Otherwise Specified
+#sample=>biosample_id=cgh08;group_id=NA;group_label=NA;biosample_id=cgh08;histological_diagnosis_id=NCIT:C80280;histological_diagnosis_label=Diffuse Large B-Cell Lymphoma, Not Otherwise Specified
+#sample=>biosample_id=cgh09;group_id=NA;group_label=NA;biosample_id=cgh09;histological_diagnosis_id=NCIT:C3222;histological_diagnosis_label=Medulloblastoma
+#sample=>biosample_id=cgh10;group_id=NA;group_label=NA;biosample_id=cgh10;histological_diagnosis_id=NCIT:C3222;histological_diagnosis_label=Medulloblastoma
 biosample_id	reference_name	start	end	log2	variant_type	reference_bases	alternate_bases
 cgh01	8	0	145138636	0.58	DUP	None	None
 cgh01	17	25100000	83257441	0.58	DUP	None	None
