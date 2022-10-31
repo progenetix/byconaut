@@ -35,6 +35,11 @@ def ISCNsegmenter():
     parse_variant_parameters(byc)
     generate_genomic_intervals(byc)
 
+    group_parameter = "histological_diagnosis_id"
+
+    if byc["args"].group_by:
+        group_parameter = byc["args"].group_by
+
     technique = "cCGH"
     iscn_field = "iscn_ccgh"
     platform_id = "EFO:0010937"
@@ -65,6 +70,9 @@ Output will be written to {}""".format(outputfile) )
 
     if not iscn_field in fieldnames:
         print('The samplefile header does not contain the "{}" column => quitting'.format(iscn_field))
+        exit()
+    if not group_parameter in fieldnames:
+        print('The samplefile header does not contain the provided "{}" `group_by` parameter\n    => continuing but be ¡¡¡WARNED!!!'.format(group_parameter))
 
     iscn_no = len(iscn_samples)
     print("=> The samplefile contains {} samples".format(iscn_no))
@@ -76,12 +84,22 @@ Output will be written to {}""".format(outputfile) )
         cs_id = s.get("assay_id", "exp-{}".format(c+1))
         s.update({"biosample_id": bs_id, "assay_id": cs_id})
         h_line = "#sample=>biosample_id={}".format(bs_id)
-        hd_id = s.get("histological_diagnosis_id", "NA")
-        hd_l = s.get("histological_diagnosis_label", "NA")
-        icdom_id = s.get("icdo_morphology_id", "NA") 
-        icdom_l = s.get("icdo_morphology_label", "NA") 
-        h_line = '{};group_id={};group_label={};NCIT::id={};NCIT::label={};icdom::id={};icdom::label={}\n'.format(h_line, icdom_id, icdom_l, hd_id, hd_l, icdom_id, icdom_l)
-        pgxseg.write( h_line )
+        g_id = s.get(group_parameter, "")
+        if len(g_id) < 1:
+            g_id = "NA"
+        g_l = s.get(re.sub("_id", "_label", group_parameter), "")
+        if len(g_l) < 1:
+            g_l = "NA"
+        h_line += ';group_id={};group_label={}'.format(g_id, g_l)
+
+        for h_p in byc["datatable_mappings"]["io_params"]["biosample"].keys():
+            if h_p in fieldnames:
+                f_v = s.get(h_p, "")
+                if len(f_v) < 1:
+                    f_v = "NA"
+                h_line += ';{}={}'.format(h_p, f_v)
+
+        pgxseg.write( "{}\n".format(h_line) )
 
     pgxseg.write( pgxseg_header_line() )
     for s in iscn_samples:
@@ -97,27 +115,6 @@ Output will be written to {}""".format(outputfile) )
     print("Wrote to {}".format(outputfile))
 
     exit()
-
-################################################################################
-
-def variants_from_revish(bs_id, cs_id, technique, iscn, byc):
-
-    v_s, v_e = deparse_ISCN_to_variants(iscn, technique, byc)
-    variants = []
-
-    for v in v_s:
-
-        v.update({
-            "id": generate_id("pgxvar"),
-            "variant_internal_id": variant_create_digest(v, byc),
-            "biosample_id": bs_id,
-            "callset_id": cs_id,
-            "updated": datetime.datetime.now().isoformat()
-        })
-
-        variants.append(v)
-
-    return variants, v_e
 
 ################################################################################
 ################################################################################
