@@ -84,39 +84,23 @@ Output will be written to {}""".format(outputfile) )
 
     for c, s in enumerate(iscn_samples):
 
+        n = str(c+1)
         update_bs ={
-            "id": s.get("biosample_id", "sample-{}".format(c+1)),
-            "callset_id": s.get("assay_id", "exp-{}".format(c+1)),
-            "individual_id": s.get("individual_id", "ind-{}".format(c+1)),
+            "id": s.get("biosample_id", "sample-"+n),
+            "callset_id": s.get("callset_id", "exp-"+n),
+            "individual_id": s.get("individual_id", "ind-"+n),
         }
         update_bs = import_datatable_dict_line(byc, update_bs, fieldnames, s, "biosample")
-
-        # TODO: have one meta line generation method in bycon & use this here
-        # already created the biosample object etc.
-        h_line = "#sample=>biosample_id={}".format(update_bs["id"])
-        g_id = s.get(group_parameter, "")
-        if len(g_id) < 1:
-            g_id = "NA"
-        g_l = s.get(re.sub("_id", "_label", group_parameter), "")
-        if len(g_l) < 1:
-            g_l = "NA"
-        h_line += ';group_id={};group_label={}'.format(g_id, g_l)
-
-        for h_p in byc["datatable_mappings"]["io_params"]["biosample"].keys():
-            if h_p in fieldnames:
-                f_v = update_bs.get(h_p, "")
-                if len(f_v) < 1:
-                    f_v = "NA"
-                h_line += ';{}={}'.format(h_p, f_v)
-
+        h_line = pgxseg_biosample_meta_line(byc, update_bs, group_parameter)
         pgxseg.write( "{}\n".format(h_line) )
 
-    pgxseg.write( pgxseg_header_line() )
+    pgxseg.write( "{}\n".format(pgxseg_header_line()) )
 
-    for s in iscn_samples:
+    for c, s in enumerate(iscn_samples):
 
-        bs_id = s.get("biosample_id", "sample-{}".format(c+1)),
-        cs_id = s.get("assay_id", "exp-{}".format(c+1))
+        n = str(c+1)
+        bs_id = s.get("biosample_id", "sample-"+n)
+        cs_id = s.get("callset_id", "exp-"+n)
 
         variants, v_e = variants_from_revish(bs_id, cs_id, technique, s[iscn_field], byc)
 
