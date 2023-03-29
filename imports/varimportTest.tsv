@@ -1,0 +1,2 @@
+variant_id	callset_id	biosample_id	individual_id	sequence_id	start	end	variant_state_id	variant_state_label	reference_bases	alternate_bases	annotation_derived
+pgxvar-cnvtest	pgxcs-test1	pgxbs-test1	pgxind-test1	refseq:NC_000007.14	123000000	123500000	EFO:0030070	copy number gain	.	.	false
