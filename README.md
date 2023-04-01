@@ -11,6 +11,13 @@ The `byconaut` package contains scripts for data processing for and based on the
       to a given collation code
 * I/O & transformations for `bycon` generated files
 
+## Installation
+
+`byconaut` depends on the `bycon` package which can be downloaded from its
+[repository](http://github.com/progenetix/bycon/). While there is also a `pip`
+installation possible over `pip3 install bycon` this will _not_ include the
+local configuration files necessary e.g. for processing the databases.
+
 ## Scripts
 
 ## collationsCreator
