@@ -14,15 +14,37 @@ The `byconaut` package contains scripts for data processing for and based on the
 ## Installation
 
 `byconaut` depends on the `bycon` package which can be downloaded from its
-[repository](http://github.com/progenetix/bycon/). While there is also a `pip`
-installation possible over `pip3 install bycon` this will _not_ include the
-local configuration files necessary e.g. for processing the databases.
+[repository](http://github.com/progenetix/bycon/). Please see the repository
+and the corresponding [documentation site](http://bycon.progenetix.org).
 
-## Scripts
+While there is also a `pip` installation possible over `pip3 install bycon`
+this will _not_ include the local configuration files necessary e.g. for
+processing the databases.
 
-## collationsCreator
+## Database setup
 
-**Collations** provide aggregate data for all samples etc. matching a given
+1. Create database and variants collection
+2. update the local `bycon` installation for your database information andlocal parameters
+    * database name(s)
+    * `filter_definitions` for parameter mapping
+3. Create metadata collections - `callsets`, `biosamples` and `individuals`
+4. Create `statusmaps` and CNV statistics for the callsets collection
+    * only relevant for CNV database use cases
+5. Create the `collations` collection which uses `filter_definitions` and the
+   corresponding values to aggregate information for query matching, term expansion ...
+6. Create `frequencymaps` for binned CNV data
+    * relies on existence of `statusmaps` in `callsets` and `collations`
+    * only needed for CNV data
+
+## Data maintenance scripts
+
+### `callsetsStatusmapsRefresher`
+
+* `bin/callsetsStatusmapsRefresher.py -d examplez`
+
+### `collationsCreator`
+
+**`collations`** provide aggregate data for all samples etc. matching a given
 classification, external reference or other entity code, including hierarchy
 data for term expansion when matching the code. The hierarchy data is provided
 in `rsrc/classificationTrees/__filterType__/numbered-hierarchies.tsv` as a list
@@ -33,7 +55,18 @@ of ordered branches in the format `code | label | depth | order`.
 * `bin/collationsCreator.py -d examplez --collationtypes "icdom,icdot"`
 * `bin/collationsCreator.py -d progenetix`
 
-### ISCNsegmenter
+### `frequencymapsCreator`
+
+**`frequencymaps`** contain pre-computed frequencies for CNV data, aggregating
+the binned statusmaps data from all callsets belonging to a given collation.
+
+#### Examples
+
+* `bin/frequencymapsCreator.py -d examplez`
+
+## Utility apps
+
+### `ISCNsegmenter`
 
 #### Examples
 

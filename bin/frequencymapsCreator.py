@@ -39,26 +39,19 @@ def frequencymaps_creator():
 
     set_collation_types(byc)
 
-    # for non-standard CNV binning
+    # re-doing the interval generation for non-standard CNV binning
     genome_binning_from_args(byc)
     generate_genomic_intervals(byc)
     
     print("=> Using data values from {}".format(ds_id))
 
-    coll_client = MongoClient()
-    coll_coll = coll_client[ ds_id ][ byc["config"]["collations_coll"] ]
-
-    fm_client = MongoClient()
-    fm_coll = fm_client[ ds_id ][ byc["config"]["frequencymaps_coll"] ]
-
-    bios_client = MongoClient()
-    bios_coll = bios_client[ ds_id ][ "biosamples" ]
-
-    ind_client = MongoClient()
-    ind_coll = ind_client[ ds_id ]["individuals"]
-
-    data_client = MongoClient()
-    cs_coll = data_client[ ds_id ]["callsets"]
+    data_client = MongoClient( )
+    data_db = data_client[ ds_id ]
+    coll_coll = data_db[ byc["config"]["collations_coll"] ]
+    fm_coll = data_db[ byc["config"]["frequencymaps_coll"] ]
+    ind_coll = data_db["individuals"]
+    bios_coll = data_db[ "biosamples" ]
+    cs_coll = data_db["callsets"]
 
     coll_ids = _filter_coll_ids(coll_coll, byc)    
     coll_no = len(coll_ids)
