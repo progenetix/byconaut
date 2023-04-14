@@ -38,7 +38,14 @@ processing the databases.
 
 ## Data maintenance scripts
 
-### `callsetsStatusmapsRefresher`
+### `callsetsStatusmapsRefresher` (CNV)
+
+The `callsetsStatusmapsRefresher` script creates CNV status data for binned
+genomic intervals, for each CNV callset (_i.e._ the CNV data of all corresponding
+variants from the same experiment/sample).
+
+
+#### Examples
 
 * `bin/callsetsStatusmapsRefresher.py -d examplez`
 
@@ -55,7 +62,7 @@ of ordered branches in the format `code | label | depth | order`.
 * `bin/collationsCreator.py -d examplez --collationtypes "icdom,icdot"`
 * `bin/collationsCreator.py -d progenetix`
 
-### `frequencymapsCreator`
+### `frequencymapsCreator` (CNV)
 
 **`frequencymaps`** contain pre-computed frequencies for CNV data, aggregating
 the binned statusmaps data from all callsets belonging to a given collation.
