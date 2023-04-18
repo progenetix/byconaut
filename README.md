@@ -23,6 +23,18 @@ processing the databases.
 
 ## Database setup
 
+### Option A: `examplez` from <rsrc/mongodump>
+
+1. download <rsrc/mongodump/examplez.zip>
+2. unpack somewhere & restore with (your paths etc.):
+```
+mongosh examplez --eval 'db.dropDatabase()'
+mongorestore --db $database .../mongodump/examplez/
+```
+3. proceed w/ step 4 ... below
+
+### Option B: Create your own databases
+
 1. Create database and variants collection
 2. update the local `bycon` installation for your database information andlocal parameters
     * database name(s)
