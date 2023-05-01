@@ -32,19 +32,15 @@ def collations_creator():
     initialize_bycon_service(byc)
     select_dataset_ids(byc)
     
-    if len(byc["dataset_ids"]) < 1:
-        print("No existing dataset was provided with -d ...")
+    if len(byc["dataset_ids"]) > 1:
+        print("Please give only one dataset using -d")
         exit()
 
+    ds_id = byc["dataset_ids"][0]
+
+    print( "Creating collations for " + ds_id)
+
     set_collation_types(byc)
-
-    for ds_id in byc["dataset_ids"]:
-        print( "Creating collations for " + ds_id)
-        _create_collations_from_dataset( ds_id, byc )
-
-################################################################################
-
-def _create_collations_from_dataset( ds_id, byc ):
 
     for coll_type, coll_defs in byc["filter_definitions"].items():
 

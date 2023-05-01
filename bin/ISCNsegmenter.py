@@ -30,8 +30,8 @@ def ISCNsegmenter():
 
 	group_parameter = "histological_diagnosis_id"
 
-	if byc["args"].group_by:
-		group_parameter = byc["args"].group_by
+	if byc["args"].groupBy:
+		group_parameter = byc["args"].groupBy
 
 	technique = "cCGH"
 	iscn_field = "iscn_ccgh"
