@@ -109,12 +109,10 @@ def collations_plotter():
     mongo_client.close( )
 
     svg = bycon_plot_generator(byc, results)
+
     svg_fh = open(svg_file, "w")
     svg_fh.write( svg )
     svg_fh.close()
-
-
-
 
 ################################################################################
 ################################################################################
