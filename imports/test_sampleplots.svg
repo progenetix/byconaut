@@ -1,0 +1,17 @@
+<svg
+xmlns="http://www.w3.org/2000/svg"
+xmlns:xlink="http://www.w3.org/1999/xlink"
+version="1.1"
+id="genomeplot"
+width="1024px"
+height="80px"
+style="margin: auto; font-family: Helvetica, sans-serif;">
+<style type="text/css"><![CDATA[
+.plot-area {fill: #eef6ff; fill-opacity: 0.8;}
+  .footer-r {text-anchor: end; fill: #999999; font-size: 10px;}
+  .footer-l {text-anchor: start; fill: #999999; font-size: 10px;}
+]]></style>
+<rect x="0" y="0" width="1024" height="80" style="fill: #ffffff" />
+<text x="527.0" y="35" style="text-anchor: middle; font-size: 10px">No matching CNV data</text>
+<text x="999" y="55" class="footer-r">&#169; CC-BY 2001 - 2023 progenetix.org</text>
+</svg>
