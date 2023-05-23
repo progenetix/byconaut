@@ -47,7 +47,7 @@ style="margin: auto; font-family: Helvetica, sans-serif;">
   <stop offset="0%" stop-color="rgb(163,55,247)" />
   <stop offset="100%" stop-color="rgb(138,43,226)" />
 </linearGradient>
-<text x="527.0" y="41" style="text-anchor: middle; font-size: 16px">import</text>
+<text x="527.0" y="41" style="text-anchor: middle; font-size: 16px">import (None)</text>
 <text x="93.14443333397304" y="73" style="text-anchor: middle; font-size: 10px">1</text>
 <text x="171.39710772733986" y="73" style="text-anchor: middle; font-size: 10px">2</text>
 <text x="241.88766095981916" y="73" style="text-anchor: middle; font-size: 10px">3</text>

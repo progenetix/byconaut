@@ -36,6 +36,9 @@ def pgxfreq_plotter():
     print('BREAK: Script is just a stub...')
     exit()
 
+    pb = ByconBundler(byc)
+    pb.pgxseg2bundle(inputfile)    
+
     interval_frequency_object = bycon_bundle_create_intervalfrequencies_object(bycon_bundle, byc)
 
 
