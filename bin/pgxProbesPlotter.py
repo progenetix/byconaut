@@ -14,42 +14,40 @@ from bycon import *
 
 def main():
 
-    pgxseg_plotter()
+    pgx_probes_plotter()
 
 ################################################################################
 
-def pgxseg_plotter():
+def pgx_probes_plotter():
 
     initialize_bycon_service(byc)
     parse_variant_parameters(byc)
     generate_genomic_intervals(byc)
 
     if not byc["args"].inputfile:
-        print("No input file specified (-i, --inputfile) => read_pgxseg_2_objects(filepath, byc):quitting ...")
+        print("No input file specified (-i, --inputfile) => read_probedata_file(filepath, byc):quitting ...")
         exit()
 
     inputfile = byc["args"].inputfile
-    if not inputfile.endswith(".pgxseg"):
-        print('Only ".pgxseg" input files are accepted.')
+    if not "probe" in inputfile:
+        print('Only probe files are accepted.')
         exit()
 
     pb = ByconBundler(byc)
-    pb.pgxseg_to_bundle(inputfile)
+
+    # TODO: method for multiple?
+    cs_probes = pb.read_probedata_file(inputfile)
+    
     plot_data_bundle = {
-        "interval_frequencies_bundles": pb.callsets_frequencies_bundles(),
-        "callsets_variants_bundles": pb.callsets_variants_bundles()
+        "callsets_probes_bundles": [ {"id": "TBD", "probes": cs_probes }]
     }
 
-    byc.update({"output":"samplesplot"})
+    byc.update({"output":"arrayplot"})
     if byc["args"].outputfile:
         outfile = byc["args"].outputfile
     else:
-        outfile = re.sub(".pgxseg", "_sampleplots.svg", inputfile)
+        outfile = re.sub(".tsv", "_sampleplots.svg", inputfile)
 
-    ByconPlot(byc, plot_data_bundle).svg2file(outfile)
-
-    byc.update({"output":"histoplot"})
-    outfile = re.sub(".pgxseg", "_histoplot.svg", inputfile)
     ByconPlot(byc, plot_data_bundle).svg2file(outfile)
 
 ################################################################################

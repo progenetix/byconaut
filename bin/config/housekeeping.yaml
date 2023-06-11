@@ -1,0 +1,9 @@
+response_types:
+  biosample:
+    collection: biosamples
+  individual:
+    collection: individuals
+  variant:
+    collection: variants
+  analysis:
+    collection: callsets

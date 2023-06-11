@@ -1,4 +1,4 @@
-#!/usr/local/bin/python3
+#!/usr/bin/env python3
 
 import datetime, json, re, sys, yaml
 from os import path, environ, pardir

@@ -1,0 +1,69 @@
+site_name: byconaut Documentation
+site_description: 'Documentation for the byconaut tools for the bycon Beacon implementation'
+site_author: Michael Baudis
+repo_name: byconaut
+repo_url: https://github.com/progenetix/byconaut
+
+###############################################################################
+
+nav:
+  - Documentation Home: /
+  - Changes & To Do: changes-todo
+  - bycon Documentation: http://progenetix.org
+  - Progenetix Site: http://progenetix.org
+  - Baudisgroup: http://info.baudisgroup.org
+
+###############################################################################
+
+markdown_extensions:
+  - toc:
+      toc_depth: 2-3
+      permalink: true
+  - admonition
+  - attr_list
+  - footnotes
+  - md_in_html
+  - pymdownx.critic
+  - pymdownx.caret
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.tilde
+  - pymdownx.saneheaders
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.magiclink:
+      hide_protocol: true
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - tables
+  - mdx_gh_links:
+      user: ga4gh-beacon
+      repo: beacon-v2-unity-testing
+  - pymdownx.emoji
+
+theme:
+  name: material
+  palette:
+    primary: deep orange
+  favicon: img/site-logo-topright.png
+  logo: img/site-logo-topright.png
+  features:
+    - content.tabs.link
+    - search.highlight
+    - search.share
+
+plugins:
+    - search
+    - macros
+    # - mermaid2
+
+extra:
+  excerpt_separator: <!--more-->
+  blog_list_length: 100
+  social:
+    - icon: fontawesome/brands/github 
+      link: https://github.com/progenetix
+extra_css:
+  - css/extra.css

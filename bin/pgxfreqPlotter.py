@@ -1,4 +1,4 @@
-#!/usr/local/bin/python3
+#!/usr/bin/env python3
 
 import re, json, yaml
 from os import path, environ, pardir
@@ -37,10 +37,9 @@ def pgxfreq_plotter():
     exit()
 
     pb = ByconBundler(byc)
-    pb.pgxseg2bundle(inputfile)    
+    pb.pgxseg_to_bundle(inputfile)    
 
     interval_frequency_object = bycon_bundle_create_intervalfrequencies_object(bycon_bundle, byc)
-
 
     plot_data_bundle = {
         "interval_frequencies_bundles": [ interval_frequency_object ],
