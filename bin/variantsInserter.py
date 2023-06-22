@@ -2,6 +2,7 @@
 
 import re, json, yaml
 from copy import deepcopy
+from progress.bar import Bar
 from os import path, environ, pardir
 import sys, datetime
 
@@ -37,19 +38,24 @@ def variantsInserter():
         print("No input file file specified (-i, --inputfile) => quitting ...")
         exit()
 
-    inputfile = byc["args"].inputfile
-    variants, fieldnames = read_tsv_to_dictlist(inputfile, int(byc["args"].limit))
+    vb = ByconBundler(byc)
+    variants = vb.read_pgx_file(byc["args"].inputfile)
 
-    var_no = len(variants)
+    var_no = len(variants.data)
     up_v_no = 0
 
-    delBiosVars = input("Delete variants from matched biosamples before insertion?\n(y|N): ")
+    delBiosVars, delSOvars, delCNVvars = ["n", "n", "n"]
+
+    delBiosVars = input("Delete variants from matched biosamples before insertion?\n¡¡¡ This will remove ALL variants for each  `biosample_id` !!!\n(y|N): ")
+    if not "y" in delBiosVars.lower():
+        delSOvars = input('Delete only the sequence variants ("SO:...") from matched biosamples before insertion?\n(y|N): ')
+        delCNVvars = input('Delete only the CNV variants ("EFO:...") from matched biosamples before insertion?\n(y|N): ')
 
     mongo_client = MongoClient( )
     var_coll = MongoClient( )[ ds_id ][ "variants" ]
 
     bios_ids = set()
-    for c, v in enumerate(variants):
+    for c, v in enumerate(variants.data):
         bs_id = v.get("biosample_id", False)
         if not bs_id:
             print("¡¡¡ The `biosample_id` parameter is required for variant assignment !!!")
@@ -69,60 +75,70 @@ def variantsInserter():
             v_dels = var_coll.delete_many({"biosample_id": b_del})
             print("==>> deleted {} variants from {}".format(v_dels.deleted_count, b_del))
 
+    if not "y" in delBiosVars.lower():
+        
+        if "y" in delSOvars.lower():
+            for b_del in bios_ids:
+                v_dels = var_coll.delete_many({"biosample_id": b_del, "variant_state.id":{"$regex":"SO:"}})
+                print("==>> deleted {} variants from {}".format(v_dels.deleted_count, b_del))
+
+        if "y" in delCNVvars.lower():
+            for b_del in bios_ids:
+                v_dels = var_coll.delete_many({"biosample_id": b_del, "variant_state.id":{"$regex":"EFO:"}})
+                print("==>> deleted {} variants from {}".format(v_dels.deleted_count, b_del))
+
     v_proto = object_instance_from_schema_name(byc, "pgxVariant", "") #pgxVariant
 
-    for c, v in enumerate(variants, 1):
+    bios_v_counts = {}
+
+    if not byc["test_mode"]:
+        bar = Bar("Writing ", max = var_no, suffix='%(percent)d%%'+" of "+str(var_no) )
+
+    for c, v in enumerate(variants.data, 1):
+
+        if not byc["test_mode"]:
+                bar.next()
 
         bs_id = v.get("biosample_id", False)
+        if not bs_id in bios_v_counts.keys():
+            bios_v_counts.update({bs_id: 0})
+        bios_v_counts[bs_id] += 1
 
         # variant prototype from schema
         insert_v = deepcopy(v_proto)
 
         # TODO: This is a bit of a double definition; disentangle ...
         insert_v.update( {
-            "legacy_id": v.get("variant_id", f'pgxvar-{c:09d}'),
             "biosample_id": bs_id,            
             "callset_id": v.get("callset_id", re.sub("pgxbs-", "pgxcs-", bs_id)),
             "individual_id": v.get("individual_id", re.sub("pgxbs-", "pgxind-", bs_id))
         })
 
-        insert_v = import_datatable_dict_line(byc, insert_v, fieldnames, v, "variant")
-
-        seq_id = insert_v["location"].get("sequence_id")
-        chromosome = insert_v["location"].get("chromosome")
-        var_id = insert_v["variant_state"].get("id")
-        var_label = insert_v["variant_state"].get("label")
-
-        if not seq_id and not chromosome:
-            print(f"Neither `reference_name` (chromosome) nor `sequence_id` were specified in line {c}...")
+        insert_v = import_datatable_dict_line(byc, insert_v, variants.fieldnames, v, "variant")
+        insert_v, errors = normalize_pgx_variant(insert_v, byc, c)
+        if len(errors) > 0:
+            print("\n".join(errors))
+            print(f'==> exit at variant line {c}; last import from line {c-1} <==')
             exit()
-
-        if not seq_id:
-            if chromosome in v_d["refseq_aliases"].keys():
-                r_id = v_d["refseq_aliases"][chromosome]
-                insert_v["location"].update({"sequence_id": r_id})
-        if not chromosome:
-            if seq_id in v_d["chro_aliases"].keys():
-                c_id = v_d["refseq_aliases"][seq_id]
-                insert_v["location"].update({"chromosome": v_d["chro_aliases"].get(seq_id)})
-        if not var_label:
-            if var_id in v_d["efo_dupdel_map"].keys():
-                insert_v["variant_state"].update({"label": v_d["efo_dupdel_map"][var_id].get("label")})
-
         insert_v.update({
             "variant_internal_id": variant_create_digest(insert_v, byc),
             "updated": datetime.datetime.now().isoformat()
         })
 
         if not byc["test_mode"]:
+            up_v_no += 1
             vid = var_coll.insert_one( insert_v  ).inserted_id
             vstr = 'pgxvar-'+str(vid)
             var_coll.update_one({'_id':vid},{'$set':{ 'id':vstr }})
-            print("=> inserted {}".format(vstr))
+            # print(f'==> inserted {vstr} for sample {bs_id}')
         else:
             prjsonnice(insert_v)
 
-    exit()
+    if not byc["test_mode"]:
+        bar.finish()
+        print(f'==> inserted {up_v_no} variants for {len(bios_v_counts.keys())} samples')
+    else:
+        print(bios_v_counts)
 
 ################################################################################
 ################################################################################

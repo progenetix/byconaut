@@ -48,6 +48,13 @@ mongorestore --db $database .../mongodump/examplez/
     * relies on existence of `statusmaps` in `callsets` and `collations`
     * only needed for CNV data
 
+## Server `services`
+
+Since version `1.0.55` (2023-06-22) additional "services" may be installed from
+the [`byconaut`](https://github.com/progenetix/byconaut/) repository using the
+[`install.py`](./install.py) utility script. Please edit the [`install.yaml`](./install.yaml) configuration accordingly.
+
+
 ## Data maintenance scripts
 
 ### `callsetsStatusmapsRefresher` (CNV)
