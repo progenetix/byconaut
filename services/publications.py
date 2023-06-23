@@ -55,7 +55,7 @@ def publications():
     cgi_break_on_errors(byc)
 
     mongo_client = MongoClient( )
-    pub_db = byc["config"]["info_db"]
+    pub_db = byc["config"]["services_db"]
     pub_coll = mongo_client[ pub_db ][ "publications" ]
 
     p_re = re.compile( byc["filter_definitions"]["PMID"]["pattern"] )
