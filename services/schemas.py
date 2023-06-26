@@ -29,6 +29,11 @@ def main():
 
 def schemas():
 
+    byc.update({
+        "request_path_root": "services",
+        "request_entity_path_id": "schemas"
+    })
+    
     initialize_bycon_service(byc)
     create_empty_service_response(byc)
 

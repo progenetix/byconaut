@@ -9,6 +9,8 @@ from uuid import uuid4
 
 from bycon import *
 
+dir_path = path.dirname( path.abspath(__file__) )
+
 ################################################################################
 ################################################################################
 ################################################################################
@@ -26,13 +28,20 @@ def main():
 
 def uploader():
 
+    byc.update({
+        "request_path_root": "services",
+        "request_entity_path_id": "uploader"
+    })
+    conf_dir = path.join(dir_path, "local")
+    read_local_prefs( "local_paths", conf_dir, byc )
+    # initialize_bycon_service(byc)
     file_id = str(uuid4())
     form = cgi.FieldStorage()
 
     response = {
         "error": {},
-        "rel_path": "{}/{}".format(byc["config"].get("server_tmp_dir_web", "/tmp"), file_id),
-        "loc_path": path.join( *byc["config"][ "server_tmp_dir_loc" ], file_id ),
+        "rel_path": "{}/{}".format(byc["local_paths"].get("server_tmp_dir_web", "/tmp"), file_id),
+        "loc_path": path.join( *byc["local_paths"][ "server_tmp_dir_loc" ], file_id ),
         "file_id": file_id,
         "plot_link": '/services/samplePlots/?fileId='+file_id,
         "host": "http://"+str(environ.get('HTTP_HOST'))

@@ -36,6 +36,11 @@ def samplesPlotter():
 
 def samples_plotter():
 
+    byc.update({
+        "request_path_root": "services",
+        "request_entity_path_id": "samplesPlotter"
+    })
+    
     initialize_bycon_service(byc)
     parse_variant_parameters(byc)
     generate_genomic_intervals(byc)
@@ -44,6 +49,7 @@ def samples_plotter():
     create_empty_beacon_response(byc)
 
     id_rest = rest_path_value("samplesPlotter")
+    local_paths = byc.get("local_paths", {})
 
     if id_rest is not None:
         byc[ "file_id" ] = id_rest
@@ -60,7 +66,7 @@ def samples_plotter():
     if not "plot" in byc.get("output", "histoplot"):
         byc.update({"output": "histoplot"})
 
-    inputfile = path.join( *config[ "server_tmp_dir_loc" ], byc[ "file_id" ] )
+    inputfile = path.join( *local_paths[ "server_tmp_dir_loc" ], byc[ "file_id" ] )
 
     if not path.exists(inputfile):
         response_add_error(byc, 422, f"The file path {inputfile} does not exist.")  
@@ -90,11 +96,8 @@ def _create_file_handover_response(byc):
         h_o_defs = h_o_types.get(h_o_t, {})
         h_o_defs.update({"script_path_web":"/services/samplesPlotter"})
         h_o_r = {
-            "handover_type": {
-                "id": h_o_defs[ "id" ],
-                "label": f'{ h_o_defs.get("label", "generic handover") }'
-            },
-            "description": h_o_defs[ "description" ],
+            "handover_type": h_o_defs.get("handoverType", {}),
+            "note": h_o_defs.get("note", ""),
             "url": handover_create_url(h_o_server, h_o_defs, byc[ "file_id" ], byc),
             "pages": []
         }

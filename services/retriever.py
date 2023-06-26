@@ -37,6 +37,11 @@ def main():
 
 def retriever():
 
+    byc.update({
+        "request_path_root": "services",
+        "request_entity_path_id": "aggregator"
+    })
+    
     initialize_bycon_service(byc, "aggregator")
     parse_filters(byc)
     parse_variant_parameters(byc)
