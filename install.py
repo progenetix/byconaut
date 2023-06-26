@@ -66,9 +66,9 @@ def install_services():
             print("¡¡¡ {} does not exist - please check & create !!!".format(s_p))
             exit()
     
-    system(f'sudo rsync -avh --delete {dir_path}/services/ {b_i_d_p}/services/')
+    system(f'sudo rsync -avh {dir_path}/services/ {b_i_d_p}/services/')
     system(f'sudo rsync -avh {b_s_d_p}/local/ {dir_path}/local/')
-    system(f'sudo rsync -avh --delete {dir_path}/local/ {b_i_d_p}/services/local/')
+    system(f'sudo rsync -avh {dir_path}/local/ {b_i_d_p}/services/local/')
 
     system(f'sudo chown -R {s_u}:{s_g} {b_i_d_p}')
     system(f'sudo chmod 775 {b_i_d_p}/services/*.py')

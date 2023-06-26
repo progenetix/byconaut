@@ -1,0 +1,50 @@
+defaults:
+
+  dataset_ids:
+    - progenetix
+  request_path_root: services
+  request_entity_path_id: info
+  assembly_id: GRCh38
+  response_schema: beaconResultsetsResponse
+  include_resultset_responses: HIT
+  include_handovers: false
+  test_mode: false
+  test_mode_count: 5
+  requested_granularity: record
+  returned_granularity: record
+  pagination:
+    skip: 0
+    limit: 2000
+  response_entity:
+    entity_type: collations
+    collection: collations
+    response_schema: beaconCollectionsResponse
+    beacon_schema:
+      entity_type: collations
+      schema: https://progenetix.org/services/schemas/pgxCollation/
+    h->o_access_key: False
+
+################################################################################
+# services entity defaults #######################################################
+################################################################################
+
+entity_defaults:
+
+  aggregator:
+    request_entity_path_id: genomicVariations
+    response_entity_id: genomicVariant
+    response_schema: beaconBooleanResponse
+
+  ##############################################################################
+
+  cytomapper:
+    request_path_root: services
+    response_entity_id: cytobandMapping
+    response_entity:
+      entity_type: cytobandMapping
+      response_schema: beaconResultsetsResponse
+      collection: Null
+      beacon_schema:
+        entity_type: cytobandMapping
+        schema: https://progenetix.org/services/schemas/cytobandMapping/
+      h->o_access_key: Null

@@ -22,9 +22,13 @@ def main():
 
 def collations():
 
+    byc.update({
+        "request_path_root": "services",
+        "request_entity_path_id": "collations"
+    })
+
     initialize_bycon_service(byc)
     select_dataset_ids(byc)
-    # first the filter => collation_type which removes the filter if type match
     parse_filters(byc)
     _check_collation_type_query(byc)
     create_empty_service_response(byc) 

@@ -39,12 +39,6 @@ def services():
             m_f = path.join( conf_dir, "services_mappings.yaml")
             if path.isfile(m_f):
                 b_m = load_yaml_empty_fallback( m_f )
-            d_f = Path( path.join( conf_dir, "beacon_defaults.yaml" ) )
-            if path.isfile(d_f):
-                byc.update({"beacon_defaults": load_yaml_empty_fallback( d_f ) })
-                defaults = byc["beacon_defaults"].get("defaults", {})
-                for d_k, d_v in defaults.items():
-                    byc.update( { d_k: d_v } )
             read_bycon_definition_files(conf_dir, byc)
 
     byc.update({"request_path_root": "services"})

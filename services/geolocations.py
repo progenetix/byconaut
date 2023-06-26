@@ -31,6 +31,10 @@ def main():
 
 def geolocations():
 
+    byc.update({
+        "request_path_root": "services",
+        "request_entity_path_id": "geolocations"
+    })
     initialize_bycon_service(byc)
 
     # for the geolocs database, not the provenance object
@@ -46,7 +50,7 @@ def geolocations():
 
         query, geo_pars = geo_query( byc )
         for g_k, g_v in geo_pars.items():
-            response_add_received_request_summary_parameter(byc, g_k, g_v)
+            received_request_summary_add_custom_parameter(byc, g_k, g_v)
 
         if len(query.keys()) < 1:
             response_add_error(byc, 422, "No query generated - missing or malformed parameters" )

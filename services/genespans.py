@@ -23,6 +23,10 @@ def main():
 
 def genespans():
 
+    byc.update({
+        "request_path_root": "services",
+        "request_entity_path_id": "genespans"
+    })
     initialize_bycon_service(byc)        
     parse_variant_parameters(byc)
     generate_genomic_intervals(byc)
@@ -54,7 +58,7 @@ def genespans():
         response_add_error(byc, 422, "No geneId value provided!" )
     cgi_break_on_errors(byc)
 
-    response_add_received_request_summary_parameter(byc, "geneId", gene_id)
+    received_request_summary_add_custom_parameter(byc, "geneId", gene_id)
 
     results, e = retrieve_gene_id_coordinates(gene_id, byc)
     response_add_error(byc, 422, e )

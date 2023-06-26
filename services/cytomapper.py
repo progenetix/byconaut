@@ -25,6 +25,11 @@ def main():
 
 def cytomapper():
     
+    byc.update({
+        "request_path_root": "services",
+        "request_entity_path_id": "cytomapper"
+    })
+    
     initialize_bycon_service(byc)
     
     parse_variant_parameters(byc)
