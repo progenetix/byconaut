@@ -81,7 +81,7 @@ def aggregator():
     initialize_bycon_service(byc)
     parse_filters(byc)
     parse_variant_parameters(byc)
-    generate_genomic_intervals(byc)
+    generate_genomic_mappings(byc)
     create_empty_service_response(byc)    
 
     cgi_break_on_errors(byc)

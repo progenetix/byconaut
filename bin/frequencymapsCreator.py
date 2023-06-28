@@ -39,7 +39,7 @@ def frequencymaps_creator():
 
     # re-doing the interval generation for non-standard CNV binning
     genome_binning_from_args(byc)
-    generate_genomic_intervals(byc)
+    generate_genomic_mappings(byc)
     
     print("=> Using data values from {}".format(ds_id))
 

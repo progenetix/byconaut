@@ -29,11 +29,10 @@ def genespans():
     })
     initialize_bycon_service(byc)        
     parse_variant_parameters(byc)
-    generate_genomic_intervals(byc)
+    generate_genomic_mappings(byc)
     get_global_filter_flags(byc)
     create_empty_service_response(byc)
 
-    v_rs_chros = byc["variant_definitions"]["chro_aliases"]
 
     assembly_id = byc["assembly_id"]
     if "assembly_id" in byc[ "form_data" ]:
@@ -93,11 +92,13 @@ def genespans():
 
 def _gene_add_cytobands(gene, byc):
 
-    v_rs_chros = byc["variant_definitions"]["chro_aliases"]
+    g_a = byc.get("genome_aliases", {})
+    c_a = g_a.get("chro_aliases", {})
+
     gene.update({"cytobands": None})
 
     acc = gene.get("accession_version", "NA")
-    if acc not in v_rs_chros:
+    if acc not in c_a:
         return gene
 
     start = gene.get("start", None)
@@ -105,7 +106,7 @@ def _gene_add_cytobands(gene, byc):
     if start is None or end is None:
         return gene
 
-    chro = v_rs_chros.get( acc, "")
+    chro = c_a.get( acc, "")
     chro_bases = "{}:{}-{}".format(chro, gene.get("start", ""), gene.get("end", ""))
     cytoBands, chro, start, end = bands_from_chrobases(chro_bases, byc)
     cb_label = cytobands_label( cytoBands )

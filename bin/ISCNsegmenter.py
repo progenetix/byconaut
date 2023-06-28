@@ -26,7 +26,7 @@ def ISCNsegmenter():
 	initialize_bycon_service(byc)
 	set_processing_modes(byc)
 	parse_variant_parameters(byc)
-	generate_genomic_intervals(byc)
+	generate_genomic_mappings(byc)
 
 	group_parameter = "histological_diagnosis_id"
 

@@ -33,10 +33,13 @@ def cytomapper():
     initialize_bycon_service(byc)
     
     parse_variant_parameters(byc)
-    generate_genomic_intervals(byc)
+    generate_genomic_mappings(byc)
 
     # response prototype
     create_empty_service_response(byc)
+
+    g_a = byc.get("genome_aliases", {})
+    r_a = g_a.get("refseq_aliases", {})
 
     cytoBands = [ ]
     if "cyto_bands" in byc["variant_pars"]:
@@ -54,7 +57,6 @@ def cytomapper():
 
     size = int(  end - start )
     chroBases = "{}:{}-{}".format(chro, start, end)
-    r_a = byc["variant_definitions"]["refseq_aliases"]
     sequence_id = r_a.get(chro, chro)
 
     if "text" in byc["output"]:

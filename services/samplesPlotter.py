@@ -43,7 +43,7 @@ def samples_plotter():
     
     initialize_bycon_service(byc)
     parse_variant_parameters(byc)
-    generate_genomic_intervals(byc)
+    generate_genomic_mappings(byc)
 
     byc["response_entity"].update({"response_schema": "beaconResultsetsResponse"})
     create_empty_beacon_response(byc)

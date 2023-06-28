@@ -22,7 +22,7 @@ def pgxseg_plotter():
 
     initialize_bycon_service(byc)
     parse_variant_parameters(byc)
-    generate_genomic_intervals(byc)
+    generate_genomic_mappings(byc)
 
     if not byc["args"].inputfile:
         print("No input file specified (-i, --inputfile) => read_pgxseg_2_objects(filepath, byc):quitting ...")

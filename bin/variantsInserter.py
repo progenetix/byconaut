@@ -26,7 +26,7 @@ def variantsInserter():
     parse_variant_parameters(byc)
     select_dataset_ids(byc)
 
-    v_d = byc["variant_definitions"]
+    v_d = byc["variant_parameters"]
 
     if len(byc["dataset_ids"]) != 1:
         print("No single existing dataset was provided with -d ...")

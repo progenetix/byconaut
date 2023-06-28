@@ -33,7 +33,7 @@ def uploader():
         "request_entity_path_id": "uploader"
     })
     conf_dir = path.join(dir_path, "local")
-    read_local_prefs( "local_paths", conf_dir, byc )
+    read_bycon_configs_by_name( "local_paths", conf_dir, byc )
     # initialize_bycon_service(byc)
     file_id = str(uuid4())
     form = cgi.FieldStorage()
