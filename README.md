@@ -29,7 +29,7 @@ processing the databases.
 2. unpack somewhere & restore with (your paths etc.):
 ```
 mongosh examplez --eval 'db.dropDatabase()'
-mongorestore --db $database .../mongodump/examplez/
+mongorestore --db $database ../rsrc/mongodump/examplez/
 ```
 3. proceed w/ step 4 ... below
 
