@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import argparse, datetime, re, sys
-from os import path, environ, pardir
 from pymongo import MongoClient
 from humps import camelize
 
