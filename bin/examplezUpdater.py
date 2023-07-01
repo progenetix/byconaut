@@ -92,7 +92,6 @@ def examplez_updater():
             # existing associated varriants, callsets ... and then re-importing
             # ... o.k., I've modified...
 
-
             e_bs = e_bios_coll.find_one({'id': bs_id})
             if e_bs and option == "keep":
                 continue
