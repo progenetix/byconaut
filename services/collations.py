@@ -44,7 +44,7 @@ def collations():
     # this is all just a bit complex since a multi-dataset response is taken care of...
     s_s = { }
 
-    mongo_client = MongoClient( )
+    mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
     for ds_id in byc[ "dataset_ids" ]:
         mongo_db = mongo_client[ ds_id ]        
         mongo_coll = mongo_db[ c ]

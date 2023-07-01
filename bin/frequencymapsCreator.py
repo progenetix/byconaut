@@ -43,7 +43,7 @@ def frequencymaps_creator():
     
     print("=> Using data values from {}".format(ds_id))
 
-    data_client = MongoClient( )
+    data_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
     data_db = data_client[ ds_id ]
     coll_coll = data_db[ byc["config"]["collations_coll"] ]
     fm_coll = data_db[ byc["config"]["frequencymaps_coll"] ]

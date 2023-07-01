@@ -2,7 +2,7 @@
 
 import cgi
 import re, json
-from os import path, pardir
+from os import path, pardir, environ
 import sys
 from pymongo import MongoClient
 
@@ -60,7 +60,7 @@ def ontologymaps():
 
     c_g = [ ]
     u_c_d = { }
-    mongo_client = MongoClient( )
+    mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
     mongo_coll = mongo_client[ byc["config"]["services_db"] ][ byc["ontologymaps_coll"] ]
     for o in mongo_coll.find( query, { '_id': False } ):
         for c in o["code_group"]:

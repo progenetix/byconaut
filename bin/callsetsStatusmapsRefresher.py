@@ -2,6 +2,7 @@
 
 # import re, json, yaml
 # from os import path, environ, pardir
+from os import environ
 import sys, datetime
 from isodate import date_isoformat
 from pymongo import MongoClient
@@ -48,7 +49,7 @@ def callsets_refresher():
         
     print("=> Using data values from {}".format(ds_id))
 
-    data_client = MongoClient( )
+    data_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
     data_db = data_client[ ds_id ]
     cs_coll = data_db[ "callsets" ]
     v_coll = data_db[ "variants" ]

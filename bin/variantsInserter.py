@@ -50,8 +50,8 @@ def variantsInserter():
         delSOvars = input('Delete only the sequence variants ("SO:...") from matched biosamples before insertion?\n(y|N): ')
         delCNVvars = input('Delete only the CNV variants ("EFO:...") from matched biosamples before insertion?\n(y|N): ')
 
-    mongo_client = MongoClient( )
-    var_coll = MongoClient( )[ ds_id ][ "variants" ]
+    mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
+    var_coll = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))[ ds_id ][ "variants" ]
 
     bios_ids = set()
     for c, v in enumerate(variants.data):

@@ -64,10 +64,10 @@ def collations_creator():
             print( "Creating dummy hierarchy for " + coll_type)
             hier =  _get_dummy_hierarchy( ds_id, coll_type, coll_defs, byc )
 
-        coll_client = MongoClient( )
+        coll_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
         coll_coll = coll_client[ ds_id ][ byc["config"]["collations_coll"] ]
 
-        data_client = MongoClient( )
+        data_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
         data_db = data_client[ ds_id ]
         data_coll = data_db[ collection ]
 
@@ -175,7 +175,7 @@ def get_prefix_hierarchy( ds_id, coll_type, pre_h_f, byc):
     # now adding terms missing from the tree ###################################
 
     print("Looking for missing {} codes in {}.{} ...".format(coll_type, ds_id, coll_defs["scope"]))
-    data_client = MongoClient( )
+    data_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
     data_db = data_client[ ds_id ]
     data_coll = data_db[coll_defs["scope"]]
 
@@ -275,7 +275,7 @@ def _make_dummy_publication_hierarchy(byc):
     coll_type = "PMID"
     coll_defs = byc["filter_definitions"][coll_type]
     data_db = byc["config"]["services_db"]
-    data_coll = MongoClient( )[ data_db ][ "publications" ]
+    data_coll = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))[ data_db ][ "publications" ]
     query = { "id": { "$regex": coll_defs["pattern"] } }
 
     hier = { }
@@ -309,7 +309,7 @@ def _make_dummy_publication_hierarchy(byc):
 
 def _get_dummy_hierarchy(ds_id, coll_type, coll_defs, byc):
 
-    data_client = MongoClient( )
+    data_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
     data_db = data_client[ ds_id ]
     data_coll = data_db[ coll_defs["scope"] ]
     data_pat = coll_defs["pattern"]

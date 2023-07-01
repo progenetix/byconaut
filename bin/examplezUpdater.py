@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from pymongo import MongoClient
-from os import path, pardir, system
+from os import path, pardir, system, environ
 from pathlib import Path
 from progress.bar import Bar
 
@@ -34,7 +34,7 @@ def examplez_updater():
 
     # Access the input value with '-d' flag
     e_ds_id = args.database
-    mongo_client = MongoClient()
+    mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
     db_names = list(mongo_client.list_database_names())
 
     # NOTE: I wouldn't use a large framework lime pandas for reading in just
@@ -52,7 +52,7 @@ def examplez_updater():
 
     print('Database to create/update:', e_ds_id)
 
-    mongo_client = MongoClient()
+    mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
     db = mongo_client[e_ds_id]
     TODO: One needs an _option_ to select for deletion here!
     if e_ds_id in db_names:

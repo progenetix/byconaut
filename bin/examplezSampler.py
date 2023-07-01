@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 import pymongo
 from pymongo import  MongoClient
+from os import environ
+
 biosample_id_list=[]
-client = MongoClient()
+client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
 
 
 progenetix_biosample_id_list=[]
 progenetix_individual_id_list=[]
 progenetix_variant_id_list=[]
 progenetix_callset_id_list=[]
-client = MongoClient()
+client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
 db=client['progenetix']
 TCGA_cancers=['TCGA.MESO','TCGA.GBM','TCGA.BLCA','TCGA.UVM']
 for cancer in TCGA_cancers:

@@ -3,7 +3,7 @@
 import argparse, datetime, re, sys
 from pymongo import MongoClient
 from humps import camelize
-
+from os import environ
 from bycon import *
 
 """
@@ -67,7 +67,7 @@ def collations_plotter():
         fmap_name = "frequencymap_codematches"
 
     results = [ ]
-    mongo_client = MongoClient( )
+    mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
     for ds_id in byc[ "dataset_ids" ]:
 
         for f_val in coll_ids:
