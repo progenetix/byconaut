@@ -2,9 +2,9 @@
 
 import cgi
 import re, json, yaml
-from os import path, environ, pardir
+from os import path
+
 import sys, datetime, argparse
-from pathlib import Path
 
 from bycon import *
 

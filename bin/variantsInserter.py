@@ -3,7 +3,6 @@
 import re, json, yaml
 from copy import deepcopy
 from progress.bar import Bar
-from os import path, environ, pardir
 import sys, datetime
 
 from bycon import *
