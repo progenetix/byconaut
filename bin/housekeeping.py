@@ -3,11 +3,13 @@
 import re, json, yaml, sys, datetime
 from copy import deepcopy
 from isodate import date_isoformat
-from os import path, environ, pardir
+from os import path, environ, pardir, system
 from pymongo import MongoClient, GEOSPHERE
 from progress.bar import Bar
 
 from bycon import *
+
+dir_path = path.dirname( path.abspath(__file__) )
 
 """
 The housekeeping script contains **non-destructive** maintenance scripts which
@@ -33,33 +35,27 @@ def housekeeping():
         print("No single existing dataset was provided with -d ...")
         exit()
 
-    # collecting the actions
+    ds_id = byc["dataset_ids"][0]
 
+    # collecting the actions
     todos = {
         "individual_age_days": input("Recalculate `age_days` in individuals?\n(y|N): "),
+        "update_cs_statusmaps": input(f'Update statusmaps in `callsets` for {ds_id}?\n(y|N): '),
+        "update_collations": input(f'Create `collations` for {ds_id}?\n(Y|n): '),
+        "update_frequencymaps": input(f'Create `frequencymaps` for {ds_id} collations?\n(Y|n): '),
         "datasets_counts": input("Recalculate counts for all datasets?\n(y|N): "),
         "mongodb_index_creation": input("Check & create MongoDB indexes?\n(y|N): ")
     }
 
-    ds_id = byc["dataset_ids"][0]
     data_db = MongoClient( )[ ds_id ]
 
+    #>------------------------- callsets -------------------------------------<#
 
-    #>---------------------- info db update ----------------------------------<#
+    if "y" in todos.get("update_cs_statusmaps", "y").lower():
+        print(f'==> executing "{dir_path}/callsetsStatusmapsRefresher.py -d {ds_id}"')
+        system(f'{dir_path}/callsetsStatusmapsRefresher.py -d {ds_id}')
 
-    if "y" in todos.get("datasets_counts", "n").lower():
-
-        i_db = byc[ "config" ][ "services_db" ]
-        i_coll = byc[ "config" ][ "beacon_info_coll"]
-
-        print(f'==> Updating dataset statistics in "{ds_id}.{i_coll}"')
-
-        b_info = __dataset_update_counts(byc)
-
-        info_coll = MongoClient( )[ i_db ][ i_coll ]
-        info_coll.delete_many( { "date": b_info["date"] } ) #, upsert=True
-        info_coll.insert_one( b_info ) #, upsert=True 
-        print(f'==> updated entry {b_info["date"]} in {ds_id}.{i_coll}')
+    #>------------------------ / callsets ------------------------------------<#
 
     #>------------------------ individuals -----------------------------------<#
 
@@ -87,6 +83,40 @@ def housekeeping():
 
     #>----------------------- / individuals ----------------------------------<#
 
+    #>---------------------- info db update ----------------------------------<#
+
+    if "y" in todos.get("datasets_counts", "n").lower():
+
+        i_db = byc[ "config" ][ "services_db" ]
+        i_coll = byc[ "config" ][ "beacon_info_coll"]
+
+        print(f'==> Updating dataset statistics in "{ds_id}.{i_coll}"')
+
+        b_info = __dataset_update_counts(byc)
+
+        info_coll = MongoClient( )[ i_db ][ i_coll ]
+        info_coll.delete_many( { "date": b_info["date"] } ) #, upsert=True
+        info_coll.insert_one( b_info ) #, upsert=True 
+        print(f'==> updated entry {b_info["date"]} in {ds_id}.{i_coll}')
+
+    #>--------------------- / info db update ---------------------------------<#
+
+    #>---------------------- update collations -------------------------------<#
+
+    if not "n" in todos.get("update_collations", "y").lower():
+        print(f'==> executing "{dir_path}/collationsCreator.py -d {ds_id}"')
+        system(f'{dir_path}/collationsCreator.py -d {ds_id}')
+
+    #>--------------------- / update collations ------------------------------<#
+
+    #>--------------------- update frequencymaps -----------------------------<#
+
+    if not "n" in todos.get("update_frequencymaps", "y").lower():
+        print(f'==> executing "{dir_path}/frequencymapsCreator.py -d {ds_id}"')
+        system(f'{dir_path}/frequencymapsCreator.py -d {ds_id}')
+
+    #>-------------------- / update frequencymaps ----------------------------<#
+
     #>-------------------- MongoDB index updates -----------------------------<#
 
     if "y" in todos.get("mongodb_index_creation", "n").lower():
@@ -101,13 +131,14 @@ def housekeeping():
 def __update_mongodb_indexes(ds_id, byc):
 
     dt_m = byc["datatable_mappings"]
-    b_rt_s = byc["service_config"]["response_types"]
+    b_rt_s = byc["service_config"]["indexed_response_types"]
     mongo_client = MongoClient( )
     data_db = mongo_client[ds_id]
+    coll_names = data_db.list_collection_names()
     for r_t, r_d in b_rt_s.items():
 
         collname = r_d.get("collection", False)
-        if collname is False:
+        if collname not in coll_names:
             print(f"¡¡¡ Collection {collname} does not exist in {ds_id} !!!")
             continue
 
@@ -127,6 +158,23 @@ def __update_mongodb_indexes(ds_id, byc):
             k = re.sub("properties.latitude", "geometry", io_params["geoprov_lat"]["db_key"])
             m = i_coll.create_index([(k, GEOSPHERE)])
             print(m)
+
+    #<------------------------ special collections --------------------------->#
+
+    specials = byc["service_config"].get("indexed_special_collections", {})
+
+    for collname, io_params in specials.items():
+        if collname not in coll_names:
+            continue
+
+        i_coll = data_db[ collname ]
+
+        for p_k, p_v in io_params.items():
+            k = p_v["db_key"]
+            print('Creating index "{}" in {} from {}'.format(k, collname, ds_id))
+            m = i_coll.create_index(k)
+            print(m)
+
 
 ################################################################################
 

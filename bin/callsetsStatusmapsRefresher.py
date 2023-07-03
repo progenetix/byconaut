@@ -60,18 +60,21 @@ def callsets_refresher():
     no_cnv_type = 0
 
     if not "callsets._id" in ds_results.keys():
-        cs_ids = cs_coll.distinct("_id", {})
-        print("¡¡¡ Using all {} callsets from {} !!!".format(len(cs_ids), ds_id))
+        cs_ids = []
+        for cs in cs_coll.find( {} ):
+            cs_ids.append(cs["_id"])
+        cs_no = len(cs_ids)
+        print(f'¡¡¡ Using all {cs_no} callsets from {ds_id} !!!')
     else:
         cs_ids = ds_results["callsets._id"]["target_values"]
+        cs_no = len(cs_ids)
 
-    print("Re-generating statusmaps with {} intervals for {} callsets...".format(len(byc["genomic_intervals"]), len(cs_ids)))
-    no =  len(cs_ids)
-    bar = Bar("{} callsets".format(ds_id), max = no, suffix='%(percent)d%%'+" of "+str(no) )
+    print(f'Re-generating statusmaps with {byc["genomic_interval_count"]} intervals for {cs_no} callsets...')
+    bar = Bar("{} callsets".format(ds_id), max = cs_no, suffix='%(percent)d%%'+" of "+str(cs_no) )
     counter = 0
     updated = 0
 
-    proceed = input("Do you want to continue to update database **{}**?\n(Y|n): ".format(ds_id))
+    proceed = input(f'Do you want to continue to update database **{ds_id}**?\n(Y|n): ')
     if "n" in proceed.lower():
         exit()
 
