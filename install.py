@@ -12,7 +12,9 @@ from bycon import *
 """
 The install script copies the relevant services files to the webserver directory
 specified in the `install.yaml` file and sets the file permissions
-accordingly. It requires admin permissions ({sudo_cmd}).
+accordingly. By default, it requires admin permissions (sudo). If you want to run
+it without sudo, invoke it with `--no-sudo`. The current use will need to be able
+to write into the target directories. 
 """
 
 ################################################################################
