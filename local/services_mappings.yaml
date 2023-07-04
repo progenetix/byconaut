@@ -1,5 +1,4 @@
 service_aliases:
-  /: info
   endpoints: endpoints
   collations: collations
   cytomapper: cytomapper
@@ -18,10 +17,12 @@ service_aliases:
   samplesPlotter: samplesPlotter
   schemas: schemas
   uploader: uploader
+  variantsPlotter: variantsPlotter
+
 
 rewrites:
-  collationPlots: '/cgi/PGX/cgi/collationPlots.cgi'
-  samplePlots: '/cgi/PGX/cgi/samplePlots.cgi'
+  # collationPlots: '/cgi/PGX/cgi/collationPlots.cgi'
+  # samplePlots: '/cgi/PGX/cgi/samplePlots.cgi'
   biosamples: '/beacon/biosamples/'
   variants: '/beacon/variants/'
   individuals: '/beacon/individuals/'
