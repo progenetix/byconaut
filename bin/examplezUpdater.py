@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from pymongo import MongoClient
-from os import path, pardir, system
+from os import path, pardir, system, environ
 from pathlib import Path
 from progress.bar import Bar
 
@@ -29,13 +29,11 @@ def examplez_updater():
     # you may want to create a new database not in the configuration list ...
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--database', help='Specify a target database name with the `-d` flag')
-    # parser.add_argument('-o', '--option', help='Specify delete or keep the existing target database name with the `-o` flag')
     args = parser.parse_args()
 
     # Access the input value with '-d' flag
     e_ds_id = args.database
-    # option = args.option
-    mongo_client = MongoClient()
+    mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
     db_names = list(mongo_client.list_database_names())
     todos = {
         "drop_existing_database": False,
@@ -69,10 +67,9 @@ def examplez_updater():
         "cellz": list(pd.read_csv(cellz_id_f, sep=',', index_col=0))
     }
 
-    mongo_client = MongoClient()
+    mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
     db = mongo_client[e_ds_id]
 
-    # TODO: One needs an _option_ to select for deletion here!
     if todos["drop_existing_database"] is True:
         print(f'Database {e_ds_id} existed but is deleted & re-created...')
         mongo_client.drop_database(e_ds_id)

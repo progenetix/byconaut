@@ -1,6 +1,6 @@
 #!/usr/local/bin/python3
 
-from os import path, pardir
+from os import path, pardir, environ
 from pymongo import MongoClient
 from isodate import date_isoformat
 import cgi, cgitb, csv, datetime, requests, sys
@@ -49,7 +49,7 @@ def publications_inserter():
 
     rows = []
 
-    mongo_client = MongoClient()
+    mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
 
     pub_coll = mongo_client["progenetix"]["publications"]
     bios_coll = mongo_client["progenetix"]["biosamples"]

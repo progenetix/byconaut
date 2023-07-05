@@ -47,7 +47,7 @@ def housekeeping():
         "mongodb_index_creation": input("Check & create MongoDB indexes?\n(y|N): ")
     }
 
-    data_db = MongoClient( )[ ds_id ]
+    data_db = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))[ ds_id ]
 
     #>------------------------- callsets -------------------------------------<#
 
@@ -94,7 +94,7 @@ def housekeeping():
 
         b_info = __dataset_update_counts(byc)
 
-        info_coll = MongoClient( )[ i_db ][ i_coll ]
+        info_coll = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))[ i_db ][ i_coll ]
         info_coll.delete_many( { "date": b_info["date"] } ) #, upsert=True
         info_coll.insert_one( b_info ) #, upsert=True 
         print(f'==> updated entry {b_info["date"]} in {ds_id}.{i_coll}')
@@ -132,7 +132,7 @@ def __update_mongodb_indexes(ds_id, byc):
 
     dt_m = byc["datatable_mappings"]
     b_rt_s = byc["service_config"]["indexed_response_types"]
-    mongo_client = MongoClient( )
+    mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
     data_db = mongo_client[ds_id]
     coll_names = data_db.list_collection_names()
     for r_t, r_d in b_rt_s.items():
@@ -181,7 +181,7 @@ def __update_mongodb_indexes(ds_id, byc):
 def __dataset_update_counts(byc):
 
     b_info = { "date": date_isoformat(datetime.datetime.now()), "datasets": { } }
-    mongo_client = MongoClient( )
+    mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
 
     # this is independend of the dataset selected for the script & will update
     # for all in any run
