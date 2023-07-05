@@ -15,6 +15,7 @@ client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
 db=client['progenetix']
 TCGA_cancers=['TCGA.MESO','TCGA.GBM','TCGA.BLCA','TCGA.UVM']
 for cancer in TCGA_cancers:
+    # NOTE: better use format strings: str('pgx:'+cancer) => f'pgx:{cancer}'
     bis_records=db['biosamples'].aggregate([
         { '$match': {'$and':[{'cohorts.id':{'$regex':'TCGAcancer'}},{'external_references.id':str('pgx:'+cancer)}]}},
         { '$sample': { 'size': 100 } }

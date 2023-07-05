@@ -1,4 +1,4 @@
-response_types:
+indexed_response_types:
   biosample:
     collection: biosamples
   individual:
@@ -7,3 +7,42 @@ response_types:
     collection: variants
   analysis:
     collection: callsets
+
+indexed_special_collections:
+  collations:
+    id:
+      db_key: id
+    code:
+      db_key: code
+    child_terms:
+      db_key: child_terms
+    collation_type:
+      db_key: collation_type
+    scope:
+      db_key: scope
+    count:
+      db_key: count
+    code_matches:
+      db_key: code_matches
+
+  publications:
+    id:
+      db_key: id
+    pubmedid:
+      db_key: pubmedid
+    ccgh_count:
+      db_key: counts.ccgh
+    acgh_count:
+      db_key: counts.acgh
+    wes_count:
+      db_key: counts.wes
+    wgs_count:
+      db_key: counts.wgs
+    genomes_count:
+      db_key: counts.genomes
+    geoprov_city:
+      db_key: provenance.geo_location.properties.city
+    geoprov_country:
+      db_key: provenance.geo_location.properties.country
+    geoprov_iso_alpha3:
+      db_key: provenance.geo_location.properties.ISO3166alpha3

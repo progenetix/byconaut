@@ -54,11 +54,13 @@ def frequencymaps_creator():
     coll_ids = _filter_coll_ids(coll_coll, byc)    
     coll_no = len(coll_ids)
    
-    print("Writing {} {} fMaps for {} intervals".format(coll_no, ds_id, len(byc["genomic_intervals"])))
+    bar = Bar(f'{coll_no} {ds_id} fMaps for {byc["genomic_interval_count"]} intervals', max = coll_no, suffix='%(percent)d%%'+f' of {coll_no}' )
 
     coll_i = 0
 
     for c_id in coll_ids:
+
+        bar.next()
 
         coll = coll_coll.find_one({"_id":c_id})
 
@@ -90,8 +92,8 @@ def frequencymaps_creator():
 
         i_t = coll_i % 100
         start_time = time.time()
-        if i_t == 0 or cs_no > 1000:
-            print("{}: {} bios, {} cs\t{}/{}\t{:.1f}%".format(coll["id"], bios_no, cs_no, coll_i, coll_no, 100*coll_i/coll_no))
+        # if i_t == 0 or cs_no > 1000:
+        #     print("{}: {} bios, {} cs\t{}/{}\t{:.1f}%".format(coll["id"], bios_no, cs_no, coll_i, coll_no, 100*coll_i/coll_no))
 
         update_obj = {
             "id": coll["id"],
@@ -104,7 +106,7 @@ def frequencymaps_creator():
             "updated": date_isoformat(datetime.datetime.now()),
             "counts": {"biosamples": bios_no, "callsets": cs_no },
             "frequencymap": {
-                "interval_count": len(byc["genomic_intervals"]),
+                "interval_count": byc["genomic_interval_count"],
                 "binning": byc["genome_binning"],
                 "biosample_count": bios_no
             }
@@ -120,11 +122,11 @@ def frequencymaps_creator():
         coll_coll.update_one({"_id": c_id}, {"$set": {"cnv_analyses": cnv_cs_count}})
 
         proc_time = time.time() - start_time
-        if cs_no > 1000:
-            print(" => Processed in {:.2f}s: {:.4f}s per callset".format(proc_time, (proc_time/cs_no)))
+        # if cs_no > 1000:
+        #     print(" => Processed in {:.2f}s: {:.4f}s per callset".format(proc_time, (proc_time/cs_no)))
 
         if not byc["test_mode"]:
-            print("Updating {}...".format(coll["id"]))
+            # print("Updating {}...".format(coll["id"]))
             fm_coll.delete_one( { "id": coll["id"] } )
             fm_coll.insert_one( update_obj )
 
@@ -148,10 +150,12 @@ def frequencymaps_creator():
                         "analysis_count": cnv_cs_count
                     })
 
-                    print("{}: {} exact of {} total code matches".format(coll["id"], cs_no_cm, cs_no))
+                    # print("{}: {} exact of {} total code matches".format(coll["id"], cs_no_cm, cs_no))
 
                     if not byc["test_mode"]:
                         fm_coll.update_one( { "id": coll["id"] }, { '$set': cm_obj }, upsert=False )
+
+    bar.finish()
 
 ################################################################################
 
@@ -200,7 +204,7 @@ def _cs_cursor_from_bios_query(bios_coll, ind_coll, cs_coll, coll_id, scope, que
     bios_no = len(bios_ids)
     
     if pre_b > bios_no:
-        print("WARNING: {} samples for {}, while {} after excluding normals by EFO:0009654".format(pre_b, coll_id, bios_no))
+        print(f'\nWARNING: {pre_b} samples for {coll_id}, while {bios_no} after excluding normals by EFO:0009654')
        
     cs_query = { "biosample_id": { "$in": bios_ids } , "variant_class": { "$ne": "SNV" } }
     cs_cursor = cs_coll.find(cs_query)

@@ -17,11 +17,11 @@ bin/ISCNsegmenter.py -i imports/progenetix-from-filemaker-ISCN-samples-cCGH.tsv 
 
 def main():
 
-	ISCNsegmenter()
+	iscn_segmenter()
 
 ################################################################################
 
-def ISCNsegmenter():
+def iscn_segmenter():
 
 	initialize_bycon_service(byc)
 	set_processing_modes(byc)
