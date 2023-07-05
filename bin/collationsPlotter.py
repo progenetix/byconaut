@@ -24,7 +24,7 @@ def collations_plotter():
 
     initialize_bycon_service(byc)
     select_dataset_ids(byc)
-    parse_variant_parameters(byc)
+    parse_variants(byc)
     generate_genomic_mappings(byc)
 
     p_d_p = byc["plot_defaults"]["parameters"]

@@ -28,7 +28,7 @@ def main():
 def housekeeping():
 
     initialize_bycon_service(byc)
-    parse_variant_parameters(byc)
+    # parse_variants(byc)
 
     select_dataset_ids(byc)
     if len(byc["dataset_ids"]) != 1:

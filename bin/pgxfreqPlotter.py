@@ -21,7 +21,7 @@ def main():
 def pgxfreq_plotter():
 
     initialize_bycon_service(byc)
-    parse_variant_parameters(byc)
+    parse_variants(byc)
     generate_genomic_mappings(byc)
 
     if not byc["args"].inputfile:

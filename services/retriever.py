@@ -44,7 +44,7 @@ def retriever():
     
     initialize_bycon_service(byc, "aggregator")
     parse_filters(byc)
-    parse_variant_parameters(byc)
+    parse_variants(byc)
     generate_genomic_mappings(byc)
     create_empty_service_response(byc)    
 
