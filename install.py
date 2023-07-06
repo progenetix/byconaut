@@ -63,21 +63,35 @@ def install_services(no_sudo):
             exit()
 
     b_s_d_p = path.join( *install["bycon_source_dir"] )
+    # in case this is a standard path w/ a username ...
     b_s_d_p = re.sub("__USERNAME__", getlogin(), b_s_d_p)
     b_i_d_p = path.join( *install["bycon_install_dir"] )
     w_t_d_p = path.join( *install["bycon_instance_pars"]["server_tmp_dir_loc"] )
+    s_s_d = path.join(dir_path, "services", "")
+    s_i_d = path.join(b_i_d_p, "services", "")
+    s_c_d = path.join(dir_path, "local", "")
 
     for s_p in [b_i_d_p, w_t_d_p]:
         if not path.isdir(s_p):
             print("¡¡¡ {} does not exist - please check & create !!!".format(s_p))
             exit()
     
-    system(f'{sudo_cmd} rsync -avh {dir_path}/services/ {b_i_d_p}/services/')
-    system(f'{sudo_cmd} rsync -avh {b_s_d_p}/local/ {dir_path}/local/')
-    system(f'{sudo_cmd} rsync -avh {dir_path}/local/ {b_i_d_p}/services/local/')
+    # pulling local definition from the bycon dir into the local definitions
+    # source; this might be commented to avoid clashes
+    # ¡¡¡ Do not use `--delete` here to keep configs which do not exist in `bycon`
+    system(f'{sudo_cmd} rsync -avh {path.join(b_s_d_p, "local", "")} {s_c_d}')
 
-    system(f'{sudo_cmd} chown -R {s_u}:{s_g} {b_i_d_p}')
-    system(f'{sudo_cmd} chmod 775 {b_i_d_p}/services/*.py')
+    # adding the local configs to the directories with the exacutables
+    for bin_dir in ["bin", "services"]:
+        system(f'{sudo_cmd} rsync -avh {s_c_d} {path.join(dir_path, bin_dir, "local", "")}')
+
+    # copying the services dir to the server cgi directory
+    system(f'{sudo_cmd} rsync -avh {s_s_d} {s_i_d}')
+    system(f'{sudo_cmd} chown -R {s_u}:{s_g} {s_i_d}')
+    system(f'{sudo_cmd} chmod 775 {s_i_d}*.py')
+
+    # making sure the tmp dir has the right permissions (existence checked above)
+    system(f'{sudo_cmd} chmod -R 1777 {w_t_d_p}')
 
 ################################################################################
 ################################################################################
