@@ -34,6 +34,8 @@ defaults:
 # framework or from beacon_entry_types and might be disentangled further on ...
 ################################################################################
 
+#  => snake_casing
+
 entity_defaults:
 
   info:
@@ -159,7 +161,7 @@ entity_defaults:
 
   ##############################################################################
 
-  genomicVariations:
+  genomic_variations:
     request_entity_path_id: genomicVariations
     response_entity_id: genomicVariant
 
