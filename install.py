@@ -2,8 +2,8 @@
 
 # version: 2023-06-22
 
-import sys, re, ruamel.yaml
-from os import getlogin, path, system
+import sys, re, ruamel.yaml, getpass
+from os import path, system
 
 dir_path = path.dirname( path.abspath(__file__) )
 
@@ -64,7 +64,7 @@ def install_services(no_sudo):
 
     b_s_d_p = path.join( *install["bycon_source_dir"] )
     # in case this is a standard path w/ a username ...
-    b_s_d_p = re.sub("__USERNAME__", getlogin(), b_s_d_p)
+    b_s_d_p = re.sub("__USERNAME__", getpass.getuser(), b_s_d_p)
     b_i_d_p = path.join( *install["bycon_install_dir"] )
     w_t_d_p = path.join( *install["bycon_instance_pars"]["server_tmp_dir_loc"] )
     s_s_d = path.join(dir_path, "services", "")
