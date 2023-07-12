@@ -65,6 +65,7 @@ def install_services(no_sudo):
     b_s_d_p = path.join( *install["bycon_source_dir"] )
     # in case this is a standard path w/ a username ...
     b_s_d_p = re.sub("__USERNAME__", getpass.getuser(), b_s_d_p)
+
     b_i_d_p = path.join( *install["bycon_install_dir"] )
     w_t_d_p = path.join( *install["bycon_instance_pars"]["server_tmp_dir_loc"] )
     s_s_d = path.join(dir_path, "services", "")
