@@ -6,6 +6,10 @@ from os import environ, pardir, path, scandir
 import sys, datetime
 from humps import camelize
 
+# dir_path = path.dirname( path.abspath(__file__) )
+# pkg_path = path.join( dir_path, pardir )
+# sys.path.append( path.join( pkg_path, pardir ) )
+
 from bycon import *
 
 """podmd
@@ -33,8 +37,8 @@ def schemas():
         "request_path_root": "services",
         "request_entity_path_id": "schemas"
     })
-    
-    initialize_bycon_service(byc)
+   
+    initialize_bycon_service(byc, "schemas")
     create_empty_service_response(byc)
 
     if "id" in byc["form_data"]:

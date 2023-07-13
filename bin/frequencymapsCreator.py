@@ -118,7 +118,6 @@ def frequencymaps_creator():
             "analysis_count": cnv_cs_count
         })
 
-        # print("...updating {}-{} {}: {}".format(ds_id, byc["config"]["collations_coll"], c_id, cnv_cs_count))
         coll_coll.update_one({"_id": c_id}, {"$set": {"cnv_analyses": cnv_cs_count}})
 
         proc_time = time.time() - start_time

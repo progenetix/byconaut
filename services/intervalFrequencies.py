@@ -61,9 +61,6 @@ def interval_frequencies():
     cgi_break_on_errors(byc)
 
     # data retrieval & response population
-    f_coll_name = byc["config"]["frequencymaps_coll"]
-    c_coll_name = byc["config"]["collations_coll"]
-
     fmap_name = "frequencymap"
     if "codematches" in byc["method"]:
         fmap_name = "frequencymap_codematches"
@@ -77,8 +74,8 @@ def interval_frequencies():
 
             f_val = f["id"]
  
-            collation_f = mongo_client[ ds_id ][ f_coll_name ].find_one( { "id": f_val } )
-            collation_c = mongo_client[ ds_id ][ c_coll_name ].find_one( { "id": f_val } )
+            collation_f = mongo_client[ ds_id ][ "frequencymaps" ].find_one( { "id": f_val } )
+            collation_c = mongo_client[ ds_id ][ "collations" ].find_one( { "id": f_val } )
 
             if collation_f is None:
                 continue
@@ -92,9 +89,9 @@ def interval_frequencies():
                 continue
 
             if not collation_f:
-                response_add_error(byc, 422, "No collation {} was found in {}.{}".format(f_val, ds_id, f_coll_name))
+                response_add_error(byc, 422, "No collation {} was found in {}.frquencymaps".format(f_val, ds_id))
             if not collation_c:
-                response_add_error(byc, 422, "No collation {} was found in {}.{}".format(f_val, ds_id, c_coll_name))
+                response_add_error(byc, 422, "No collation {} was found in {}.collations".format(f_val, ds_id))
             cgi_break_on_errors(byc)
 
             s_c = collation_c["count"]

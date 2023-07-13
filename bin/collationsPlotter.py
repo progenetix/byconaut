@@ -59,9 +59,6 @@ def collations_plotter():
         print("Please indicate one or more collation ids using `--filters`")
 
     # data retrieval & response population
-    f_coll_name = byc["config"]["frequencymaps_coll"]
-    c_coll_name = byc["config"]["collations_coll"]
-
     fmap_name = "frequencymap"
     if "codematches" in byc["method"]:
         fmap_name = "frequencymap_codematches"
@@ -72,8 +69,8 @@ def collations_plotter():
 
         for f_val in coll_ids:
  
-            collation_f = mongo_client[ ds_id ][ f_coll_name ].find_one( { "id": f_val } )
-            collation_c = mongo_client[ ds_id ][ c_coll_name ].find_one( { "id": f_val } )
+            collation_f = mongo_client[ ds_id ][ "frequencymaps" ].find_one( { "id": f_val } )
+            collation_c = mongo_client[ ds_id ][ "collations" ].find_one( { "id": f_val } )
 
             if collation_f is None:
                 continue
@@ -87,9 +84,9 @@ def collations_plotter():
                 continue
 
             if not collation_f:
-                print("No collation {} was found in {}.{}".format(f_val, ds_id, f_coll_name))
+                print("No collation {} was found in {}.frquencymaps".format(f_val, ds_id))
             if not collation_c:
-                print("No collation {} was found in {}.{}".format(f_val, ds_id, c_coll_name))
+                print("No collation {} was found in {}.collations".format(f_val, ds_id))
 
             s_c = collation_c["count"]
             if "analysis_count" in collation_f[ fmap_name ]:
