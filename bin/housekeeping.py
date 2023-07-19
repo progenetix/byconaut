@@ -90,17 +90,18 @@ def housekeeping():
 
     if "y" in todos.get("datasets_counts", "n").lower():
 
-        i_db = byc[ "config" ][ "services_db" ]
+        i_db = byc[ "config" ][ "housekeeping_db" ]
         i_coll = byc[ "config" ][ "beacon_info_coll"]
 
-        print(f'\n{__hl()}==> Updating dataset statistics in "{ds_id}.{i_coll}"')
+        print(f'\n{__hl()}==> Updating dataset statistics in "{i_db}.{i_coll}"')
 
         b_info = __dataset_update_counts(byc)
 
         info_coll = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))[ i_db ][ i_coll ]
         info_coll.delete_many( { "date": b_info["date"] } ) #, upsert=True
         info_coll.insert_one( b_info ) #, upsert=True 
-        print(f'\n{__hl()}==> updated entry {b_info["date"]} in {ds_id}.{i_coll}')
+
+        print(f'\n{__hl()}==> updated entry {b_info["date"]} in {i_db}.{i_coll}')
 
     #>--------------------- / info db update ---------------------------------<#
 

@@ -65,7 +65,7 @@ def collations_creator():
             hier =  _get_dummy_hierarchy( ds_id, coll_type, coll_defs, byc )
 
         coll_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
-        coll_coll = coll_client[ ds_id ][ byc["config"]["collations_coll"] ]
+        coll_coll = coll_client[ ds_id ]["collations"]
 
         data_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
         data_db = data_client[ ds_id ]
@@ -161,7 +161,7 @@ def collations_creator():
                 coll_coll.delete_many( { "collation_type": coll_type } )
                 coll_coll.insert_many( sel_hiers )
 
-        print("===> Found {} of {} {} codes & added them to {}.{} <===".format(matched, no, coll_type, ds_id, byc["config"]["collations_coll"]))
+        print("===> Found {} of {} {} codes & added them to {}.collations <===".format(matched, no, coll_type, ds_id))
        
 ################################################################################
 
@@ -274,7 +274,7 @@ def _make_dummy_publication_hierarchy(byc):
 
     coll_type = "PMID"
     coll_defs = byc["filter_definitions"][coll_type]
-    data_db = byc["config"]["services_db"]
+    data_db = "publications"
     data_coll = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))[ data_db ][ "publications" ]
     query = { "id": { "$regex": coll_defs["pattern"] } }
 

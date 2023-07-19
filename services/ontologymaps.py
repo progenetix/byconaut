@@ -61,7 +61,7 @@ def ontologymaps():
     c_g = [ ]
     u_c_d = { }
     mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
-    mongo_coll = mongo_client[ byc["config"]["services_db"] ][ byc["ontologymaps_coll"] ]
+    mongo_coll = mongo_client["progenetix"]["ontologymaps"]
     for o in mongo_coll.find( query, { '_id': False } ):
         for c in o["code_group"]:
             pre, code = re.split("[:-]", c["id"], maxsplit=1)

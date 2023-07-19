@@ -4,7 +4,6 @@ import cgi
 import re, json
 from os import path, pardir, environ
 import sys
-from pymongo import MongoClient
 
 from bycon import *
 

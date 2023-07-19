@@ -55,8 +55,7 @@ def publications():
     cgi_break_on_errors(byc)
 
     mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
-    pub_db = byc["config"]["services_db"]
-    pub_coll = mongo_client[ pub_db ][ "publications" ]
+    pub_coll = mongo_client[ "progenetix" ][ "publications" ]
 
     p_re = re.compile( byc["filter_definitions"]["PMID"]["pattern"] )
 

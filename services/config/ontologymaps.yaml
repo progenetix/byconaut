@@ -1,7 +1,6 @@
 defaults:
   query_field: "code_group.id"
   response_entity_id: ontologymap
-  ontologymaps_coll: ontologymaps
 meta:
   returned_schemas:
     - entity_type: ontologyclassgroup
