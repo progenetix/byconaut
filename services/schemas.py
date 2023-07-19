@@ -51,7 +51,7 @@ def schemas():
         comps = schema_name.split('.')
         schema_name = comps.pop(0)
 
-        s = read_schema_file(schema_name, "", byc)
+        s = read_schema_file(byc, schema_name, "")
         if s is not False:
 
             print('Content-Type: application/json')
