@@ -46,6 +46,8 @@ def callsets_refresher():
     # re-doing the interval generation for non-standard CNV binning
     genome_binning_from_args(byc)
     generate_genomic_mappings(byc)
+    #generate_genomic_intervals(byc)
+
         
     print("=> Using data values from {}".format(ds_id))
 

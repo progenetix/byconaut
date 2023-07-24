@@ -100,6 +100,7 @@ def housekeeping():
         info_coll = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))[ i_db ][ i_coll ]
         info_coll.delete_many( { "date": b_info["date"] } ) #, upsert=True
         info_coll.insert_one( b_info ) #, upsert=True 
+
         print(f'\n{__hl()}==> updated entry {b_info["date"]} in {i_db}.{i_coll}')
 
     #>--------------------- / info db update ---------------------------------<#
@@ -123,7 +124,7 @@ def housekeeping():
     #>-------------------- MongoDB index updates -----------------------------<#
 
     if "y" in todos.get("mongodb_index_creation", "n").lower():
-        print(f'\n{__hl()}==> executing "{dir_path}/frequencymapsCreator.py -d {ds_id}"')
+        print(f'\n{__hl()}==> updating indexes for {ds_id}"')
         mongodb_update_indexes(ds_id, byc)
 
     #>------------------- / MongoDB index updates ----------------------------<#

@@ -113,7 +113,7 @@ def variantsInserter():
             "individual_id": v.get("individual_id", re.sub("pgxbs-", "pgxind-", bs_id))
         })
 
-        insert_v = import_datatable_dict_line(byc, insert_v, variants.fieldnames, v, "variant")
+        insert_v = import_datatable_dict_line(byc, insert_v, variants.fieldnames, v, "genomicVariant")
         insert_v, errors = normalize_pgx_variant(insert_v, byc, c)
         if len(errors) > 0:
             print("\n".join(errors))
