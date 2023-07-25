@@ -9,6 +9,11 @@ from operator import itemgetter
 
 from bycon import *
 
+services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
+sys.path.append( services_lib_path )
+
+from geomap_utils import *
+
 """podmd
 
 podmd"""

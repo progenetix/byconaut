@@ -115,7 +115,7 @@ def publications_inserter():
 
             try:
                 if len(pub["PROVENANCE_ID"]) > 4:
-                    geo_info = mongo_client["progenetix"]["geolocs"].find_one({"id": pub["PROVENANCE_ID"]}, {"_id": 0, "id": 0})
+                    geo_info = mongo_client["_byconServicesDB"]["geolocs"].find_one({"id": pub["PROVENANCE_ID"]}, {"_id": 0, "id": 0})
                     if geo_info is not None:
                         n_p["provenance"].update({"geo_location":geo_info["geo_location"]})
             except KeyError:

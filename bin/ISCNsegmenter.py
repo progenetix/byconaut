@@ -95,9 +95,11 @@ Output will be written to {}""".format(outputfile) )
 
 		if len(variants) > 0:
 			s_w_v_no += 1
+
+			v_instances = list(sorted(variants, key=lambda x: (f'{x["reference_name"].replace("X", "XX").replace("Y", "YY").zfill(2)}', x['start'])))
 		
-			for v in variants:
-				pgxseg.write(pgxseg_variant_line(v, byc)+"\n")
+			for v in v_instances:
+				pgxseg.write(pgxseg_variant_line(v)+"\n")
 
 	print("=> {} samples had variants".format(s_w_v_no))
 	print("Wrote to {}".format(outputfile))

@@ -3,7 +3,7 @@ indexed_response_types:
     collection: biosamples
   individual:
     collection: individuals
-  variant:
+  genomicVariant:
     collection: variants
   analysis:
     collection: callsets
@@ -30,7 +30,29 @@ indexed_special_collections:
 
 indexed_special_dbs:
 
+  cellz:
+
+    biosamples:
+      location:
+        db_key: provenance.geo_location.geometry
+        type: 2dsphere
+    individuals:
+      location:
+        db_key: provenance.geo_location.geometry
+        type: 2dsphere
+
+
   progenetix:
+
+    biosamples:
+      location:
+        db_key: provenance.geo_location.geometry
+        type: 2dsphere
+    individuals:
+      location:
+        db_key: provenance.geo_location.geometry
+        type: 2dsphere
+
     publications:
       id:
         db_key: id
@@ -52,6 +74,10 @@ indexed_special_dbs:
         db_key: provenance.geo_location.properties.country
       geoprov_iso_alpha3:
         db_key: provenance.geo_location.properties.ISO3166alpha3
+      location:
+        db_key: provenance.geo_location.geometry
+        type: 2dsphere
+
 
     ontologymaps:
       id:
@@ -81,6 +107,21 @@ indexed_special_dbs:
         db_key: start
       end:
         db_key: end
+
+    geolocs:
+      id:
+        db_key: id
+      geoprov_city:
+        db_key: geo_location.properties.city
+      geoprov_country:
+        db_key: geo_location.properties.country
+      geoprov_iso_alpha3:
+        db_key: geo_location.properties.ISO3166alpha3
+      location:
+        db_key: geo_location.geometry
+        type: 2dsphere
+
+
 
 
 

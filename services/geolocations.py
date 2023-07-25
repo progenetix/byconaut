@@ -8,6 +8,11 @@ from pymongo import MongoClient
 
 from bycon import *
 
+services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
+sys.path.append( services_lib_path )
+
+from geomap_utils import *
+
 """podmd
 * <https://progenetix.org/services/geolocations?city=zurich>
 * <https://progenetix.org/services/geolocations?geoLongitude=8.55&geoLatitude=47.37&geoDistance=100000>

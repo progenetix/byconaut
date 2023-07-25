@@ -30,10 +30,12 @@ def mongodb_update_indexes(ds_id, byc):
             m = i_coll.create_index(k)
             print(m)
 
-        if "geoprov_lat" in io_params.keys():
-            k = re.sub("properties.latitude", "geometry", io_params["geoprov_lat"]["db_key"])
-            m = i_coll.create_index([(k, GEOSPHERE)])
-            print(m)
+        # TODO: 
+
+        # if "geoprov_lat" in io_params.keys():
+        #     k = re.sub("properties.latitude", "geometry", io_params["geoprov_lat"]["db_key"])
+        #     m = i_coll.create_index([(k, GEOSPHERE)])
+        #     print(m)
 
     #<------------------------ special collections --------------------------->#
 
@@ -60,13 +62,19 @@ def __index_by_colldef(ds_id, coll_defs):
         i_coll = i_db[ collname ]
 
         for p_k, p_v in io_params.items():
+            special = p_v.get("type", "___none___")
             k = p_v["db_key"]
-            print(f'Creating index "{k}" in {collname} from {ds_id}')
-            try:
-                m = i_coll.create_index(k)
-                print(m)
-            except Exception:
-                print(f'¡¡¡ Index "{k}" in {collname} from {ds_id} has one with same id !!!')
+            if "2dsphere" in special:
+                print(f'Creating GEOSPHERE index "{k}" in {collname} from {ds_id}')
+                i_coll.create_index([(k, GEOSPHERE)])
+                pass
+            else:
+                print(f'Creating index "{k}" in {collname} from {ds_id}')
+                try:
+                    m = i_coll.create_index(k)
+                    print(m)
+                except Exception:
+                    print(f'¡¡¡ Index "{k}" in {collname} from {ds_id} has one with same id !!!')
 
 
 
