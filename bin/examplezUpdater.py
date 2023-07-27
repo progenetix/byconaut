@@ -167,13 +167,15 @@ def examplez_updater():
 
     ############################################################################
 
-    rsrc_dir = path.join( pkg_path, "rsrc" )
-    mongo_dir = Path( path.join( rsrc_dir, "mongodump" ) )
-    e_ds_dir = Path( path.join( mongo_dir, e_ds_id ) )
-    e_ds_archive = f'{e_ds_id}.tar.gz'
-    system(f'rm -rf {e_ds_dir}')
-    system(f'mongodump --db {e_ds_id} --out {mongo_dir}')
-    system(f'cd {mongo_dir} && tar -czf {e_ds_archive} {e_ds_id} && rm -rf {e_ds_id}')
+    for db in (e_ds_id, "_byconServicesDB"):
+
+        rsrc_dir = path.join( pkg_path, "rsrc" )
+        mongo_dir = Path( path.join( rsrc_dir, "mongodump" ) )
+        e_ds_dir = Path( path.join( mongo_dir, db ) )
+        e_ds_archive = f'{db}.tar.gz'
+        system(f'rm -rf {db}')
+        system(f'mongodump --db {db} --out {mongo_dir}')
+        system(f'cd {mongo_dir} && tar -czf {e_ds_archive} {db} && rm -rf {db}')
 
 ################################################################################
 ################################################################################

@@ -5,7 +5,7 @@ id_queryscope_mappings:
   callset_ids: callsets
   analysis_ids: callsets
   individual_ids: individuals
-  genomicVariant_ids: genomicVariations
+  # genomicVariant_ids: genomicVariations
 
 service_aliases:
 
