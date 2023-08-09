@@ -114,13 +114,13 @@ def variantsInserter():
         })
 
         insert_v = import_datatable_dict_line(byc, insert_v, variants.fieldnames, v, "genomicVariant")
-        insert_v, errors = normalize_pgx_variant(insert_v, byc, c)
+        insert_v, errors = __normalize_pgx_variant(insert_v, byc, c)
         if len(errors) > 0:
             print("\n".join(errors))
             print(f'==> exit at variant line {c}; last import from line {c-1} <==')
             exit()
         insert_v.update({
-            "variant_internal_id": variant_create_digest(insert_v, byc),
+            "variant_internal_id": __variant_create_digest(insert_v, byc),
             "updated": datetime.datetime.now().isoformat()
         })
 
@@ -138,6 +138,78 @@ def variantsInserter():
         print(f'==> inserted {up_v_no} variants for {len(bios_v_counts.keys())} samples')
     else:
         print(bios_v_counts)
+
+################################################################################
+
+def __variant_create_digest(v, byc):
+
+    # TODO: remove; it is part of ByconVariant
+
+    t = v["variant_state"]["id"]
+    t = re.sub(":", "_", t)
+
+    v_i = v["location"]
+    return f'{v_i["chromosome"]}:{v_i["start"]}-{v_i["end"]}:{t}'
+
+################################################################################
+
+def __normalize_pgx_variant(variant, byc, counter=1):
+    g_a = byc.get("genome_aliases", {})
+    r_a = g_a.get("refseq_aliases", {})
+    c_a = g_a.get("chro_aliases", {})
+    v_t_defs = byc["variant_type_definitions"]
+    errors = []
+
+    var_id = variant.get("id", counter)
+
+    seq_id = variant["location"].get("sequence_id")
+    chromosome = variant["location"].get("chromosome")
+    start = variant["location"].get("start")
+    end = variant["location"].get("end")
+    if not seq_id:
+        if chromosome:
+            variant["location"].update({"sequence_id": r_a.get(str(chromosome))})
+    if not chromosome:
+        if seq_id:
+            variant["location"].update({"chromosome": c_a.get(str(seq_id))})
+    if not isinstance(end, int):
+        try:
+            ref = variant.get("reference_sequence")
+            alt = variant.get("sequence")
+            v_l = len(ref) - len(alt)
+            end_pos = start + abs(v_l) + 1
+            # TODO: VRS would do a left-clipping -> start shift ...
+            variant["location"].update({"end": end_pos})
+        except:
+            pass
+
+    # TODO: Some fixes ...
+    if "-" in variant.get("sequence", "."):
+        variant["sequence"] = re.sub("-", "", variant["sequence"])
+    if "-" in variant.get("reference_sequence", "."):
+        variant["sequence"] = re.sub("-", "", variant["reference_sequence"])
+
+    var_state_id = variant["variant_state"].get("id")
+    variant_type = variant.get("variant_type")
+    if not var_state_id:
+        if variant_type:
+            variant.update({ "variant_state": variant_state_from_variant_par(variant_type, byc) })
+
+    try:
+        variant["variant_state"].update({"label": v_t_defs[var_state_id].get("label")})
+    except:
+        pass
+
+
+    for v_l_k in [ "sequence_id", "chromosome", "start", "end" ]:
+        if not variant["location"].get(v_l_k):
+            errors.append(f'¡¡¡ Parameter `location.{v_l_k}` undefined in variant {var_id} !!!')
+    for v_s_k in [ "id", "label" ]:
+        if not variant["variant_state"].get(v_s_k):
+            errors.append(f'¡¡¡ Parameter `variant_state.{v_s_k}` undefined in variant {var_id} !!!')
+
+    return variant, errors
+
 
 ################################################################################
 ################################################################################

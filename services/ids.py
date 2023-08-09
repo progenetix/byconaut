@@ -37,7 +37,8 @@ def main():
 def ids():
 
     set_debug_state(debug=0)
-    read_local_prefs( "ids", dir_path, byc )
+    s_pref_dir = path.join(dir_path, "config")
+    read_service_prefs( "ids", s_pref_dir, byc )
 
     id_in = rest_path_value("ids")
     output = rest_path_value(id_in)

@@ -19,7 +19,6 @@ service_aliases:
   uploader: uploader
   variantsPlotter: variantsPlotter
 
-
 rewrites:
   # collationPlots: '/cgi/PGX/cgi/collationPlots.cgi'
   # samplePlots: '/cgi/PGX/cgi/samplePlots.cgi'

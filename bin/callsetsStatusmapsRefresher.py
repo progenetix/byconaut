@@ -44,10 +44,8 @@ def callsets_refresher():
     ds_id = byc["dataset_ids"][0]
 
     # re-doing the interval generation for non-standard CNV binning
-    genome_binning_from_args(byc)
+    # genome_binning_from_args(byc)
     generate_genomic_mappings(byc)
-    #generate_genomic_intervals(byc)
-
         
     print("=> Using data values from {}".format(ds_id))
 
@@ -118,9 +116,9 @@ def callsets_refresher():
 
     bar.finish()
 
-    print("{} callsets were processed".format(counter))
-    print("{} callsets were not from CNV calling".format(no_cnv_type))
-    print("{} callsets were updated for\n    `cnv_statusmaps`\n    `cnv_stats`\n    `cnv_chro_stats`\nusing {} bins ({})".format(updated, len(byc["genomic_intervals"]), byc["genome_binning"]))
+    print(f"{counter} callsets were processed")
+    print(f"{no_cnv_type} callsets were not from CNV calling")
+    print(f'{updated} callsets were updated for\n    `cnv_statusmaps`\n    `cnv_stats`\n    `cnv_chro_stats`\nusing {byc["genomic_interval_count"]} bins ({byc["interval_definitions"].get("genome_binning", "")})')
 
 ################################################################################
 ################################################################################

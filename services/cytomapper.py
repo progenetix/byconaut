@@ -41,12 +41,12 @@ def cytomapper():
     r_a = g_a.get("refseq_aliases", {})
 
     cytoBands = [ ]
-    if "cyto_bands" in byc["variant_pars"]:
-        cytoBands, chro, start, end, error = bands_from_cytobands(byc["variant_pars"]["cyto_bands"], byc)
-        byc["service_response"]["meta"]["received_request_summary"].update({ "cytoBands": byc["variant_pars"]["cyto_bands"] })
-    elif "chro_bases" in byc["variant_pars"]:
-        cytoBands, chro, start, end = bands_from_chrobases(byc["variant_pars"]["chro_bases"], byc)
-        byc["service_response"]["meta"]["received_request_summary"].update({ "chroBases": byc["variant_pars"]["chro_bases"] })
+    if "cyto_bands" in byc["varguments"]:
+        cytoBands, chro, start, end, error = bands_from_cytobands(byc["varguments"]["cyto_bands"], byc)
+        byc["service_response"]["meta"]["received_request_summary"].update({ "cytoBands": byc["varguments"]["cyto_bands"] })
+    elif "chro_bases" in byc["varguments"]:
+        cytoBands, chro, start, end = bands_from_chrobases(byc["varguments"]["chro_bases"], byc)
+        byc["service_response"]["meta"]["received_request_summary"].update({ "chroBases": byc["varguments"]["chro_bases"] })
 
     cb_label = cytobands_label( cytoBands )
 

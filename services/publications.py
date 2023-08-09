@@ -193,7 +193,10 @@ def _create_filters_query( byc ):
         else:
             q_list.append( { "id": f_val } )
 
-    query = create_and_or_query_for_list('$and', q_list)
+    if len(q_list) > 1:
+        query = { '$and': q_list }
+    else:
+        query = q_list[0]
 
     return query, error
 
