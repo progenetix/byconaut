@@ -1,4 +1,3 @@
-collection_name: collations
 defaults:
   method: counts
   response_entity_id: collation

@@ -58,7 +58,7 @@ def genespans():
 
     received_request_summary_add_custom_parameter(byc, "geneId", gene_id)
 
-    results, e = retrieve_gene_id_coordinates(gene_id, byc)
+    results, e = retrieve_gene_id_coordinates(gene_id, byc["filter_flags"].get("precision", "start"), byc)
     response_add_error(byc, 422, e )
     cgi_break_on_errors(byc)
 

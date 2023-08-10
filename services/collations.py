@@ -37,8 +37,6 @@ def collations():
     # data retrieval & response population
     d_k = collations_set_delivery_keys(byc)
 
-    c = byc["service_config"]["collection_name"]
-
     ##################################
 
     # this is all just a bit complex since a multi-dataset response is taken care of...
@@ -46,8 +44,7 @@ def collations():
 
     mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
     for ds_id in byc[ "dataset_ids" ]:
-        mongo_db = mongo_client[ ds_id ]        
-        mongo_coll = mongo_db[ c ]
+        mongo_coll = mongo_client[ ds_id ][ "collations" ]
         for collation in mongo_coll.find( byc["queries"], { "_id": 0 } ):
 
             if "codematches" in byc["method"]:

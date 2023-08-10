@@ -10,9 +10,11 @@ from bycon import *
 
 """podmd
 
-* https://progenetix.org/services/intervalFrequencies/?datasetIds=progenetix&filters=NCIT:C7376,PMID:22824167
+* https://progenetix.org/services/intervalFrequencies/?datasetIds=progenetix&filters=NCIT:C7376,PMID:22824167,pgx:icdom-85003
+* https://progenetix.org/services/intervalFrequencies/?datasetIds=progenetix&filters=NCIT:C7376,PMID:22824167&output=histoplot
 * https://progenetix.org/services/intervalFrequencies/?datasetIds=progenetix&id=pgxcohort-TCGAcancers
 * https://progenetix.org/cgi/bycon/services/intervalFrequencies.py/?output=pgxseg&datasetIds=progenetix&filters=NCIT:C7376
+* http://progenetix.org/services/intervalFrequencies/?datasetIds=progenetix&filters=NCIT&filterPrecision=start&withSamples=20&collationTypes=NCIT&output=histoplot&plot_area_height=20&plot_labelcol_font_size=6&plot_axislab_y_width=2&plot_label_y_values=0&plot_axis_y_max=80&plot_region_gap_width=1&debug=
 
 podmd"""
 
@@ -50,6 +52,7 @@ def interval_frequencies():
     cgi_break_on_errors(byc)
 
     id_rest = rest_path_value("intervalFrequencies")
+    ff = byc.get("filter_flags", {})
 
     if id_rest is not None:
         byc[ "filters" ] = [ {"id": id_rest } ]
@@ -66,47 +69,75 @@ def interval_frequencies():
         fmap_name = "frequencymap_codematches"
 
     results = [ ]
-
     mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
+
+    include_f = [x for x in byc.get("filters", []) if not "!" in x["id"]]
+    # exclude filters are for exact matches
+    exclude_f = [re.sub("!", "", x["id"]) for x in byc.get("filters", []) if "!" in x["id"]]
+
     for ds_id in byc[ "dataset_ids" ]:
-
-        for f in byc[ "filters" ]:
-
+        coll_db = mongo_client[ ds_id ]
+        for f in include_f:
             f_val = f["id"]
+
+            if "start" in ff.get("precision", "exact"):
+                f_q = { "id":{'$regex': f'^{f_val}' } }
+            else:
+                f_q = { "id": f_val }
+
+            coll_ids = coll_db[ "frequencymaps" ].distinct("id", f_q)
+
+            for c_id in coll_ids:
+
+                if c_id in exclude_f:
+                    continue
  
-            collation_f = mongo_client[ ds_id ][ "frequencymaps" ].find_one( { "id": f_val } )
-            collation_c = mongo_client[ ds_id ][ "collations" ].find_one( { "id": f_val } )
+                collation_f = coll_db[ "frequencymaps" ].find_one( { "id": c_id } )
+                collation_c = coll_db[ "collations" ].find_one( { "id": c_id } )
 
-            if collation_f is None:
-                continue
+                if not collation_f:
+                    continue
+                if not collation_c:
+                    continue
 
-            if "with_samples" in byc["form_data"]: 
-                if int(byc["form_data"]["with_samples"]) > 0:
-                    if int(collation_c[ "code_matches" ]) < 1:
+                s_cm = collation_c.get("code_matches", 0)
+                with_s = int(byc["form_data"].get("with_samples", 0))
+                if with_s > 0:
+                    if s_cm < with_s:
                         continue
 
-            if not fmap_name in collation_f:
-                continue
+                if not fmap_name in collation_f:
+                    continue
 
-            if not collation_f:
-                response_add_error(byc, 422, "No collation {} was found in {}.frquencymaps".format(f_val, ds_id))
-            if not collation_c:
-                response_add_error(byc, 422, "No collation {} was found in {}.collations".format(f_val, ds_id))
-            cgi_break_on_errors(byc)
+                # if not collation_f:
+                #     response_add_error(byc, 422, "No collation {} was found in {}.frquencymaps".format(c_id, ds_id))
+                # if not collation_c:
+                #     response_add_error(byc, 422, "No collation {} was found in {}.collations".format(c_id, ds_id))
+                # cgi_break_on_errors(byc)
 
-            s_c = collation_c["count"]
-            if "analysis_count" in collation_f[ fmap_name ]:
-               s_c = collation_f[ fmap_name ]["analysis_count"]
+                s_c = collation_c.get("count", 0)
+                min_no = int(byc["form_data"].get("min_number", 0))
+                if min_no > 0:
+                    if s_c < min_no:
+                        continue
 
-            i_d = collation_c["id"]
-            r_o = {
-                "dataset_id": ds_id,
-                "group_id": i_d,
-                "label": re.sub(r';', ',', collation_c["label"]),
-                "sample_count": s_c,
-                "interval_frequencies": collation_f[ fmap_name ]["intervals"] }
-                
-            results.append(r_o)
+                s_t = collation_c.get("collation_type", "___none___")
+                c_t_s = byc["form_data"].get("collation_types", [])
+                if len(c_t_s) > 0:
+                    if s_t not in c_t_s:
+                        continue
+
+                if "analysis_count" in collation_f[ fmap_name ]:
+                   s_c = collation_f[ fmap_name ]["analysis_count"]
+
+                r_o = {
+                    "dataset_id": ds_id,
+                    "group_id": c_id,
+                    "label": re.sub(r';', ',', collation_c["label"]),
+                    "sample_count": s_c,
+                    "interval_frequencies": collation_f[ fmap_name ]["intervals"] }
+                    
+                results.append(r_o)
 
     mongo_client.close( )
 
