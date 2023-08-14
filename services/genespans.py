@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 
-import cgi
 import re, json
-from os import path, pardir, environ
-import sys
+from os import environ
 
 from bycon import *
 
@@ -21,6 +19,9 @@ def main():
 ################################################################################
 
 def genespans():
+    """
+
+    """
 
     byc.update({
         "request_path_root": "services",
@@ -100,16 +101,13 @@ def _gene_add_cytobands(gene, byc):
     if acc not in c_a:
         return gene
 
-    start = gene.get("start", None)
-    end = gene.get("end", None)
-    if start is None or end is None:
+    chro = c_a.get( acc, "")
+    start = gene.get("start")
+    end = gene.get("end")
+    if not start or not end:
         return gene
 
-    chro = c_a.get( acc, "")
-    chro_bases = "{}:{}-{}".format(chro, gene.get("start", ""), gene.get("end", ""))
-    cytoBands, chro, start, end = bands_from_chrobases(chro_bases, byc)
-    cb_label = cytobands_label( cytoBands )
-    gene.update({"cytobands": "{}{}".format(chro, cb_label)})
+    gene.update({"cytobands": f'{chro}{cytobands_label_from_positions(byc, chro, start, end)}'})
 
     return gene
 
