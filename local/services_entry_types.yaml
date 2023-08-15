@@ -16,6 +16,15 @@ collation:
     schema: https://progenetix.org/services/schemas/pgxCollation/
   h->o_access_key: Null
 
+geolocation:
+  entity_type: geolocation
+  collection: Null
+  response_schema: progenetixServiceResponse
+  beacon_schema:
+    entity_type: geolocation
+    schema: https://progenetix.org/services/schemas/GeoLocation/
+  h->o_access_key: Null
+
 gene:
   entity_type: gene
   collection: Null
