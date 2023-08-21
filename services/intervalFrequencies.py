@@ -15,7 +15,7 @@ from bycon import *
 * https://progenetix.org/services/intervalFrequencies/?datasetIds=progenetix&id=pgxcohort-TCGAcancers
 * https://progenetix.org/cgi/bycon/services/intervalFrequencies.py/?output=pgxseg&datasetIds=progenetix&filters=NCIT:C7376
 * http://progenetix.org/services/intervalFrequencies/?datasetIds=progenetix&filters=NCIT&filterPrecision=start&withSamples=20&collationTypes=NCIT&output=histoplot&plot_area_height=20&plot_labelcol_font_size=6&plot_axislab_y_width=2&plot_label_y_values=0&plot_axis_y_max=80&plot_region_gap_width=1&debug=
-
+* http://progenetix.test/services/intervalFrequencies/?datasetIds=progenetix&filters=NCIT:C7376,PMID:22824167&output=histoheatplot
 podmd"""
 
 ################################################################################
@@ -48,6 +48,7 @@ def interval_frequencies():
     parse_filters(byc)
     parse_variants(byc)
     generate_genomic_mappings(byc)
+
     create_empty_service_response(byc)
     cgi_break_on_errors(byc)
 

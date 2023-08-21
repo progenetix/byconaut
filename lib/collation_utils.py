@@ -5,9 +5,9 @@ from progress.bar import Bar
 
 def set_collation_types(byc):
 
-    if byc["args"].collationtypes:
+    if byc["args"].collationTypes:
         s_p = {}
-        for p in re.split(",", byc["args"].collationtypes):
+        for p in re.split(",", byc["args"].collationTypes):
             if p in byc["filter_definitions"].keys():
                 if byc["filter_definitions"]["p"].get("collationed", True) is False:
                     continue

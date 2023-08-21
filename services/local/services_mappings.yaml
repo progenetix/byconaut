@@ -1,4 +1,6 @@
 service_aliases:
+
+  aggregator: aggregator
   endpoints: endpoints
   collations: collations
   cytomapper: cytomapper
@@ -19,16 +21,10 @@ service_aliases:
   uploader: uploader
   variantsPlotter: variantsPlotter
 
-rewrites:
-  # collationPlots: '/cgi/PGX/cgi/collationPlots.cgi'
-  # samplePlots: '/cgi/PGX/cgi/samplePlots.cgi'
-  biosamples: '/beacon/biosamples/'
-  variants: '/beacon/variants/'
-  individuals: '/beacon/individuals/'
-  phenopackets: '/beacon/phenopackets/'
+rewrites: {}
 
 #response_type_aliases:
-path_response_type_mappings:
+path_entry_type_mappings:
 
   ontologymaps: ontologymap
   ontologyMaps: ontologymap
@@ -36,3 +32,4 @@ path_response_type_mappings:
   genespans: gene
   intervalFrequencies: intervalFrequencies
   cytomapper: cytobandMapping
+  geolocations: geoLocation

@@ -42,11 +42,10 @@ def geolocations():
     })
     initialize_bycon_service(byc)
 
-    # for the geolocs database, not the provenance object
-    geo_root = "geo_location"
+    byc["geoloc_definitions"].update({"geo_root": "geo_location"})
+
     services_db = byc["config"].get("services_db")
     geo_coll = byc["config"].get("geolocs_coll")
-    byc["geoloc_definitions"].update({"geo_root":geo_root })
     
     r, e = instantiate_response_and_error(byc, byc["response_entity"]["response_schema"])
     byc.update({"service_response": r, "error_response": e})
@@ -57,7 +56,7 @@ def geolocations():
 
     else:
 
-        query, geo_pars = geo_query( byc )
+        query, geo_pars = geo_query(byc)
         for g_k, g_v in geo_pars.items():
             received_request_summary_add_custom_parameter(byc, g_k, g_v)
 

@@ -69,7 +69,7 @@ of ordered branches in the format `code | label | depth | order`.
 
 #### Examples
 
-* `bin/collationsCreator.py -d examplez --collationtypes "icdom,icdot"`
+* `bin/collationsCreator.py -d examplez --collationTypes "icdom,icdot"`
 * `bin/collationsCreator.py -d progenetix`
 
 ### `frequencymapsCreator` (CNV)
