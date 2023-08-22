@@ -34,7 +34,7 @@ def publications_inserter():
     skip_cols = byc["service_config"]["skipped_columns"]
 
     if byc["args"].inputfile:
-        pub_file = yc["args"].inputfile
+        pub_file = byc["args"].inputfile
     else:
         print("No inputfile file specified => pulling the online table ...")
         pub_file = path.join( pkg_root_path, "tmp", "pubtable.tsv" )

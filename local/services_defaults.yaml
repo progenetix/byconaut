@@ -1,28 +1,45 @@
-defaults:
+defaults: {}
 
-  dataset_ids:
-    - progenetix
-  request_path_root: services
-  request_entity_path_id: info
-  assembly_id: GRCh38
-  response_schema: beaconResultsetsResponse
-  include_resultset_responses: HIT
-  include_handovers: false
-  test_mode: false
-  test_mode_count: 5
-  requested_granularity: record
-  returned_granularity: record
-  pagination:
-    skip: 0
-    limit: 2000
-  response_entity:
-    entity_type: collations
-    collection: collations
-    response_schema: beaconCollectionsResponse
-    beacon_schema:
-      entity_type: collations
-      schema: https://progenetix.org/services/schemas/pgxCollation/
-    h->o_access_key: False
+################################################################################
+# mappings and aliases #########################################################
+################################################################################
+
+service_aliases:
+
+  aggregator: aggregator
+  endpoints: endpoints
+  collations: collations
+  cytomapper: cytomapper
+  dbstats: dbstats
+  deliveries: deliveries
+  genespans: genespans
+  genes: genespans
+  geolocs: geolocations
+  geolocations: geolocations
+  ids: ids
+  interval_frequencies: intervalFrequencies
+  intervalFrequencies: intervalFrequencies
+  ontologymaps: ontologymaps
+  ontologyMaps: ontologymaps
+  publications: publications
+  samplesPlotter: samplesPlotter
+  schemas: schemas
+  uploader: uploader
+  variantsPlotter: variantsPlotter
+
+rewrites: {}
+
+#response_type_aliases:
+path_entry_type_mappings:
+
+  ontologymaps: ontologymap
+  ontologyMaps: ontologymap
+  collations: collation
+  genespans: gene
+  intervalFrequencies: intervalFrequencies
+  cytomapper: cytobandMapping
+  geolocations: geoLocation
+
 
 ################################################################################
 # services entity defaults => snake_casing #####################################
@@ -31,20 +48,79 @@ defaults:
 entity_defaults:
 
   aggregator:
+    entity_type: genomicVariant
+    request_path_root: services
     request_entity_path_id: genomicVariations
-    response_entity_id: genomicVariant
+    collection: variants
     response_schema: beaconBooleanResponse
+    beacon_schema:
+      entity_type: genomicVariant
+      schema: https://progenetix.org/services/schemas/genomicVariant/
 
   ##############################################################################
 
-  cytomapper:
+  cytobandMapping:
+    entity_type: cytobandMapping
     request_path_root: services
+    request_entity_path_id: cytomapper
     response_entity_id: cytobandMapping
-    response_entity:
+    collection: Null
+    response_schema: beaconResultsetsResponse
+    beacon_schema:
       entity_type: cytobandMapping
-      response_schema: beaconResultsetsResponse
-      collection: Null
-      beacon_schema:
-        entity_type: cytobandMapping
-        schema: https://progenetix.org/services/schemas/cytobandMapping/
-      h->o_access_key: Null
+      schema: https://progenetix.org/services/schemas/cytobandMapping/
+ 
+  ##############################################################################
+
+  geoLocation:
+    entity_type: geoLocation
+    request_path_root: services
+    request_entity_path_id: geolocations
+    response_entity_id: geoLocation
+    collection: geolocs
+    response_schema: progenetixServiceResponse
+    beacon_schema:
+      entity_type: GeoLocation
+      schema: https://progenetix.org/services/schemas/GeoLocation/
+
+  ##############################################################################
+
+  gene:
+    entity_type: gene
+    request_path_root: services
+    request_entity_path_id: genespans
+    response_entity_id: gene
+    collection: genes
+    response_schema: progenetixServiceResponse
+    beacon_schema:
+      entity_type: gene
+      schema: https://progenetix.org/services/schemas/ProgenetixGene/
+
+  ##############################################################################
+
+  intervalFrequencies:
+    entity_type: intervalFrequencies
+    request_path_root: services
+    request_entity_path_id: intervalFrequencies
+    response_entity_id: intervalFrequencies
+    collection: collations
+    response_schema: progenetixServiceResponse
+    beacon_schema:
+      entity_type: intervalFrequencies
+      schema: https://progenetix.org/services/schemas/IntervalFrequencies/
+
+  ##############################################################################
+
+  publication:
+    entity_type: publication
+    request_path_root: services
+    request_entity_path_id: publications
+    response_entity_id: publication
+    collection: publications
+    response_schema: progenetixServiceResponse
+    beacon_schema:
+      entity_type: intervalFrequencies
+      schema: https://progenetix.org/services/schemas/Publication/
+
+
+

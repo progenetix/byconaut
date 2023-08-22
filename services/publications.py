@@ -101,7 +101,7 @@ def publications():
  
     results = sorted(p_l, key=itemgetter('sortid'), reverse = True)
 
-    check_map_response(byc, results)
+    __check_publications_map_response(byc, results)
 
     populate_service_response( byc, results)
     cgi_print_response( byc, 200 )
@@ -109,7 +109,7 @@ def publications():
 ################################################################################
 ################################################################################
 
-def check_map_response(byc, results):
+def __check_publications_map_response(byc, results):
 
     if not "map" in byc["output"]:
         return
@@ -117,8 +117,6 @@ def check_map_response(byc, results):
     u_locs = {}
 
     for p in results:
-        if not "provenance" in p:
-            pass
         if not "counts" in p:
             pass
 
@@ -150,6 +148,16 @@ def _create_filters_query( byc ):
 
     query = { }
     error = ""
+    f_d_s = byc[ "filter_definitions" ]
+
+    if byc.get("test_mode", False) is True:
+        test_mode_count = int(byc.get('test_mode_count', 5))
+        mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
+        data_coll = mongo_client[ "progenetix" ][ "publications" ]
+
+        rs = list(data_coll.aggregate([{"$sample": {"size": test_mode_count}}]))
+        query = {"_id": {"$in": list(s["_id"] for s in rs)}}
+        return query, error
 
     q_list = [ ]
     count_pat = re.compile( r'^(\w+?)\:([>=<])(\d+?)$' )
@@ -158,13 +166,18 @@ def _create_filters_query( byc ):
 
     for f in byc[ "filters" ]:
         f_val = f["id"]
+        if len(f_val) < 1:
+            continue
         pre_code = re.split('-|:', f_val)
         pre = pre_code[0]
+        if str(pre) not in f_d_s.keys():
+            continue
+
         dbk = byc[ "filter_definitions" ][ pre ][ "db_key" ]
 
         if count_pat.match( f_val ):
             pre, op, no = count_pat.match(f_val).group(1,2,3)
-            dbk = byc[ "filter_definitions" ][ pre ][ "db_key" ]
+            dbk = f_d_s[ pre ][ "db_key" ]
             if op == ">":
                 op = '$gt'
             elif op == "<":
@@ -181,11 +194,11 @@ def _create_filters_query( byc ):
             for the selection of PMID labeled publications.
             podmd"""
             q_list.append( { "id": re.compile(r'^'+f_val ) } )
-        elif pre in byc[ "filter_definitions" ].keys():
+        elif pre in f_d_s.keys():
             # TODO: hacky method for pgxuse => redo
             q_v = f_val
             try:
-                if byc[ "filter_definitions" ][ pre ][ "remove_prefix" ] is True:
+                if f_d_s[ pre ][ "remove_prefix" ] is True:
                     q_v = pre_code[1]
             except:
                 pass
@@ -195,6 +208,8 @@ def _create_filters_query( byc ):
 
     if len(q_list) > 1:
         query = { '$and': q_list }
+    elif len(q_list) < 1:
+        query = {}
     else:
         query = q_list[0]
 

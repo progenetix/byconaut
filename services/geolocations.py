@@ -42,10 +42,13 @@ def geolocations():
     })
     initialize_bycon_service(byc)
 
-    # for the geolocs database, not the provenance object
-    byc["geoloc_definitions"]["geo_root"] = "geo_location"
+    byc["geoloc_definitions"].update({"geo_root": "geo_location"})
+
+    services_db = byc["config"].get("services_db")
+    geo_coll = byc["config"].get("geolocs_coll")
     
-    create_empty_service_response(byc)
+    r, e = instantiate_response_and_error(byc, byc["response_entity"]["response_schema"])
+    byc.update({"service_response": r, "error_response": e})
 
     # TODO: move the map table reading to a sane place 
     if "file" in byc["form_data"]:
@@ -53,7 +56,7 @@ def geolocations():
 
     else:
 
-        query, geo_pars = geo_query( byc )
+        query, geo_pars = geo_query(byc)
         for g_k, g_v in geo_pars.items():
             received_request_summary_add_custom_parameter(byc, g_k, g_v)
 
@@ -62,7 +65,7 @@ def geolocations():
         
         cgi_break_on_errors(byc)
 
-        results, e = mongo_result_list( byc["dataset_ids"][0], byc["geo_coll"], query, { '_id': False } )
+        results, e = mongo_result_list( services_db, geo_coll, query, { '_id': False } )
         response_add_error(byc, 422, e)
 
     print_map_from_geolocations(byc, results)
@@ -75,8 +78,8 @@ def geolocations():
                 "geo_latitude": l_l[1],
                 "geo_distance": int(byc["form_data"]["geo_distance"])
             }
-            query = return_geo_longlat_query(byc["geoloc_definitions"]["geo_root"], geo_pars)
-            results, e = mongo_result_list( byc["dataset_ids"][0], byc["geo_coll"], query, { '_id': False } )
+            query = return_geo_longlat_query(geo_root, geo_pars)
+            results, e = mongo_result_list( services_db, geo_coll, query, { '_id': False } )
             response_add_error(byc, 422, e)
     
     cgi_break_on_errors(byc)

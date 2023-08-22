@@ -5,7 +5,7 @@ import sys, re
 from importlib import import_module
 
 from bycon import *
-pkg_path = path.join( path.dirname( path.abspath(__file__) ), pardir, pardir )
+pkg_path = path.dirname( path.abspath(__file__) )
 
 """
 The `services` application deparses a request URI and calls the respective
@@ -31,24 +31,49 @@ def services():
     set_debug_state(debug=0)
 
     frm = inspect.stack()[1]
+    service = frm.function
+
+    loc_dir = path.join( pkg_path, "local" )
+    conf_dir = path.join( pkg_path, "config" )
+
     mod = inspect.getmodule(frm[0])
-    if mod is not None:
-        sub_path = path.dirname( path.abspath(mod.__file__) )
-        conf_dir = path.join( sub_path, "local" )
-        if path.isdir(conf_dir):
-            m_f = path.join( conf_dir, "services_mappings.yaml")
-            if path.isfile(m_f):
-                b_m = load_yaml_empty_fallback( m_f )
-            read_bycon_definition_files(conf_dir, byc)
+
+    # updates `beacon_defaults`, `dataset_definitions` and `local_paths`
+    update_rootpars_from_local(loc_dir, byc)
+    read_service_prefs(service, conf_dir, byc)
+
+    defaults = byc["beacon_defaults"].get("defaults", {})
+    for d_k, d_v in defaults.items():
+        byc.update( { d_k: d_v } )
+
+    s_a_s = byc["beacon_defaults"].get("service_aliases", {})
+    r_w = byc["beacon_defaults"].get("rewrites", {})
+    d_p_s = byc["beacon_defaults"].get("data_pipeline_path_ids", [])
 
     byc.update({"request_path_root": "services"})
     rest_path_elements(byc)
-    r_p_id = byc.get("request_entity_path_id", "__empty_value__")
+    get_bycon_args(byc)
+    args_update_form(byc)
 
-    if r_p_id in b_m["service_aliases"]:    
-        f = b_m["service_aliases"][ r_p_id ]
-        
-        # dynamic package/function loading
+    r_p_id = byc.get("request_entity_path_id", "info")
+
+    # check for rewrites
+    if r_p_id in r_w:
+        uri = environ.get('REQUEST_URI')
+        pat = re.compile( rf"^.+\/{r_p_id}\/?(.*?)$" )
+        if pat.match(uri):
+            stuff = pat.match(uri).group(1)
+            print_uri_rewrite_response(r_w[r_p_id], stuff)
+
+    f = s_a_s.get(r_p_id)
+    if not f:
+        pass
+    elif f in d_p_s:
+        beacon_data_pipeline(byc, f)
+    elif f:
+        # dynamic package/function loading; e.g. `filteringTerms` loads
+        # `filteringTerms` from `filteringTerm.py` which is an alias to
+        # the `filtering_terms` function there...
         try:
             mod = import_module(f)
             serv = getattr(mod, f)
@@ -58,16 +83,9 @@ def services():
             print('Content-Type: text')
             print('status:422')
             print()
-            print('Service {} error: {}'.format(f, e))
+            print('Service {} WTF error: {}'.format(f, e))
 
             exit()
-
-    if r_p_id in b_m["rewrites"]:
-        uri = environ.get('REQUEST_URI')
-        pat = re.compile( rf"^.+\/{r_p_id}\/?(.*?)$" )
-        if pat.match(uri):
-            stuff = pat.match(uri).group(1)
-            print_uri_rewrite_response(b_m["rewrites"][r_p_id], stuff)
 
     byc.update({
         "service_response": {},
