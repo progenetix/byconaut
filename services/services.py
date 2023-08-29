@@ -38,7 +38,7 @@ def services():
 
     mod = inspect.getmodule(frm[0])
 
-    # updates `beacon_defaults`, `beacon_mappings`, `dataset_definitions` and `local_paths`
+    # updates `beacon_defaults`, `dataset_definitions` and `local_paths`
     update_rootpars_from_local(loc_dir, byc)
     read_service_prefs(service, conf_dir, byc)
 
@@ -46,9 +46,8 @@ def services():
     for d_k, d_v in defaults.items():
         byc.update( { d_k: d_v } )
 
-    s_a_s = byc["beacon_mappings"].get("service_aliases", {})
-    r_w = byc["beacon_mappings"].get("rewrites", {})
-    d_p_s = byc["beacon_mappings"].get("data_pipeline_entry_types", [])
+    s_a_s = byc["beacon_defaults"].get("service_path_aliases", {})
+    r_w = byc["beacon_defaults"].get("rewrites", {})
 
     byc.update({"request_path_root": "services"})
     rest_path_elements(byc)

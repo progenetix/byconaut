@@ -1,9 +1,30 @@
 ################################################################################
-# Beacon defaults - please adjust!
+# Beacon defaults. Values reflect the developers' environment:Please adjust!
 ################################################################################
 
 defaults:
   default_dataset_id: progenetix
+
+################################################################################
+# mappings and aliases #########################################################
+################################################################################
+
+# map path id flavours to canonical entry_type_path_id #########################
+# the aliases here are for non-standard speling or additional entry types
+
+service_path_aliases:
+  callsets: analyses
+  filteringTerms: filteringTerms
+  phenopackets: phenopackets
+  variants: genomicVariations
+
+################################################################################
+# here you can map additional path values to the corresponding (additional)
+# entry type
+################################################################################
+
+path_entry_type_mappings:
+  phenopackets: phenopacket
 
 ################################################################################
 # Beacon entry type defaults - please adjust esp. info and schema paths...
@@ -17,7 +38,7 @@ defaults:
 
 # ################################################################################
 #   filteringTerm:
-#     entity_type: filteringTerm
+#     is_entry_type: False
 #     request_entity_path_id: filteringTerms
 #     response_entity_id: filteringTerm
 #     collection: collations
@@ -28,7 +49,7 @@ defaults:
 #     h->o_access_key: Null
 # ################################################################################
 #   biosample:
-#     entity_type: biosample
+#     is_entry_type: True
 #     request_entity_path_id: biosamples
 #     response_entity_id: biosample
 #     collection: biosamples  
@@ -42,7 +63,7 @@ defaults:
 entity_defaults:
 
   info:
-    entity_type: info
+    is_entry_type: False
     collection: Null
     response_schema: beaconInfoResponse
     beacon_schema:
@@ -97,7 +118,7 @@ entity_defaults:
   ##############################################################################
 
   phenopacket:
-    entity_type: phenopacket
+    is_entry_type: True
     request_entity_path_id: phenopackets
     response_entity_id: phenopacket
     collection: individuals

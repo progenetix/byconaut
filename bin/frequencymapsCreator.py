@@ -73,9 +73,9 @@ def frequencymaps_creator():
 
         exclude_normals = True
 
-        for normal in byc["service_config"]["keep_normals"]:
+        for normal in ("EFO:0009654", "oneKgenomes"):
             if normal in coll["id"]:
-                print("---> keeping normals for {}".format(coll["id"]))
+                print(f'---> keeping normals for {coll["id"]}')
                 exclude_normals = False
 
         db_key = coll["db_key"]
@@ -107,7 +107,7 @@ def frequencymaps_creator():
             "counts": {"biosamples": bios_no, "callsets": cs_no },
             "frequencymap": {
                 "interval_count": byc["genomic_interval_count"],
-                "binning": byc["genome_binning"],
+                "binning": byc["interval_definitions"].get("genome_binning", ""),
                 "biosample_count": bios_no
             }
         }
@@ -135,26 +135,26 @@ def frequencymaps_creator():
                 bios_no_cm, cs_cursor_cm = _cs_cursor_from_bios_query(bios_coll, ind_coll, cs_coll, coll["id"], coll["scope"], query_cm)
                 cs_no_cm = len(list(cs_cursor_cm))
                 if cs_no_cm > 0:
-
                     cm_obj = { "frequencymap_codematches": {
                             "interval_count": len(byc["genomic_intervals"]),
-                            "binning": byc["genome_binning"],
+                            "binning": byc["interval_definitions"].get("genome_binning", ""),
                             "biosample_count": bios_no_cm
                         }
                     }
 
-                    intervals, cnv_cs_count = interval_counts_from_callsets(cs_cursor, byc)
-                    cm_obj.update({
+                    intervals, cnv_cs_count = interval_counts_from_callsets(cs_cursor_cm, byc)
+                    cm_obj["frequencymap_codematches"].update({
                         "intervals": intervals,
-                        "analysis_count": cnv_cs_count
+                        "analysis_count": cs_no_cm
                     })
 
-                    # print("{}: {} exact of {} total code matches".format(coll["id"], cs_no_cm, cs_no))
+                    print(f'{coll["id"]}: {cs_no_cm} exact of {cs_no} total code matches')
 
                     if not byc["test_mode"]:
                         fm_coll.update_one( { "id": coll["id"] }, { '$set': cm_obj }, upsert=False )
 
     bar.finish()
+
 
 ################################################################################
 
