@@ -44,12 +44,14 @@ def schemas():
     if "id" in byc["form_data"]:
         schema_name = byc["form_data"].get("id", None)
     else:
-        schema_name = rest_path_value("schemas")
+        schema_name = byc["request_entity_path_id_value"]
 
-    if schema_name is not None:
+    if schema_name:
 
         comps = schema_name.split('.')
         schema_name = comps.pop(0)
+
+        prdbug(byc, schema_name)
 
         s = read_schema_file(byc, schema_name, "")
         if s is not False:

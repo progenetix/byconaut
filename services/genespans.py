@@ -22,41 +22,25 @@ def genespans():
     """
 
     """
-
-    byc.update({
-        "request_path_root": "services",
-        "request_entity_path_id": "genespans"
-    })
     initialize_bycon_service(byc)        
     parse_variants(byc)
     generate_genomic_mappings(byc)
-    get_global_filter_flags(byc)
     create_empty_service_response(byc)
 
-
-    assembly_id = byc["assembly_id"]
-    if "assembly_id" in byc[ "form_data" ]:
-        aid = byc[ "form_data" ]["assembly_id"]
-        if aid in byc["service_config"]["assembly_ids"]:
-            assembly_id = aid
-        else:
-            byc["service_response"]["meta"]["warnings"].append("{} is not supported; fallback {} is being used!".format(aid, assembly_id))
-            
-    if not "filter_precision" in byc["form_data"]:
-        byc["filter_flags"]["filter_precision"] = "start"
-    for mk, mv in byc["service_config"]["meta"].items():
-        byc["service_response"]["meta"].update({mk: mv})
+    # form id assumes start match (e.g. for autocompletes)
+    byc[ "config" ][ "filter_flags" ].update({"precision": "start"})
 
     gene_id = rest_path_value("genespans")
-
     if gene_id is not None:
-        byc["filter_flags"].update({"filter_precision": "exact"})
+        # REST path id assumes exact match
+        byc[ "config" ][ "filter_flags" ].update({"precision": "exact"})
     elif "gene_id" in byc[ "form_data" ]:
         gene_id = byc[ "form_data" ]["gene_id"]
     else:
         response_add_error(byc, 422, "No geneId value provided!" )
     cgi_break_on_errors(byc)
 
+    get_global_filter_flags(byc)
     received_request_summary_add_custom_parameter(byc, "geneId", gene_id)
 
     results, e = retrieve_gene_id_coordinates(gene_id, byc["filter_flags"].get("precision", "start"), byc)
@@ -68,15 +52,14 @@ def genespans():
 
     e_k_s = byc["service_config"]["method_keys"]["genespan"]
 
-    if "method" in byc:
-        if "genespan" in byc["method"]:
-            for i, g in enumerate(results):
-                g_n = {}
-                for k in byc["service_config"]["method_keys"]["genespan"]:
-                    g_n.update({k: g.get(k, "")})
-                results[i] = g_n
+    if "genespan" in byc.get("method", "___none___"):
+        for i, g in enumerate(results):
+            g_n = {}
+            for k in byc["service_config"]["method_keys"]["genespan"]:
+                g_n.update({k: g.get(k, "")})
+            results[i] = g_n
 
-    if "text" in byc["output"]:
+    if "text" in byc.get("output", "___none___"):
         open_text_streaming(byc["env"])
         for g in results:
             s_comps = []

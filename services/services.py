@@ -46,9 +46,9 @@ def services():
     for d_k, d_v in defaults.items():
         byc.update( { d_k: d_v } )
 
-    s_a_s = byc["beacon_defaults"].get("service_aliases", {})
+    s_a_s = byc["beacon_defaults"].get("service_path_aliases", {})
     r_w = byc["beacon_defaults"].get("rewrites", {})
-    d_p_s = byc["beacon_defaults"].get("data_pipeline_path_ids", [])
+    # d_p_s = byc["beacon_defaults"].get("data_pipeline_path_ids", [])
 
     byc.update({"request_path_root": "services"})
     rest_path_elements(byc)
@@ -56,6 +56,9 @@ def services():
     args_update_form(byc)
 
     r_p_id = byc.get("request_entity_path_id", "info")
+
+    prdbug(byc, r_p_id)
+    prdbug(byc, s_a_s.keys())
 
     # check for rewrites
     if r_p_id in r_w:
@@ -68,8 +71,8 @@ def services():
     f = s_a_s.get(r_p_id)
     if not f:
         pass
-    elif f in d_p_s:
-        beacon_data_pipeline(byc, f)
+    # elif f in d_p_s:
+    #     beacon_data_pipeline(byc, f)
     elif f:
         # dynamic package/function loading; e.g. `filteringTerms` loads
         # `filteringTerms` from `filteringTerm.py` which is an alias to

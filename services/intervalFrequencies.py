@@ -69,6 +69,9 @@ def interval_frequencies():
     if "codematches" in byc["method"]:
         fmap_name = "frequencymap_codematches"
 
+    prdbug(byc, f'===> method: {byc["method"]}')
+    prdbug(byc, fmap_name)
+
     results = [ ]
     mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
 
@@ -76,8 +79,8 @@ def interval_frequencies():
     # exclude filters are for exact matches
     exclude_f = [re.sub("!", "", x["id"]) for x in byc.get("filters", []) if "!" in x["id"]]
 
-    for ds_id in byc[ "dataset_ids" ]:
-        coll_db = mongo_client[ ds_id ]
+    for ds_id in byc["dataset_ids"]:
+        coll_db = mongo_client[ds_id]
         for f in include_f:
             f_val = f["id"]
 
