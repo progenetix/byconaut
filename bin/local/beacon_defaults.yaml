@@ -17,6 +17,7 @@ service_path_aliases:
   filteringTerms: filteringTerms
   phenopackets: phenopackets
   variants: genomicVariations
+  genomicVariations: genomicVariations
 
 ################################################################################
 # here you can map additional path values to the corresponding (additional)
@@ -27,10 +28,21 @@ path_entry_type_mappings:
   phenopackets: phenopacket
 
 ################################################################################
+# her you can add additional path ids to the data query aggregation pipeline
+# that usually mapps/reduces queries against biosamples, genomicVariations,
+#individuals ...
+################################################################################
+
+data_pipeline_path_ids:
+  - phenopackets
+
+################################################################################
 # Beacon entry type defaults - please adjust esp. info and schema paths...
 # TODO: Some of the entry type configuration duplicates data from the Beacon
 # framework and might be disentangled further on ...
 ################################################################################
+
+#  => snake_casing
 
 # standard examples
 

@@ -56,6 +56,9 @@ def services():
 
     r_p_id = byc.get("request_entity_path_id", "info")
 
+    prdbug(byc, r_p_id)
+    prdbug(byc, s_a_s.keys())
+
     # check for rewrites
     if r_p_id in r_w:
         uri = environ.get('REQUEST_URI')
@@ -67,8 +70,6 @@ def services():
     f = s_a_s.get(r_p_id)
     if not f:
         pass
-    elif f in d_p_s:
-        beacon_data_pipeline(byc, f)
     elif f:
         # dynamic package/function loading; e.g. `filteringTerms` loads
         # `filteringTerms` from `filteringTerm.py` which is an alias to
