@@ -28,6 +28,7 @@ def collations():
 
     initialize_bycon_service(byc, "collations")
     run_beacon_init_stack(byc)
+    prdbug(byc, byc["filters"])
 
     r = ByconautServiceResponse(byc)
 

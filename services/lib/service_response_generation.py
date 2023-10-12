@@ -222,32 +222,42 @@ class ByconCollations:
         f_coll = "collations"
         d_k = set_selected_delivery_keys(self.delivery_method, self.service_config.get("method_keys"), self.form_data)
 
-        ft_fs = []
-        for f in self.filters:
-            ft_fs.append('(' + f.get("id", "___none___") + ')')
-        if len(ft_fs) > 0:
-            f_s = '|'.join(ft_fs)
-            f_re = re.compile(r'^' + '|'.join(ft_fs))
-        else:
-            f_re = None
-
+        c_id = self.form_data.get("id", "")
         # TODO: This should be derived from some entity definitions
         # TODO: whole query generation in separate function ...
         query = {}
-        q_list = []
 
-        q_types = self.form_data.get("collation_types", [])
-        if len(q_types) > 0:
-            q_list.append({"collation_type": {"$in": q_types }})
-
-        if len(q_list) == 1:
-            query = q_list[0]
-        elif len(q_list) > 1:
-            query = {"$and": q_list}
-
-        
         if self.test_mode is True:
             query, error = mongo_test_mode_query(self.dataset_ids[0], f_coll, self.test_mode_count)
+        elif len(c_id) > 0:
+            query = { "id": c_id }
+        else:
+
+            q_list = []
+            ft_fs = []
+            for f in self.filters:
+                ft_fs.append('(' + f.get("id", "___none___") + ')')
+            if len(ft_fs) > 0:
+                f_s = '|'.join(ft_fs)
+                f_re = re.compile(r'^' + '|'.join(ft_fs))
+            else:
+                f_re = None
+
+            if f_re is not None:
+                q_list.append({"id": { "$regex": f_re}})
+
+            q_types = self.form_data.get("collation_types", [])
+            if len(q_types) > 0:
+                q_list.append({"collation_type": {"$in": q_types }})
+
+            if len(q_list) == 1:
+                query = q_list[0]
+            elif len(q_list) > 1:
+                query = {"$and": q_list}
+        
+        # TODO
+        # if not query:
+        #     warning = 'No limit (filters, collationTypes, id) on collation listing -> abortin...'
 
         s_s = { }
 
