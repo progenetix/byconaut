@@ -84,7 +84,7 @@ defaults:
       pattern: '^arraymap\:([>=<]?\d+?)$'
       remove_prefix: true
 method_keys:
-  all: [ ] # forces empty list which is interpreted to use all
+  all: [] # forces empty list which is interpreted to use all
   counts:
     - id
     - counts

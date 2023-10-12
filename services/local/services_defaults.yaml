@@ -59,6 +59,18 @@ entity_defaults:
 
   ##############################################################################
 
+  collation:
+    is_entry_type: True
+    request_path_root: services
+    request_entity_path_id: collations
+    collection: collations
+    response_schema: byconautServiceResponse
+    beacon_schema:
+      entity_type: Collation
+      schema: https://progenetix.org/services/schemas/Collation/
+
+  ##############################################################################
+
   CytobandMapping:
     is_entry_type: True
     request_path_root: services

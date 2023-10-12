@@ -7,11 +7,13 @@ import sys, os, datetime
 
 from bycon import *
 
+services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
+sys.path.append( services_lib_path )
+from service_response_generation import *
+
 """podmd
 
 * <https://progenetix.org/services/dbstats/>
-* <https://progenetix.org/services/dbstats/?statsNumber=3&responseFormat=simple>
-* <http://progenetix.org/cgi/bycon/services/dbstats.py?method=filtering_terms>
 
 podmd"""
 
@@ -33,22 +35,19 @@ def dbstats():
     initialize_bycon_service(byc)
     select_dataset_ids(byc)
 
-    if "statsNumber" in byc["form_data"]:
-        s_n = byc["form_data"]["stats_number"]
-        try:
-            s_n = int(s_n)
-        except:
-            pass
-        if type(s_n) == int:
-            if s_n > 0:
-                byc["stats_number"] = s_n
+    r = ByconautServiceResponse(byc)
+    byc.update({
+        "service_response": r.emptyResponse(),
+        "error_response": r.errorResponse()
+    })
 
-    create_empty_service_response(byc)
-
-    ds_stats = dbstats_return_latest(byc)
+    info_db = byc[ "config" ][ "housekeeping_db" ]
+    coll = byc[ "config" ][ "beacon_info_coll" ]
+    stats = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))[ info_db ][ coll ].find( { }, { "_id": 0 } ).sort( "date", -1 ).limit( 1 )
 
     results = [ ]
-    for stat in ds_stats:
+    for stat in stats:
+        prdbug(byc, stat)
         # byc["service_response"]["info"].update({ "date": stat["date"] })
         for ds_id, ds_vs in stat["datasets"].items():
             if len(byc[ "dataset_ids" ]) > 0:
@@ -58,7 +57,7 @@ def dbstats():
             dbs.update({"counts":ds_vs["counts"]})
             results.append( dbs )
 
-    populate_service_response( byc, results )
+    byc.update({"service_response": r.populatedResponse(results)})
     cgi_print_response( byc, 200 )
 
 ################################################################################

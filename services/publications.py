@@ -11,7 +11,7 @@ from bycon import *
 
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
 sys.path.append( services_lib_path )
-
+from service_response_generation import *
 from geomap_utils import *
 
 """podmd
@@ -33,12 +33,14 @@ def main():
 
 def publications():
 
-    initialize_bycon_service(byc)
+    initialize_bycon_service(byc, "publications")
+    run_beacon_init_stack(byc)
 
-    get_global_filter_flags(byc)
-    parse_filters(byc)
-
-    create_empty_service_response(byc)
+    r = ByconautServiceResponse(byc)
+    byc.update({
+        "service_response": r.emptyResponse(),
+        "error_response": r.errorResponse()
+    })
 
     # data retrieval & response population
     query, e = _create_filters_query( byc )
@@ -47,8 +49,8 @@ def publications():
     geo_q, geo_pars = geo_query( byc )
 
     if geo_q:
-        for g_k, g_v in geo_pars.items():
-            received_request_summary_add_custom_parameter(byc, g_k, g_v)
+        # for g_k, g_v in geo_pars.items():
+        #     received_request_summary_add_custom_parameter(byc, g_k, g_v)
         if len(query.keys()) < 1:
             query = geo_q
         else:
@@ -56,7 +58,6 @@ def publications():
 
     if len(query.keys()) < 1:
         response_add_error(byc, 422, "No query could be constructed from the parameters provided." )
-
     cgi_break_on_errors(byc)
 
     mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
@@ -65,7 +66,7 @@ def publications():
     p_re = re.compile( byc["filter_definitions"]["PMID"]["pattern"] )
 
     p_l = [ ]
-    d_k = collations_set_delivery_keys(byc)
+    d_k = set_selected_delivery_keys(byc.get("method"), byc["service_config"].get("method_keys"), byc.get("form_data"))
     
     for pub in pub_coll.find( query, { "_id": 0 } ):
         s = { }
@@ -73,7 +74,7 @@ def publications():
             s = pub
         else:
             for k in d_k:
-                # TODO: harmless hack
+                # TODO: harmless but ugly hack
                 if k in pub.keys():
                     if k == "counts":
                         s[ k ] = { }
@@ -103,7 +104,7 @@ def publications():
 
     __check_publications_map_response(byc, results)
 
-    populate_service_response( byc, results)
+    byc.update({"service_response": r.populatedResponse(results)})
     cgi_print_response( byc, 200 )
 
 ################################################################################

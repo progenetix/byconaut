@@ -18,7 +18,6 @@ inhabitants (\~22750 cities), through either:
 
 * <https://progenetix.org/services/geolocations?city=zurich>
 * <https://progenetix.org/services/geolocations?city=Heidelberg>
-* <https://progenetix.org/services/geolocations?city=New&responseFormat=simple>
 * <https://progenetix.org/services/geolocations?geoLongitude=-0.13&geoLatitude=51.51&geoDistance=100000>
 
 

@@ -6,11 +6,11 @@ from os import environ, pardir, path, scandir
 import sys, datetime
 from humps import camelize
 
-# dir_path = path.dirname( path.abspath(__file__) )
-# pkg_path = path.join( dir_path, pardir )
-# sys.path.append( path.join( pkg_path, pardir ) )
-
 from bycon import *
+
+services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
+sys.path.append( services_lib_path )
+from service_response_generation import *
 
 """podmd
 
@@ -32,14 +32,13 @@ def main():
 ################################################################################
 
 def schemas():
-
-    byc.update({
-        "request_path_root": "services",
-        "request_entity_path_id": "schemas"
-    })
    
     initialize_bycon_service(byc, "schemas")
-    create_empty_service_response(byc)
+    r = ByconautServiceResponse(byc)
+    byc.update({
+        "service_response": r.emptyResponse(),
+        "error_response": r.errorResponse()
+    })
 
     if "id" in byc["form_data"]:
         schema_name = byc["form_data"].get("id", None)

@@ -10,8 +10,8 @@ from bycon import *
 
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
 sys.path.append( services_lib_path )
-
 from geomap_utils import *
+from service_response_generation import *
 
 """podmd
 * <https://progenetix.org/services/geolocations?city=zurich>
@@ -36,29 +36,25 @@ def main():
 
 def geolocations():
 
-    byc.update({
-        "request_path_root": "services",
-        "request_entity_path_id": "geolocations"
-    })
-    initialize_bycon_service(byc)
-
+    initialize_bycon_service(byc, "geolocations")
     byc["geoloc_definitions"].update({"geo_root": "geo_location"})
+
+    r = ByconautServiceResponse(byc)
+    byc.update({
+        "service_response": r.emptyResponse(),
+        "error_response": r.errorResponse()
+    })
 
     services_db = byc["config"].get("services_db")
     geo_coll = byc["config"].get("geolocs_coll")
     
-    r, e = instantiate_response_and_error(byc, byc["response_entity"]["response_schema"])
-    byc.update({"service_response": r, "error_response": e})
-
     # TODO: move the map table reading to a sane place 
     if "file" in byc["form_data"]:
         results = read_geomarker_table_web(byc)
-
     else:
-
         query, geo_pars = geo_query(byc)
-        for g_k, g_v in geo_pars.items():
-            received_request_summary_add_custom_parameter(byc, g_k, g_v)
+        # for g_k, g_v in geo_pars.items():
+        #     received_request_summary_add_custom_parameter(byc, g_k, g_v)
 
         if len(query.keys()) < 1:
             response_add_error(byc, 422, "No query generated - missing or malformed parameters" )
@@ -96,7 +92,7 @@ def geolocations():
             print("\t".join(s_comps))
         exit()
 
-    populate_service_response( byc, results)
+    byc.update({"service_response": r.populatedResponse(results)})
     cgi_print_response( byc, 200 )
 
 ################################################################################

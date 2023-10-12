@@ -8,6 +8,10 @@ import sys, datetime, argparse
 
 from bycon import *
 
+services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
+sys.path.append( services_lib_path )
+from service_response_generation import *
+
 """podmd
 
 podmd"""
@@ -41,12 +45,14 @@ def samples_plotter():
         "request_entity_path_id": "samplesPlotter"
     })
     
-    initialize_bycon_service(byc)
-    parse_variants(byc)
-    generate_genomic_mappings(byc)
+    initialize_bycon_service(byc, sys._getframe().f_code.co_name)
+    run_beacon_init_stack(byc)
 
-    byc["response_entity"].update({"response_schema": "beaconResultsetsResponse"})
-    create_empty_beacon_response(byc)
+    r = ByconautServiceResponse(byc)
+    byc.update({
+        "service_response": r.emptyResponse(),
+        "error_response": r.errorResponse()
+    })
 
     id_rest = rest_path_value("samplesPlotter")
     local_paths = byc.get("local_paths", {})
