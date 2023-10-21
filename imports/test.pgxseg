@@ -2,7 +2,7 @@
 #meta=>assemblyId=GRCh38
 #meta=>sample_count=10
 #meta=>call_count=5868
-#meta=>pagination.skip=1;pagination.limit=1;pagination.range=11,20
+#meta=>pagination.skip=1;pagination.limit=1
 #meta=>filters=
 #sample=>id=pgxbs-kftvizrt;biosample_id=pgxbs-kftvizrt;individual_id=pgxind-kftx4rpe;group_id=NCIT:C7270;histological_diagnosis_id=NCIT:C7270;group_label=Mixed Mucinous and Non-Mucinous Bronchioloalveolar Carcinoma;histological_diagnosis_label=Mixed Mucinous and Non-Mucinous Bronchioloalveolar Carcinoma;icdo_morphology_id=pgx:icdom-82543;icdo_morphology_label=Bronchiolo-alveolar carcinoma, mixed mucinous and non-mucinous;icdo_topography_id=pgx:icdot-C34.9;icdo_topography_label=Lung, NOS;sampled_tissue_id=UBERON:0002048;sampled_tissue_label=lung;followup_state_id=EFO:0030039;followup_state_label=no followup status;experiment_id=geo:GSM385531;series_id=geo:GSE15126;platform_id=geo:GPL3720;external_references_id___PMID=PMID:19477428
 #sample=>id=pgxbs-kftvj1ng;biosample_id=pgxbs-kftvj1ng;individual_id=pgxind-kftx4u0i;group_id=NCIT:C3510;histological_diagnosis_id=NCIT:C3510;group_label=Cutaneous Melanoma;histological_diagnosis_label=Cutaneous Melanoma;icdo_morphology_id=pgx:icdom-87203;icdo_morphology_label=Malignant melanoma, NOS;icdo_topography_id=pgx:icdot-C44.9;icdo_topography_label=Skin, NOS;sampled_tissue_id=UBERON:0000014;sampled_tissue_label=zone of skin;followup_state_id=EFO:0030039;followup_state_label=no followup status;experiment_id=geo:GSM557941;series_id=geo:GSE22461;platform_id=geo:GPL6801;external_references_id___PMID=PMID:21584902

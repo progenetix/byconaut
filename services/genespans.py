@@ -5,6 +5,11 @@ from os import environ
 
 from bycon import *
 
+services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
+sys.path.append( services_lib_path )
+from service_helpers import *
+from service_response_generation import *
+
 ################################################################################
 ################################################################################
 ################################################################################
@@ -22,13 +27,17 @@ def genespans():
     """
 
     """
-    initialize_bycon_service(byc)        
-    parse_variants(byc)
-    generate_genomic_mappings(byc)
-    create_empty_service_response(byc)
+    initialize_bycon_service(byc, sys._getframe().f_code.co_name)
+    run_beacon_init_stack(byc)
 
     # form id assumes start match (e.g. for autocompletes)
     byc[ "config" ][ "filter_flags" ].update({"precision": "start"})
+
+    r = ByconautServiceResponse(byc)
+    byc.update({
+        "service_response": r.emptyResponse(),
+        "error_response": r.errorResponse()
+    })
 
     gene_id = rest_path_value("genespans")
     if gene_id is not None:
@@ -40,8 +49,9 @@ def genespans():
         response_add_error(byc, 422, "No geneId value provided!" )
     cgi_break_on_errors(byc)
 
+    # redoing this since possibly modified in the geneId retrieval above
     get_global_filter_flags(byc)
-    received_request_summary_add_custom_parameter(byc, "geneId", gene_id)
+    # received_request_summary_add_custom_parameter(byc, "geneId", gene_id)
 
     results, e = retrieve_gene_id_coordinates(gene_id, byc["filter_flags"].get("precision", "start"), byc)
     response_add_error(byc, 422, e )
@@ -68,7 +78,7 @@ def genespans():
             print("\t".join(s_comps))
         exit()
 
-    populate_service_response( byc, results)
+    byc.update({"service_response": r.populatedResponse(results)})
     cgi_print_response( byc, 200 )
 
 ################################################################################

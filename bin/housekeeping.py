@@ -31,7 +31,7 @@ def main():
 
 def housekeeping():
 
-    initialize_bycon_service(byc)
+    initialize_bycon_service(byc, "housekeeping")
     
     select_dataset_ids(byc)
     if len(byc["dataset_ids"]) != 1:
@@ -150,7 +150,7 @@ def __dataset_update_counts(byc):
         ds_db = mongo_client[ i_ds_id ]
         b_i_ds = { "counts": { }, "updated": datetime.datetime.now().isoformat() }
         c_n = ds_db.list_collection_names()
-        for c in byc["config"]["queried_collections"]:
+        for c in ["biosamples", "individuals", "variants", "callsets"]:
             if c not in c_n:
                 continue
 

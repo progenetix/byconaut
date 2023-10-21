@@ -43,8 +43,9 @@ method_keys:
     - code_matches
     - cnv_analyses
     - collation_type
-    - type
+    # - type
     - reference
+    - name
   ids:
     - id
     - label

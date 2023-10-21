@@ -148,7 +148,7 @@ def frequencymaps_creator():
                         "analysis_count": cs_no_cm
                     })
 
-                    print(f'{coll["id"]}: {cs_no_cm} exact of {cs_no} total code matches')
+                    print(f'\n{coll["id"]}: {cs_no_cm} exact of {cs_no} total code matches')
 
                     if not byc["test_mode"]:
                         fm_coll.update_one( { "id": coll["id"] }, { '$set': cm_obj }, upsert=False )

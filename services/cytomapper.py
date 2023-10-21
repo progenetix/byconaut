@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
 
-import cgi
-import re, yaml
-from os import path, pardir
-import csv
 import sys
 
 from bycon import *
+
+services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
+sys.path.append( services_lib_path )
+from service_helpers import *
+from service_response_generation import *
+
+"""
+cytomapper.py --cytoBands 8q21 
+cytomapper.py --chroBases 4:12000000-145000000
+"""
 
 ################################################################################
 ################################################################################
@@ -25,12 +31,31 @@ def main():
 
 def cytomapper():
     
-    initialize_bycon_service(byc)
-    parse_variants(byc)
-    generate_genomic_mappings(byc)
+    initialize_bycon_service(byc, sys._getframe().f_code.co_name)
+    run_beacon_init_stack(byc)
 
-    # response prototype
-    create_empty_service_response(byc)
+    results = __return_cytobands_results(byc)
+
+    r = ByconautServiceResponse(byc)
+    byc.update({
+        "service_response": r.populatedResponse(results),
+        "error_response": r.errorResponse()
+    })
+
+    if len( results ) < 1:
+        response_add_error(byc, 422, "No matching cytobands!" )
+        cgi_break_on_errors(byc)
+    if "cyto_bands" in byc["varguments"]:
+        byc["service_response"]["meta"]["received_request_summary"].update({ "cytoBands": byc["varguments"]["cyto_bands"] })
+    elif "chro_bases" in byc["varguments"]:
+        byc["service_response"]["meta"]["received_request_summary"].update({ "chroBases": byc["varguments"]["chro_bases"] })
+
+    cgi_print_response( byc, 200 )
+
+
+################################################################################
+
+def __return_cytobands_results(byc):
 
     g_a = byc.get("genome_aliases", {})
     r_a = g_a.get("refseq_aliases", {})
@@ -38,16 +63,13 @@ def cytomapper():
     cytoBands = [ ]
     if "cyto_bands" in byc["varguments"]:
         cytoBands, chro, start, end, error = bands_from_cytobands(byc["varguments"]["cyto_bands"], byc)
-        byc["service_response"]["meta"]["received_request_summary"].update({ "cytoBands": byc["varguments"]["cyto_bands"] })
     elif "chro_bases" in byc["varguments"]:
         cytoBands, chro, start, end = bands_from_chrobases(byc["varguments"]["chro_bases"], byc)
-        byc["service_response"]["meta"]["received_request_summary"].update({ "chroBases": byc["varguments"]["chro_bases"] })
-
-    cb_label = cytobands_label( cytoBands )
 
     if len( cytoBands ) < 1:
-        response_add_error(byc, 422, "No matching cytobands!" )
-        cgi_break_on_errors(byc)
+        return ()
+
+    cb_label = cytobands_label( cytoBands )
 
     size = int(  end - start )
     chroBases = "{}:{}-{}".format(chro, start, end)
@@ -99,8 +121,8 @@ def cytomapper():
         }
     ]
 
-    populate_service_response( byc, results)
-    cgi_print_response( byc, 200 )
+    return results
+
 
 ################################################################################
 ################################################################################

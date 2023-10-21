@@ -23,6 +23,7 @@ service_path_aliases:
   ontologyMaps: ontologymaps
   publications: publications
   samplesPlotter: samplesPlotter
+  sampleplots: sampleplots
   schemas: schemas
   uploader: uploader
   variantsPlotter: variantsPlotter
@@ -56,6 +57,18 @@ entity_defaults:
     beacon_schema:
       entity_type: genomicVariant
       schema: https://progenetix.org/services/schemas/genomicVariant/
+
+  ##############################################################################
+
+  collation:
+    is_entry_type: True
+    request_path_root: services
+    request_entity_path_id: collations
+    collection: collations
+    response_schema: byconautServiceResponse
+    beacon_schema:
+      entity_type: Collation
+      schema: https://progenetix.org/services/schemas/Collation/
 
   ##############################################################################
 

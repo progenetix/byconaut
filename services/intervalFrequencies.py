@@ -8,6 +8,11 @@ from pymongo import MongoClient
 
 from bycon import *
 
+services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
+sys.path.append( services_lib_path )
+from service_helpers import *
+from service_response_generation import *
+
 """podmd
 
 * https://progenetix.org/services/intervalFrequencies/?datasetIds=progenetix&filters=NCIT:C7376,PMID:22824167,pgx:icdom-85003
@@ -42,15 +47,14 @@ def intervalFrequencies():
 
 def interval_frequencies():
 
-    initialize_bycon_service(byc)
+    initialize_bycon_service(byc, sys._getframe().f_code.co_name)
+    run_beacon_init_stack(byc)
 
-    select_dataset_ids(byc)
-    parse_filters(byc)
-    parse_variants(byc)
-    generate_genomic_mappings(byc)
-
-    create_empty_service_response(byc)
-    cgi_break_on_errors(byc)
+    r = ByconautServiceResponse(byc)
+    byc.update({
+        "service_response": r.emptyResponse(),
+        "error_response": r.errorResponse()
+    })
 
     id_rest = rest_path_value("intervalFrequencies")
     ff = byc.get("filter_flags", {})
@@ -70,7 +74,7 @@ def interval_frequencies():
         fmap_name = "frequencymap_codematches"
 
     prdbug(byc, f'===> method: {byc["method"]}')
-    prdbug(byc, fmap_name)
+    prdbug(byc, f'===> method: {fmap_name}')
 
     results = [ ]
     mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
@@ -150,7 +154,7 @@ def interval_frequencies():
 
     check_pgxseg_frequencies_export(byc, results)
     check_pgxmatrix_frequencies_export(byc, results)
-    populate_service_response( byc, results)
+    byc.update({"service_response": r.populatedResponse(results)})
     cgi_print_response( byc, 200 )
 
 ################################################################################

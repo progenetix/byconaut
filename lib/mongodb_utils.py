@@ -19,7 +19,7 @@ def mongodb_update_indexes(ds_id, byc):
             continue
 
         i_coll = data_db[ collname ]
-        io_params = dt_m["entities"][ r_t ]["parameters"]
+        io_params = dt_m["definitions"][ r_t ]["parameters"]
 
         for p_k, p_v in io_params.items():
             i_t = p_v.get("indexed", False)

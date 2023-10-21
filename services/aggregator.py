@@ -78,11 +78,18 @@ def aggregator():
         "request_entity_path_id": "aggregator"
     })
 
-    initialize_bycon_service(byc)
-    parse_filters(byc)
-    parse_variants(byc)
-    generate_genomic_mappings(byc)
-    create_empty_service_response(byc)    
+    initialize_bycon_service(byc, sys._getframe().f_code.co_name)
+    run_beacon_init_stack(byc)
+
+    r = ByconautServiceResponse(byc)
+    byc.update({
+        "service_response": r.emptyResponse(),
+        "error_response": r.errorResponse()
+    })
+
+
+    # TODO: redo the app ...
+    exit()
 
     cgi_break_on_errors(byc)
 
@@ -91,8 +98,7 @@ def aggregator():
 
     b_p = byc["service_config"]["beacon_params"]["instances"]
 
-    byc["service_response"]["meta"]["received_request_summary"]["requested_granularity"] ="boolean"
-    check_switch_to_boolean_response(byc)
+    byc["service_response"]["meta"]["received_request_summary"]["requested_granularity"] = "boolean"
     byc["service_response"].update({"response": { "response_sets": [] }})
 
     for b in byc["service_config"]["selected_beacons"]:

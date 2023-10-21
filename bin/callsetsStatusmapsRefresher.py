@@ -7,7 +7,6 @@ import sys, datetime
 from isodate import date_isoformat
 from pymongo import MongoClient
 from progress.bar import Bar
-#import time
 
 from bycon import *
 
@@ -42,19 +41,20 @@ def callsets_refresher():
         exit()
 
     ds_id = byc["dataset_ids"][0]
+    print(f'=> Using data values from {ds_id}')
 
     # re-doing the interval generation for non-standard CNV binning
     # genome_binning_from_args(byc)
     generate_genomic_mappings(byc)
-        
-    print("=> Using data values from {}".format(ds_id))
 
     data_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
     data_db = data_client[ ds_id ]
     cs_coll = data_db[ "callsets" ]
     v_coll = data_db[ "variants" ]
 
-    execute_bycon_queries( ds_id, byc )
+    record_queries = ByconQuery(byc).recordsQuery()
+
+    execute_bycon_queries( ds_id, record_queries, byc )
 
     ds_results = byc["dataset_results"][ds_id]
 

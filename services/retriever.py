@@ -7,6 +7,10 @@ from liftover import get_lifter
 
 from bycon import *
 
+services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
+sys.path.append( services_lib_path )
+from service_response_generation import *
+
 """podmd
 # `retriever`
 
@@ -43,12 +47,13 @@ def retriever():
     })
     
     initialize_bycon_service(byc, "aggregator")
-    parse_filters(byc)
-    parse_variants(byc)
-    generate_genomic_mappings(byc)
-    create_empty_service_response(byc)    
+    run_beacon_init_stack(byc)
 
-    cgi_break_on_errors(byc)
+    r = ByconautServiceResponse(byc)
+    byc.update({
+        "service_response": r.emptyResponse(),
+        "error_response": r.errorResponse()
+    })
 
     b = byc["form_data"].get("selected_beacons", [])
     url = byc["form_data"].get("url", "")

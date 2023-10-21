@@ -126,7 +126,8 @@ def collations_creator():
                 update_obj = hier[ code ].copy()
                 update_obj.update({
                     "id": sub_id,
-                    "type": coll_defs.get("name", ""),
+                    "ft_type": coll_defs.get("ft_type", "ontologyTerm"),
+                    "name": coll_defs.get("name", ""),
                     "collation_type": coll_type,
                     "reference": "https://progenetix.org/services/ids/"+code,
                     "namespace_prefix": coll_defs.get("namespace_prefix", ""),
@@ -192,7 +193,7 @@ def get_prefix_hierarchy( ds_id, coll_type, pre_h_f, byc):
             "NCIT:C000000": {
                 "id": "NCIT:C000000",
                 "label": "Unplaced Entities",
-                "type": coll_defs.get("type", ""),
+                "ft_type": "ontologyTerm",
                 "collation_type": coll_type,
                 "namespace_prefix": coll_defs.get("namespace_prefix", ""),
                 "scope": coll_defs.get("scope", ""),
@@ -290,7 +291,7 @@ def _make_dummy_publication_hierarchy(byc):
             code: {
                 "id":  code,
                 "label": pub["label"],
-                "type": coll_defs.get("type", ""),
+                "ft_type": "ontologyTerm",
                 "collation_type": coll_type,
                 "namespace_prefix": coll_defs.get("namespace_prefix", ""),
                 "scope": coll_defs.get("scope", ""),
@@ -349,7 +350,7 @@ def _get_hierarchy_item(data_coll, coll_defs, coll_type, code, order, depth, pat
     return {
         "id":  code,
         "label": _get_label_for_code(data_coll, coll_defs, code),
-        "type": coll_defs.get("type", ""),
+        "ft_type": coll_defs.get("ft_type", ""),
         "collation_type": coll_type,
         "namespace_prefix": coll_defs.get("namespace_prefix", ""),
         "scope": coll_defs.get("scope", ""),

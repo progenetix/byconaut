@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 
-import cgi
-import re, json
-from os import path, pardir, environ
-import sys
+import re, sys
 from pymongo import MongoClient
 
 from bycon import *
+
+services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
+sys.path.append( services_lib_path )
+from service_helpers import *
+from service_response_generation import *
 
 """podmd
 * <https://progenetix.org/services/ontologymaps/?filters=NCIT:C3222>
@@ -27,14 +29,21 @@ def main():
 
 def ontologymaps():
 
-    initialize_bycon_service(byc)
+    initialize_bycon_service(byc, sys._getframe().f_code.co_name)
+    run_beacon_init_stack(byc)
 
-    get_global_filter_flags(byc)
-    parse_filters(byc)
+    r = ByconautServiceResponse(byc)
+    byc.update({
+        "service_response": r.emptyResponse(),
+        "error_response": r.errorResponse()
+    })
 
-    create_empty_service_response(byc)
+    p_filter = rest_path_value("ontologymaps")
+    if p_filter is not None:
+        byc[ "filters" ].append({"id": p_filter})
 
     q_list = [ ]
+    q_dups = [ ]
     pre_re = re.compile(r'^(\w+?)([:-].*?)?$')
     for f in byc[ "filters" ]:
         f_val = f["id"]
@@ -44,16 +53,17 @@ def ontologymaps():
             # TODO TEST
             for f_t, f_d in byc["filter_definitions"].items():
                 if re.compile( f_d["pattern"] ).match( f_val ):
-                    if "start" in byc[ "filter_flags" ][ "precision" ]:
-                        q_list.append( { byc["query_field"]: { "$regex": "^"+f_val } } )
-                    elif f["id"] == pre:
-                        q_list.append( { byc["query_field"]: { "$regex": "^"+f_val } } )
-                    else:
-                        q_list.append( { byc["query_field"]: f_val } )
+                    if f_val not in q_dups:
+                        q_dups.append(f_val)
+                        if "start" in byc[ "filter_flags" ][ "precision" ]:
+                            q_list.append( { byc["query_field"]: { "$regex": "^"+f_val } } )
+                        elif f["id"] == pre:
+                            q_list.append( { byc["query_field"]: { "$regex": "^"+f_val } } )
+                        else:
+                            q_list.append( { byc["query_field"]: f_val } )
 
     if len(q_list) < 1:
         response_add_error(byc, 422, "No correct filter value provided!" )
-
     cgi_break_on_errors(byc)
 
     if len(q_list) > 1:
@@ -65,6 +75,7 @@ def ontologymaps():
     u_c_d = { }
     mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
     mongo_coll = mongo_client["progenetix"]["ontologymaps"]
+    prdbug(byc, query)
     for o in mongo_coll.find( query, { '_id': False } ):
         for c in o["code_group"]:
             pre, code = re.split("[:-]", c["id"], maxsplit=1)
@@ -95,8 +106,7 @@ def ontologymaps():
 
         results = c_g
 
-    populate_service_response( byc, results)
-    # byc["service_response"]["info"]["count"] = len(results[0]["term_groups"])
+    byc.update({"service_response": r.populatedResponse(results)})
     cgi_print_response( byc, 200 )
 
 ################################################################################
