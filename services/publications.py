@@ -11,8 +11,9 @@ from bycon import *
 
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
 sys.path.append( services_lib_path )
-from service_response_generation import *
 from geomap_utils import *
+from service_helpers import *
+from service_response_generation import *
 
 """podmd
 
@@ -44,7 +45,6 @@ def publications():
 
     # data retrieval & response population
     query, e = _create_filters_query( byc )
-    response_add_error(byc, 422, e )
 
     geo_q, geo_pars = geo_query( byc )
 

@@ -11,6 +11,7 @@ from bycon import *
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
 sys.path.append( services_lib_path )
 from geomap_utils import *
+from service_helpers import *
 from service_response_generation import *
 
 """podmd
@@ -53,12 +54,9 @@ def geolocations():
         results = read_geomarker_table_web(byc)
     else:
         query, geo_pars = geo_query(byc)
-        # for g_k, g_v in geo_pars.items():
-        #     received_request_summary_add_custom_parameter(byc, g_k, g_v)
 
         if len(query.keys()) < 1:
-            response_add_error(byc, 422, "No query generated - missing or malformed parameters" )
-        
+            response_add_error(byc, 422, "No query generated - missing or malformed parameters" )    
         cgi_break_on_errors(byc)
 
         results, e = mongo_result_list( services_db, geo_coll, query, { '_id': False } )

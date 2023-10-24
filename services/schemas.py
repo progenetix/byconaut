@@ -10,6 +10,7 @@ from bycon import *
 
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
 sys.path.append( services_lib_path )
+from service_helpers import *
 from service_response_generation import *
 
 """podmd

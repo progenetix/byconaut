@@ -32,8 +32,7 @@ def endpoints():
     initialize_bycon_service(byc)
 
     schema_name = rest_path_value("endpoints")
-
-    if schema_name is None:
+    if schema_name:
         p = path.join( pkg_path, "schemas", "models", "json", "progenetix-model", "endpoints.json")
     else:
         comps = schema_name.split('.')
@@ -44,7 +43,7 @@ def endpoints():
     exclude_keys = [ "format", "examples" ]
     s = materialize(root_def, exclude_keys = exclude_keys)
 
-    if not s is False:
+    if s is not False:
 
         print('Content-Type: application/json')
         print('status:200')

@@ -7,6 +7,7 @@ from bycon import *
 
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
 sys.path.append( services_lib_path )
+from service_helpers import *
 from service_response_generation import *
 
 """podmd
@@ -38,7 +39,7 @@ def ontologymaps():
     })
 
     p_filter = rest_path_value("ontologymaps")
-    if p_filter is not None:
+    if p_filter:
         byc[ "filters" ].append({"id": p_filter})
 
     q_list = [ ]
@@ -63,7 +64,6 @@ def ontologymaps():
 
     if len(q_list) < 1:
         response_add_error(byc, 422, "No correct filter value provided!" )
-
     cgi_break_on_errors(byc)
 
     if len(q_list) > 1:

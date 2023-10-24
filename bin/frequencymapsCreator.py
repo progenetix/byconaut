@@ -11,6 +11,11 @@ import time
 
 from bycon import *
 
+dir_path = path.dirname( path.abspath(__file__) )
+lib_path = path.join( dir_path, "lib" )
+sys.path.append( lib_path )
+from collation_utils import set_collation_types
+
 """
 ## `frequencymapsCreator`
 """

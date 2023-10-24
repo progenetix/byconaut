@@ -2,7 +2,7 @@
 
 import cgi
 import re, json, yaml
-from os import path
+from os import path, environ, pardir
 
 import sys, datetime, argparse
 
@@ -10,6 +10,8 @@ from bycon import *
 
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
 sys.path.append( services_lib_path )
+from bycon_plot import *
+from service_helpers import *
 from service_response_generation import *
 
 """podmd
@@ -54,17 +56,17 @@ def samples_plotter():
         "error_response": r.errorResponse()
     })
 
-    id_rest = rest_path_value("samplesPlotter")
     local_paths = byc.get("local_paths", {})
 
-    if id_rest is not None:
+    id_rest = rest_path_value("samplesPlotter")
+    if id_rest:
         byc[ "file_id" ] = id_rest
-    elif "file_id" in byc["form_data"]:
-        byc[ "file_id" ] = byc["form_data"]["file_id"]
+    else:
+        byc[ "file_id" ] = byc["form_data"].get("file_id")
 
     if not "file_id" in byc:
         response_add_error(byc, 422, "No value was provided for collation `fileId`.")
-    cgi_break_on_errors(byc)
+        cgi_break_on_errors(byc)
 
     _create_file_handover_response(byc)
 
@@ -85,7 +87,7 @@ def samples_plotter():
         "callsets_variants_bundles": pb.callsets_variants_bundles()
     }
 
-    ByconPlot(byc, plot_data_bundle).svg_response()
+    ByconPlot(byc, plot_data_bundle).svgResponse()
 
 ################################################################################
 

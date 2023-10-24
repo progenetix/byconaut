@@ -5,13 +5,15 @@ from os import path, environ, pardir
 from pymongo import MongoClient
 from progress.bar import Bar
 
-dir_path = path.dirname( path.abspath(__file__) )
-byconaut_path = path.join( dir_path, pardir )
-parent_path = path.join( byconaut_path, pardir )
-sys.path.append( parent_path )
-
 from bycon import *
-from byconaut import *
+
+dir_path = path.dirname( path.abspath(__file__) )
+pkg_path = path.join( dir_path, pardir )
+
+lib_path = path.join( dir_path, "lib" )
+sys.path.append( lib_path )
+
+from collation_utils import hierarchy_from_file, set_collation_types
 
 """
 ## `collationsCreator`
@@ -50,7 +52,7 @@ def collations_creator():
             continue
 
         pre = coll_defs["namespace_prefix"]
-        pre_h_f = path.join( byconaut_path, "rsrc", "classificationTrees", coll_type, "numbered_hierarchies.tsv" )
+        pre_h_f = path.join( pkg_path, "rsrc", "classificationTrees", coll_type, "numbered_hierarchies.tsv" )
         collection = coll_defs["scope"]
         db_key = coll_defs["db_key"]
 

@@ -3,8 +3,13 @@
 import argparse, datetime, re, sys
 from pymongo import MongoClient
 from humps import camelize
-from os import environ
+from os import path, environ, pardir
 from bycon import *
+
+
+services_lib_path = path.join( path.dirname( path.abspath(__file__) ), pardir, "services", "lib" )
+sys.path.append( services_lib_path )
+from bycon_plot import *
 
 """
 ./bin/collationsPlotter.py --filters "pgx:icdom-85003,pgx:icdom-81703,pgx:icdom-87003,pgx:icdom-87203,pgx:icdom-94003,pgx:icdom-95003,pgx:icdom-81403" -o ./exports/test.svg -p "plot_area_height=50&plot_axis_y_max=80&plot_histogram_frequency_labels=30,60"

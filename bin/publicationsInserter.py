@@ -27,7 +27,7 @@ def main():
 
 def publications_inserter():
 
-    initialize_bycon_service(byc)
+    initialize_bycon_service(byc, "publications_inserter")
     set_processing_modes(byc)
 
     g_url = byc["service_config"]["google_spreadsheet_tsv_url"]

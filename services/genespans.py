@@ -7,6 +7,7 @@ from bycon import *
 
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
 sys.path.append( services_lib_path )
+from service_helpers import *
 from service_response_generation import *
 
 ################################################################################
@@ -39,14 +40,15 @@ def genespans():
     })
 
     gene_id = rest_path_value("genespans")
-    if gene_id is not None:
+    if gene_id:
         # REST path id assumes exact match
         byc[ "config" ][ "filter_flags" ].update({"precision": "exact"})
-    elif "gene_id" in byc[ "form_data" ]:
-        gene_id = byc[ "form_data" ]["gene_id"]
     else:
+        gene_id = byc[ "form_data" ].get("gene_id")
+
+    if not gene_id:
         response_add_error(byc, 422, "No geneId value provided!" )
-    cgi_break_on_errors(byc)
+        cgi_break_on_errors(byc)
 
     # redoing this since possibly modified in the geneId retrieval above
     get_global_filter_flags(byc)
