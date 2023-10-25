@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 
-import cgi
-import re, json, yaml
+import re, sys
 from os import path, environ, pardir
-import sys, datetime, argparse
 from pymongo import MongoClient
 
 from bycon import *

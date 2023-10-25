@@ -1,6 +1,9 @@
 import math, re
 
 from cgi_parsing import *
+
+services_lib_path = path.join( path.dirname( path.abspath(__file__) ) )
+sys.path.append( services_lib_path )
 from file_utils import read_www_tsv_to_dictlist
 
 ################################################################################

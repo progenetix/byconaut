@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import cgi
 import re, json, yaml
 from os import environ, pardir, path, scandir
 import sys, datetime

@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 
-import cgi
-import re
-from os import environ, path, pardir
-import csv
 import sys
+import cgi, re
+from os import environ, path
 from uuid import uuid4
 
 from bycon import *

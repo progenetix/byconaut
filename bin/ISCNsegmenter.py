@@ -6,6 +6,10 @@ import sys, datetime
 
 from bycon import *
 
+services_lib_path = path.join( path.dirname( path.abspath(__file__) ), pardir, "services", "lib" )
+sys.path.append( services_lib_path )
+from file_utils import read_tsv_to_dictlist
+
 """
 bin/ISCNsegmenter.py -i imports/ccghtest.tab -o exports/cghvars.tsv
 bin/ISCNsegmenter.py -i imports/progenetix-from-filemaker-ISCN-samples-cCGH.tsv -o exports/progenetix-from-filemaker-ISCN-samples-cCGH-icdom-grouping.pgxseg -g icdo_topography_id

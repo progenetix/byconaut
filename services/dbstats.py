@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 
-import cgi
-import re, json, yaml
-from os import environ, pardir, path
-import sys, os, datetime
+import sys
+from os import path
 
 from bycon import *
 

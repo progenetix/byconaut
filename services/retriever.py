@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-from os import path, environ, pardir
+from os import path
 from copy import deepcopy
 from liftover import get_lifter
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import re, sys
+from os import path
 from pymongo import MongoClient
 
 from bycon import *

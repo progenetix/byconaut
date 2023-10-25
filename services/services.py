@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from os import path, pardir, environ
 import sys, re
+from os import path, environ
 from importlib import import_module
 
 from bycon import *
