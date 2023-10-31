@@ -9,6 +9,7 @@ services_lib_path = path.join( path.dirname( path.abspath(__file__) ), pardir, "
 sys.path.append( services_lib_path )
 from bycon_bundler import ByconBundler
 from bycon_plot import *
+from interval_utils import generate_genome_bins
 
 """
 """
@@ -28,6 +29,7 @@ def pgxseg_plotter():
     initialize_bycon_service(byc)
     parse_variants(byc)
     generate_genomic_mappings(byc)
+    generate_genome_bins(byc)
 
     if not byc["args"].inputfile:
         print("No input file specified (-i, --inputfile) => read_pgxseg_2_objects(filepath, byc):quitting ...")

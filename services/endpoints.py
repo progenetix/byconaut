@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import re, json, yaml
 from os import environ, pardir, path, scandir
 import sys, datetime
@@ -8,8 +7,8 @@ from humps import camelize
 from bycon import *
 
 """podmd
-
-* <https://progenetix.org/services/schemas/biosample>
+The service provides the schemas for the `BeaconMap` OpenAPI endpoints.
+* <https://progenetix.org/services/endpoints/analyses>
 
 podmd"""
 
@@ -42,7 +41,7 @@ def endpoints():
     exclude_keys = [ "format", "examples" ]
     s = materialize(root_def, exclude_keys = exclude_keys)
 
-    if s is not False:
+    if s:
 
         print('Content-Type: application/json')
         print('status:200')

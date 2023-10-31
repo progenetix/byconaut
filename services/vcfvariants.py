@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
-
 import sys
 from os import path
 
 from bycon import *
-
 
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
 sys.path.append( services_lib_path )
@@ -21,17 +19,17 @@ the path is interpreted for an biosample `id` value if there is an entry at
 """
 
 ################################################################################
-################################################################################
-################################################################################
 
 def main():
+    try:
+        vcfvariants()
+    except Exception:
+        print_text_response(traceback.format_exc(), byc["env"], 302)
 
-    vcfvariants()
 
 ################################################################################
 
 def vcfvariants():
-
     initialize_bycon_service(byc, "biosamples")
     run_beacon_init_stack(byc)
 
@@ -44,8 +42,7 @@ def vcfvariants():
     ds_id = list(rss.keys())[0]
     export_vcf_download(rss, ds_id, byc)
 
-################################################################################
-################################################################################
+
 ################################################################################
 
 if __name__ == '__main__':

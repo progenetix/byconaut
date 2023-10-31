@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import re, sys
 from os import path, environ, pardir
 from pymongo import MongoClient
@@ -8,6 +7,8 @@ from bycon import *
 
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
 sys.path.append( services_lib_path )
+from bycon_plot import *
+from interval_utils import generate_genome_bins
 from service_helpers import *
 from service_response_generation import *
 
@@ -47,6 +48,7 @@ def interval_frequencies():
 
     initialize_bycon_service(byc, sys._getframe().f_code.co_name)
     run_beacon_init_stack(byc)
+    generate_genome_bins(byc)
 
     r = ByconautServiceResponse(byc)
     byc.update({
@@ -84,9 +86,7 @@ def interval_frequencies():
 
     for ds_id in byc["dataset_ids"]:
         coll_db = mongo_client[ds_id]
-        for f in include_f:
-
-        coll_ids = coll_db[ "frequencymaps" ].distinct("id", {"$in": include_f})
+        coll_ids = coll_db[ "frequencymaps" ].distinct("id", {"id": {"$in": include_f}})
         for c_id in coll_ids:
 
             collation_f = coll_db[ "frequencymaps" ].find_one( { "id": c_id } )
@@ -131,13 +131,10 @@ def interval_frequencies():
 
     mongo_client.close( )
 
-    plot_data_bundle = { "interval_frequencies_bundles": results }
-    ByconPlot(byc, plot_data_bundle).svgResponse()
-
     check_pgxseg_frequencies_export(byc, results)
     check_pgxmatrix_frequencies_export(byc, results)
-    byc.update({"service_response": r.populatedResponse(results)})
-    cgi_print_response( byc, 200 )
+    plot_data_bundle = { "interval_frequencies_bundles": results }
+    ByconPlot(byc, plot_data_bundle).svgResponse()
 
 ################################################################################
 

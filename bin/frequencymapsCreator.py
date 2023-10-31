@@ -16,6 +16,10 @@ lib_path = path.join( dir_path, "lib" )
 sys.path.append( lib_path )
 from collation_utils import set_collation_types
 
+services_lib_path = path.join( path.dirname( path.abspath(__file__) ), pardir, "services", "lib" )
+sys.path.append( services_lib_path )
+from interval_utils import generate_genome_bins, interval_cnv_arrays, interval_counts_from_callsets
+
 """
 ## `frequencymapsCreator`
 """
@@ -45,6 +49,7 @@ def frequencymaps_creator():
     # re-doing the interval generation for non-standard CNV binning
     # genome_binning_from_args(byc)
     generate_genomic_mappings(byc)
+    generate_genome_bins(byc)
     
     print("=> Using data values from {}".format(ds_id))
 

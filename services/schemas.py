@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import sys
 from os import path
 from humps import camelize
@@ -52,7 +51,7 @@ def schemas():
         prdbug(byc, schema_name)
 
         s = read_schema_file(byc, schema_name, "")
-        if s is not False:
+        if s:
 
             print('Content-Type: application/json')
             print('status:200')

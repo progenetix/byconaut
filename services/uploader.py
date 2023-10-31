@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-
-import sys
 import cgi, re
 from os import environ, path
 from uuid import uuid4

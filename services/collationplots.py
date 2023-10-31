@@ -41,6 +41,7 @@ def collationplots():
 
     initialize_bycon_service(byc, "collationplots")
     run_beacon_init_stack(byc)
+    generate_genome_bins(byc)
 
     id_from_path = rest_path_value("collationplots")
     if id_from_path:

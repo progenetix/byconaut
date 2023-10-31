@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-
-from os import path
 import sys
+from os import path
 
 from bycon import *
 

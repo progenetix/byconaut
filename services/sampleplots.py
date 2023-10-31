@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import sys
 from os import path
 
@@ -9,6 +8,7 @@ services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
 sys.path.append( services_lib_path )
 from bycon_bundler import ByconBundler
 from bycon_plot import *
+from interval_utils import generate_genome_bins
 
 """
 The plot service uses the standard bycon data retrieval pipeline with `biosample`
@@ -40,7 +40,7 @@ def sampleplots():
 
     initialize_bycon_service(byc, "biosamples")
     run_beacon_init_stack(byc)
-    generate_genomic_mappings(byc)
+    generate_genome_bins(byc)
 
     plot_type = byc["form_data"].get("plot_type", "histoplot")
     if plot_type not in ["histoplot", "samplesplot", "histoheatplot"]:

@@ -9,6 +9,7 @@ from bycon import *
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ), pardir, "services", "lib" )
 sys.path.append( services_lib_path )
 from file_utils import read_tsv_to_dictlist
+from interval_utils import generate_genome_bins
 
 """
 bin/ISCNsegmenter.py -i imports/ccghtest.tab -o exports/cghvars.tsv
@@ -31,6 +32,7 @@ def iscn_segmenter():
 	set_processing_modes(byc)
 	parse_variants(byc)
 	generate_genomic_mappings(byc)
+	generate_genome_bins(byc)
 
 	group_parameter = "histological_diagnosis_id"
 

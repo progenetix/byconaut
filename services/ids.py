@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
-
-import re, json
+import re
 from os import environ, path, pardir
-import sys
 
-# local
 from bycon import *
 
 dir_path = path.dirname( path.abspath(__file__) )

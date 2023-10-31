@@ -198,7 +198,6 @@ class ByconBundler:
 
     #--------------------------------------------------------------------------#
 
-
     def callsets_frequencies_bundles(self):
             
         self.intervalFrequenciesBundles.append(self.__callsetBundleCreateIset())

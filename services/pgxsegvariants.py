@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
-
 import sys
 from os import path, environ, pardir
 
 from bycon import *
-
 
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
 sys.path.append( services_lib_path )

@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-
-# import re, json, yaml
-# from os import path, environ, pardir
 from os import environ
 import sys, datetime
 from isodate import date_isoformat
@@ -9,6 +6,12 @@ from pymongo import MongoClient
 from progress.bar import Bar
 
 from bycon import *
+
+services_lib_path = path.join( path.dirname( path.abspath(__file__) ), pardir, "services", "lib" )
+sys.path.append( services_lib_path )
+from bycon_bundler import ByconBundler
+from bycon_plot import *
+from interval_utils import generate_genome_bins, interval_cnv_arrays
 
 """
 
@@ -46,6 +49,7 @@ def callsets_refresher():
     # re-doing the interval generation for non-standard CNV binning
     # genome_binning_from_args(byc)
     generate_genomic_mappings(byc)
+    generate_genome_bins(byc)
 
     data_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
     data_db = data_client[ ds_id ]
@@ -102,7 +106,7 @@ def callsets_refresher():
         cs_update_obj.update({"cnv_statusmaps": maps})
         cs_update_obj.update({"cnv_stats": cs_cnv_stats})
         cs_update_obj.update({"cnv_chro_stats": cs_chro_stats})
-        cs_update_obj.update({ "updated": datetime.datetime.now().isoformat() })
+        cs_update_obj.update({ "updated": datetime.now().isoformat() })
 
         if not byc["test_mode"]:
             cs_coll.update_one( { "_id": _id }, { '$set': cs_update_obj }  )

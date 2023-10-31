@@ -9,6 +9,7 @@ services_lib_path = path.join( path.dirname( path.abspath(__file__) ), pardir, "
 sys.path.append( services_lib_path )
 from bycon_bundler import ByconBundler
 from bycon_plot import *
+from interval_utils import generate_genome_bins
 
 """
 """
@@ -47,6 +48,7 @@ def samples_plotter():
     # re-doing the interval generation for non-standard CNV binning
     # genome_binning_from_args(byc)
     generate_genomic_mappings(byc)
+    generate_genome_bins(byc)
     RSS = ByconResultSets(byc).datasetsResults()
     pdb = ByconBundler(byc).resultsets_frequencies_bundles(RSS)
 

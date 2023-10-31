@@ -10,10 +10,11 @@ from progress.bar import Bar
 from bycon import *
 
 dir_path = path.dirname( path.abspath(__file__) )
-pkg_path = path.join( dir_path, pardir )
-sys.path.append( path.join( pkg_path, pardir ) )
+lib_path = path.join(dir_path , "lib")
+sys.path.append( lib_path )
 
-from byconaut import *
+from collation_utils import *
+from mongodb_utils import mongodb_update_indexes
 
 """
 The housekeeping script contains **non-destructive** maintenance scripts which

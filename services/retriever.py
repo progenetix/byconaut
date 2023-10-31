@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import sys
 from os import path
 from copy import deepcopy

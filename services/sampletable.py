@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
-
 import sys
 from os import path
 
 from bycon import *
-
 
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
 sys.path.append( services_lib_path )
@@ -51,6 +49,8 @@ def sampletable():
 
     collated_results = []
     for ds_id, data in rsd.items():
+        prdbug(byc, ds_id)
+
         collated_results += data
 
     export_datatable_download(collated_results, byc)

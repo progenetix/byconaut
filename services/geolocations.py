@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import re, json, sys
 from os import path, environ
 from pymongo import MongoClient

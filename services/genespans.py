@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-
-import re, json
+import re, json, sys
 from os import environ, path
 
 from bycon import *

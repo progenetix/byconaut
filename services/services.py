@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-
-import sys, re
+import re
 from os import path, environ
 from importlib import import_module
 
@@ -39,6 +38,7 @@ def services():
     mod = inspect.getmodule(frm[0])
 
     # updates `beacon_defaults`, `dataset_definitions` and `local_paths`
+    prdbug(byc, f'--- services loc dir {loc_dir}')
     update_rootpars_from_local(loc_dir, byc)
     read_service_prefs(service, conf_dir, byc)
 
@@ -71,9 +71,9 @@ def services():
     if not f:
         pass
     elif f:
-        # dynamic package/function loading; e.g. `filteringTerms` loads
-        # `filteringTerms` from `filteringTerm.py` which is an alias to
-        # the `filtering_terms` function there...
+        # dynamic package/function loading; e.g. `intervalFrequencies` loads
+        # `intervalFrequencies` from `interval_frequencies.py` which is an alias to
+        # the `interval_frequencies` function there...
         try:
             mod = import_module(f)
             serv = getattr(mod, f)
@@ -83,7 +83,7 @@ def services():
             print('Content-Type: text')
             print('status:422')
             print()
-            print('Service {} WTF error: {}'.format(f, e))
+            print(f'Service {f} WTF error: {e}')
 
             exit()
 
