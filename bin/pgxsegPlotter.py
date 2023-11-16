@@ -12,6 +12,7 @@ from bycon_plot import *
 from interval_utils import generate_genome_bins
 
 """
+
 """
 
 ################################################################################
@@ -27,8 +28,7 @@ def main():
 def pgxseg_plotter():
 
     initialize_bycon_service(byc)
-    parse_variants(byc)
-    generate_genomic_mappings(byc)
+    run_beacon_init_stack(byc)
     generate_genome_bins(byc)
 
     if not byc["args"].inputfile:
@@ -41,11 +41,7 @@ def pgxseg_plotter():
         exit()
 
     pb = ByconBundler(byc)
-    pb.pgxseg_to_bundle(inputfile)
-    plot_data_bundle = {
-        "interval_frequencies_bundles": pb.callsets_frequencies_bundles(),
-        "callsets_variants_bundles": pb.callsets_variants_bundles()
-    }
+    pdb = pb.pgxseg_to_plotbundle(inputfile)
 
     byc.update({"output":"samplesplot"})
     if byc["args"].outputfile:
@@ -53,11 +49,11 @@ def pgxseg_plotter():
     else:
         outfile = re.sub(".pgxseg", "_sampleplots.svg", inputfile)
 
-    ByconPlot(byc, plot_data_bundle).svg2file(outfile)
+    ByconPlot(byc, pdb).svg2file(outfile)
 
     byc.update({"output":"histoplot"})
     outfile = re.sub(".pgxseg", "_histoplot.svg", inputfile)
-    ByconPlot(byc, plot_data_bundle).svg2file(outfile)
+    ByconPlot(byc, pdb).svg2file(outfile)
 
 ################################################################################
 ################################################################################

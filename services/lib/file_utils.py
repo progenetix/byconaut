@@ -12,7 +12,6 @@ from interval_utils import interval_cnv_arrays, interval_counts_from_callsets
 from variant_mapping import ByconVariant
 from bycon_helpers import return_paginated_list
 
-
 ################################################################################
 
 def read_tsv_to_dictlist(filepath, max_count=0):

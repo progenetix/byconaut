@@ -28,6 +28,7 @@ def samples_plotter():
 
     initialize_bycon_service(byc, "biosamples")
     run_beacon_init_stack(byc)
+    generate_genome_bins(byc)
 
     if not byc["args"].outputfile:
         print("No output file specified (-o, --outputfile) => quitting ...")
@@ -47,8 +48,6 @@ def samples_plotter():
 
     # re-doing the interval generation for non-standard CNV binning
     # genome_binning_from_args(byc)
-    generate_genomic_mappings(byc)
-    generate_genome_bins(byc)
     RSS = ByconResultSets(byc).datasetsResults()
     pdb = ByconBundler(byc).resultsets_frequencies_bundles(RSS)
 

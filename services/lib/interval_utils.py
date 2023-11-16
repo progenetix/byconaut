@@ -2,7 +2,7 @@ import re
 import numpy as np
 from copy import deepcopy
 
-from genome_utils import cytobands_label_from_positions
+from bycon import cytobands_label_from_positions
 
 ################################################################################
 
@@ -115,13 +115,14 @@ def __generate_genomic_intervals(byc):
             if end >= p_max:
                 arm = "q"
             size = end - start
+            cbs = cytobands_label_from_positions(byc, chro, start, end)
 
             intervals.append({
                 "no": i,
                 "id": f'{chro}{arm}:{start}-{end}',
                 "reference_name": chro,
                 "arm": arm,
-                "cytobands": f'{chro}{cytobands_label_from_positions(byc, chro, start, end)}',
+                "cytobands": f'{chro}{cbs}',
                 "start": start,
                 "end": end,
                 "size": size

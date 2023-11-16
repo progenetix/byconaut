@@ -3,7 +3,7 @@ from datetime import datetime, date
 from os import environ, path
 from PIL import Image, ImageColor, ImageDraw
 
-from cgi_parsing import print_svg_response, prjsonnice, test_truthy, prdbug
+from cgi_parsing import prjsonnice, test_truthy, prdbug
 from genome_utils import bands_from_cytobands, retrieve_gene_id_coordinates
 
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ) )
@@ -104,6 +104,7 @@ class ByconPlot:
         p_d_p = self.plot_defaults.get("parameters", {})
         p_t_s = self.plot_defaults.get("plot_types", {})
 
+
         d_k = p_t_s[plot_type].get("data_key")
 
         # TODO: get rid of the "results"?
@@ -113,6 +114,7 @@ class ByconPlot:
             "results_number": len(self.plot_data_bundle.get(d_k, [])),
             "data_type": p_t_s[plot_type].get("data_type", "analyses")
         }
+        # prdbug(self.byc, {"plot_type": plot_type, "plv": self.plv})
 
         self.__filter_empty_callsets_results()
 
@@ -141,12 +143,12 @@ class ByconPlot:
 
         # calculate the base
         chr_b_s = 0
+
         for chro in self.plv["plot_chros"]:
             c_l = self.byc["cytolimits"][chro]
             chr_b_s += c_l["size"]
 
         pyf = self.plv["plot_area_height"] * 0.5 / self.plv["plot_axis_y_max"]
-
         gaps = len(self.plv["plot_chros"]) - 1
         gap_sw = gaps * self.plv["plot_region_gap_width"]
         genome_width = paw - gap_sw
@@ -242,6 +244,7 @@ class ByconPlot:
 
         return title
 
+
     # --------------------------------------------------------------------------#
     # --------------------------------------------------------------------------#
 
@@ -262,6 +265,7 @@ class ByconPlot:
         )
 
         self.plv["Y"] += self.plv["plot_title_font_size"]
+
 
     # --------------------------------------------------------------------------#
     # --------------------------------------------------------------------------#
@@ -342,6 +346,7 @@ class ByconPlot:
         self.plv["Y"] += self.plv["plot_chro_height"]
         self.plv["Y"] += self.plv["plot_region_gap_width"]
 
+
     # --------------------------------------------------------------------------#
     # --------------------------------------------------------------------------#
 
@@ -361,6 +366,7 @@ class ByconPlot:
             c_defs += f'\n</linearGradient>'
 
         self.plv["pls"].insert(0, c_defs)
+
 
     # --------------------------------------------------------------------------#
     # --------------------------------------------------------------------------#
@@ -413,6 +419,7 @@ class ByconPlot:
             f'<text x="{lab_x_e}" y="{self.plv["Y"] - round(self.plv["plot_samplestrip_height"] * 0.2, 1)}" class="title-left">{label}</text>'
         )
 
+
     # --------------------------------------------------------------------------#
     # --------------------------------------------------------------------------#
 
@@ -425,6 +432,7 @@ class ByconPlot:
             if len(new_order) == len(self.plv["results"]):
                 self.plv["results"][:] = [self.plv["results"][i] for i in dendrogram.get("leaves", [])]
                 self.plv.update({"dendrogram": dendrogram})
+
 
     # --------------------------------------------------------------------------#
     # --------------------------------------------------------------------------#
@@ -465,6 +473,7 @@ class ByconPlot:
             x += self.plv["plot_region_gap_width"]
 
         self.plv["Y"] += h
+
 
     # --------------------------------------------------------------------------#
     # --------------------------------------------------------------------------#
@@ -515,6 +524,7 @@ class ByconPlot:
             n += f'" fill="none" stroke="{p_s_c}" stroke-width="{p_s_w}px" />'
 
             self.plv["pls"].append(n)
+
 
     # --------------------------------------------------------------------------#
     # --------------------------------------------------------------------------#
@@ -716,7 +726,6 @@ class ByconPlot:
             base64_encoded_result_str
         ))
 
-
         self.plv["Y"] += h
 
         g_id = f_set.get("group_id", "NA")
@@ -783,6 +792,7 @@ class ByconPlot:
 
         self.__plot_area_add_grid()
 
+
     # --------------------------------------------------------------------------#
     # --------------------------------------------------------------------------#
 
@@ -818,6 +828,7 @@ class ByconPlot:
         else:
             lab_y = h_y_0 - self.plv["plot_labelcol_font_size"] * 0.5
             self.plv["pls"].append(f'<text x="{lab_x_e}" y="{lab_y}" class="title-left">{g_id}{count_lab}</text>')
+
 
     # --------------------------------------------------------------------------#
     # --------------------------------------------------------------------------#
@@ -867,6 +878,7 @@ class ByconPlot:
                     continue
 
                 self.plv["pls"].append(f'<text x="{x_y_l}" y="{y_l_y}" class="label-y">{neg}{y_m}{u}</text>')
+
 
     # -------------------------------------------------------------------------#
     # --------------------------- probesplot ----------------------------------#
@@ -1281,6 +1293,7 @@ def get_plot_parameters(plv, byc):
 
     # this is in case there was a `plotPars` argument from command line
     plot_pars = form.get("plot_pars")
+
     if plot_pars:
         for ppv in plot_pars.split('&'):
             pp, pv = ppv.split('=')
@@ -1294,14 +1307,14 @@ def get_plot_parameters(plv, byc):
             p_k_t = p_d_p[p_k].get("type", "string")
             p_d = form[p_k]
 
-            # prdbug(byc, f'{p_k}: {p_d} ({p_k_t})')
+            prdbug(byc, f'{p_k}: {p_d} ({p_k_t}), type {type(p_d)}')
 
             if "array" in p_k_t:
                 p_i_t = p_d_p[p_k].get("items", "string")
                 if type(p_d) is not list:
                     p_d = re.split(',', p_d)
                 if "int" in p_i_t:
-                    p_d = list(map(int, ))
+                    p_d = list(map(int, p_d))
                 elif "number" in p_i_t:
                     p_d = list(map(float, p_d))
                 else:
@@ -1318,5 +1331,25 @@ def get_plot_parameters(plv, byc):
                 plv.update({p_k: str(p_d)})
 
     return plv
+
+
+################################################################################
+
+def print_svg_response(this, env="server", status_code=200):
+    if not this:
+        return
+
+    if "server" in env:
+        print('Content-Type: image/svg+xml')
+        print('status:' + str(status_code))
+        print()
+
+    elif "file" in env:
+        # this opion can be used to reroute the response to a file
+        return this
+
+    print(this)
+    print()
+    exit()
 
 

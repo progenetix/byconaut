@@ -8,11 +8,12 @@ from bycon import *
 
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ), pardir, "services", "lib" )
 sys.path.append( services_lib_path )
+from bycon_bundler import *
 from bycon_plot import *
 from interval_utils import generate_genome_bins
 
 """
-./bin/collationsPlotter.py --filters "pgx:icdom-85003,pgx:icdom-81703,pgx:icdom-87003,pgx:icdom-87203,pgx:icdom-94003,pgx:icdom-95003,pgx:icdom-81403" -o ./exports/test.svg -p "plot_area_height=50&plot_axis_y_max=80&plot_histogram_frequency_labels=30,60"
+./bin/collationsPlotter.py -d "progenetix,cellz" --filters "pgx:icdom-85003,pgx:icdom-81703,pgx:icdom-87003,pgx:icdom-87203,pgx:icdom-94003,pgx:icdom-95003,pgx:icdom-81403" -o ./exports/multicollationtest.svg -p "plot_area_height=50&plot_axis_y_max=80&plot_histogram_frequency_labels=30,60"
 
 """
 
@@ -28,92 +29,26 @@ def main():
 def collations_plotter():
 
     initialize_bycon_service(byc)
-    select_dataset_ids(byc)
-    parse_variants(byc)
-    generate_genomic_mappings(byc)
+    run_beacon_init_stack(byc)
     generate_genome_bins(byc)
-
-    p_d_p = byc["plot_defaults"]["parameters"]
-
-    # plot parameters can be modified by providing them in a `-p` string...
-
-    if byc["args"].parse:
-        for c_arg in re.split(r',|&',byc["args"].parse):
-            p_v = re.split('=', c_arg)
-            if len(p_v) != 2:
-                continue
-            if p_v[0] in p_d_p.keys():
-                byc["form_data"].update({p_v[0]:p_v[1]})
 
     byc.update({"output":"histoplot"})
 
     if len(byc["dataset_ids"]) < 1:
         print("Please indicate one or more dataset ids using `-d`")
         exit()
+    if len(byc["form_data"].get("filters", [])) < 1:
+        print("Please indicate one or more collation ids using `--filters`")
     if not byc["args"].outputfile:
         print("No output file specified (-o, --outputfile) => quitting ...")
         exit()
     svg_file = byc["args"].outputfile
     if not ".svg" in svg_file.lower():
         print("The output file should be an `.svg` => quitting ...")
-        exit()
+        exit()    
 
-    coll_ids = byc["form_data"].get("filters", [])
-    
-    if len(coll_ids) < 1:
-        print("Please indicate one or more collation ids using `--filters`")
-
-    # data retrieval & response population
-    fmap_name = "frequencymap"
-    if "codematches" in byc["method"]:
-        fmap_name = "frequencymap_codematches"
-
-    results = [ ]
-    mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
-    for ds_id in byc[ "dataset_ids" ]:
-
-        for f_val in coll_ids:
- 
-            collation_f = mongo_client[ ds_id ][ "frequencymaps" ].find_one( { "id": f_val } )
-            collation_c = mongo_client[ ds_id ][ "collations" ].find_one( { "id": f_val } )
-
-            if collation_f is None:
-                continue
-
-            if "with_samples" in byc["form_data"]: 
-                if int(byc["form_data"]["with_samples"]) > 0:
-                    if int(collation_c[ "code_matches" ]) < 1:
-                        continue
-
-            if not fmap_name in collation_f:
-                continue
-
-            if not collation_f:
-                print("No collation {} was found in {}.frquencymaps".format(f_val, ds_id))
-            if not collation_c:
-                print("No collation {} was found in {}.collations".format(f_val, ds_id))
-
-            s_c = collation_c["count"]
-            if "analysis_count" in collation_f[ fmap_name ]:
-               s_c = collation_f[ fmap_name ]["analysis_count"]
-
-            i_d = collation_c["id"]
-            r_o = {
-                "dataset_id": ds_id,
-                "group_id": i_d,
-                "label": re.sub(r';', ',', collation_c["label"]),
-                "sample_count": s_c,
-                "interval_frequencies": collation_f[ fmap_name ]["intervals"] }
-                
-            results.append(r_o)
-
-    mongo_client.close( )
-
-    svg = bycon_plot_generator(byc, results)
-
-    svg_fh = open(svg_file, "w")
-    svg_fh.write( svg )
-    svg_fh.close()
+    pdb = ByconBundler(byc).collationsPlotbundles()
+    ByconPlot(byc, pdb).svg2file(svg_file)
 
 ################################################################################
 ################################################################################

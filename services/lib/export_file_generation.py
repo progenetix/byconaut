@@ -1,9 +1,13 @@
 import pymongo
-from os import environ
+from os import path, environ
 
 from cgi_parsing import *
 from bycon_helpers import get_nested_value, return_paginated_list
 from variant_mapping import ByconVariant
+
+services_lib_path = path.join( path.dirname( path.abspath(__file__) ) )
+sys.path.append( services_lib_path )
+from service_helpers import open_text_streaming, close_text_streaming
 
 ################################################################################
 
@@ -389,14 +393,12 @@ def export_vcf_download(datasets_results, ds_id, byc):
     data_client = pymongo.MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
     v_coll = data_client[ ds_id ][ "variants" ]
     ds_results = datasets_results.get(ds_id, {})
-    # prdbug(byc, ds_results)
     if not "variants._id" in ds_results:
         # TODO: error message here
         return
     v__ids = ds_results["variants._id"].get("target_values", [])
     if test_truthy( byc["form_data"].get("paginate_results", True) ):
         v__ids = return_paginated_list(v__ids, byc.get("skip", 0), byc.get("limit", 0))
-
 
     v_instances = []
     for v_id in v__ids:
@@ -407,9 +409,9 @@ def export_vcf_download(datasets_results, ds_id, byc):
 
     variant_ids = []
     for v in v_instances:
-        variant_ids += (v.get("variant_internal_id", "__none__"), )
-    # no duplicates here since each has its line
-    variant_ids = list(set(variant_ids))
+        v_iid = v.get("variant_internal_id", "__none__")
+        if v_iid not in variant_ids:
+            variant_ids.append(v_iid)
 
     biosample_ids = []
     for v in v_instances:

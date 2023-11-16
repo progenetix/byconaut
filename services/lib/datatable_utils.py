@@ -105,6 +105,9 @@ def import_datatable_dict_line(byc, parent, fieldnames, lineobj, primary_scope="
 
         v = lineobj[f_n].strip()
 
+        if v == ".":
+            v = ""
+
         if len(v) < 1:
             if f_n in io_params.keys():
                 v = io_params[f_n].get("default", "")

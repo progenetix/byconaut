@@ -12,9 +12,11 @@ from bycon import *
 dir_path = path.dirname( path.abspath(__file__) )
 lib_path = path.join(dir_path , "lib")
 sys.path.append( lib_path )
-
-from collation_utils import *
 from mongodb_utils import mongodb_update_indexes
+
+services_lib_path = path.join( dir_path, pardir, "services", "lib" )
+sys.path.append( services_lib_path )
+from collation_utils import *
 
 """
 The housekeeping script contains **non-destructive** maintenance scripts which

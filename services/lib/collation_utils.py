@@ -5,18 +5,21 @@ from progress.bar import Bar
 
 def set_collation_types(byc):
 
-    if byc["args"].collationTypes:
-        s_p = {}
-        for p in re.split(",", byc["args"].collationTypes):
-            if p in byc["filter_definitions"].keys():
-                if byc["filter_definitions"]["p"].get("collationed", True) is False:
-                    continue
-                s_p.update({p:byc["filter_definitions"][p]})
-        if len(s_p.keys()) < 1:
-            print("No existing collation type was provided with -c ...")
-            exit()
+    if not byc["args"].collationTypes:
+        return byc
 
-        byc.update({"filter_definitions":s_p})
+    cts = re.split(",", byc["args"].collationTypes)
+    s_p = {}
+    for p in cts:
+        if p in byc["filter_definitions"].keys():
+            if byc["filter_definitions"][p].get("collationed", True) is False:
+                continue
+            s_p.update({p:byc["filter_definitions"][p]})
+    if len(s_p.keys()) < 1:
+        print("No existing collation type was provided with -c ...")
+        exit()
+
+    byc.update({"filter_definitions":s_p})
 
     return byc
 

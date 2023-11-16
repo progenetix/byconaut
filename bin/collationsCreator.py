@@ -10,8 +10,8 @@ from bycon import *
 dir_path = path.dirname( path.abspath(__file__) )
 pkg_path = path.join( dir_path, pardir )
 
-lib_path = path.join( dir_path, "lib" )
-sys.path.append( lib_path )
+services_lib_path = path.join( pkg_path, "services", "lib" )
+sys.path.append( services_lib_path )
 
 from collation_utils import hierarchy_from_file, set_collation_types
 
@@ -46,9 +46,8 @@ def collations_creator():
 
     for coll_type, coll_defs in byc["filter_definitions"].items():
 
-        collationed = coll_defs.get("collationed", True)
-
-        if collationed is False:
+        collationed = coll_defs.get("collationed")
+        if not collationed:
             continue
 
         pre = coll_defs["namespace_prefix"]
@@ -56,11 +55,11 @@ def collations_creator():
         collection = coll_defs["scope"]
         db_key = coll_defs["db_key"]
 
-        if  path.exists( pre_h_f ):
+        if "PMID" in coll_type:
+            hier =  _make_dummy_publication_hierarchy(byc)
+        elif  path.exists( pre_h_f ):
             print( "Creating hierarchy for " + coll_type)
             hier =  get_prefix_hierarchy( ds_id, coll_type, pre_h_f, byc)
-        elif "PMID" in coll_type:
-            hier =  _make_dummy_publication_hierarchy(byc)
         else:
             # create /retrieve hierarchy tree; method to be developed
             print( "Creating dummy hierarchy for " + coll_type)
@@ -74,9 +73,7 @@ def collations_creator():
         data_coll = data_db[ collection ]
 
         onto_ids = _get_ids_for_prefix( data_coll, coll_defs )
-
         is_series = coll_defs.get("is_series", False)
-
         onto_keys = list( set( onto_ids ) & hier.keys() )
 
         # get the set of all parents for sample codes
@@ -196,6 +193,7 @@ def get_prefix_hierarchy( ds_id, coll_type, pre_h_f, byc):
                 "id": "NCIT:C000000",
                 "label": "Unplaced Entities",
                 "ft_type": "ontologyTerm",
+                "name": "NCI Thesaurus OBO Edition",
                 "collation_type": coll_type,
                 "namespace_prefix": coll_defs.get("namespace_prefix", ""),
                 "scope": coll_defs.get("scope", ""),
@@ -277,14 +275,13 @@ def _make_dummy_publication_hierarchy(byc):
 
     coll_type = "PMID"
     coll_defs = byc["filter_definitions"][coll_type]
-    data_db = "publications"
+    data_db = "progenetix"
     data_coll = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))[ data_db ][ "publications" ]
-    query = { "id": { "$regex": coll_defs["pattern"] } }
-
-    hier = { }
-
+    query = { "id": { "$regex": r'^PMID\:\d+?$' } }
     no = data_coll.count_documents( query )
     bar = Bar("Publications...", max = no, suffix='%(percent)d%%'+" of "+str(no) )
+
+    hier = {}
 
     for order, pub in enumerate( data_coll.find( query, { "_id": 0 } ) ):
         code = pub["id"]
@@ -294,10 +291,12 @@ def _make_dummy_publication_hierarchy(byc):
                 "id":  code,
                 "label": pub["label"],
                 "ft_type": "ontologyTerm",
+                "name": "NCBI PubMed",
                 "collation_type": coll_type,
                 "namespace_prefix": coll_defs.get("namespace_prefix", ""),
                 "scope": coll_defs.get("scope", ""),
                 "db_key": coll_defs.get("db_key", ""),
+                "updated": datetime.datetime.now().isoformat(),
                 "hierarchy_paths": [ { "order": int(order), "depth": 0, "path": [ code ] } ],
                 "parent_terms": [ code ],
                 "child_terms": [ code ]
@@ -357,6 +356,7 @@ def _get_hierarchy_item(data_coll, coll_defs, coll_type, code, order, depth, pat
         "namespace_prefix": coll_defs.get("namespace_prefix", ""),
         "scope": coll_defs.get("scope", ""),
         "db_key": coll_defs.get("db_key", ""),
+        "updated": datetime.datetime.now().isoformat(),
         "hierarchy_paths": [ { "order": int(order), "depth": int(depth), "path": list(path) } ],
         "parent_terms": list(path),
         "child_terms": [ code ]

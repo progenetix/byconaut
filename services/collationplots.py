@@ -10,7 +10,9 @@ from bycon import *
 
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
 sys.path.append( services_lib_path )
+from bycon_bundler import *
 from bycon_plot import *
+from interval_utils import generate_genome_bins
 from service_helpers import *
 from service_response_generation import *
 
@@ -53,48 +55,13 @@ def collationplots():
         response_add_error(byc, 422, "No value was provided for collation `id` or `filters`.")  
         cgi_break_on_errors(byc)
 
-    fmap_name = "frequencymap"
     plot_type = byc["form_data"].get("plot_type", "histoplot")
     if plot_type not in ["histoplot", "samplesplot", "histoheatplot"]:
         plot_type = "histoplot"
     byc.update({"output": plot_type})
 
-    prdbug(byc, f'===> method: {fmap_name}')
-    prdbug(byc, byc["filters"])
-
-    results = [ ]
-    mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
-
-    for ds_id in byc["dataset_ids"]:
-        coll_db = mongo_client[ds_id]
-        for f in byc[ "filters" ]:
-            f_val = f["id"]
-            f_q = { "id": f_val }
-            collation_f = coll_db[ "frequencymaps" ].find_one( { "id": f_val } )
-            collation_c = coll_db[ "collations" ].find_one( { "id": f_val } )
-
-            if not collation_f:
-                continue
-            if not collation_c:
-                continue
-            if not fmap_name in collation_f:
-                continue
-
-            r_o = {
-                "dataset_id": ds_id,
-                "group_id": f_val,
-                "label": re.sub(r';', ',', collation_c["label"]),
-                "sample_count": collation_f[ fmap_name ].get("analysis_count", 0),
-                "interval_frequencies": collation_f[ fmap_name ]["intervals"] }
-                
-            results.append(r_o)
-
-
-    mongo_client.close( )
-    # prdbug(byc, results)
-
-    plot_data_bundle = { "interval_frequencies_bundles": results }
-    ByconPlot(byc, plot_data_bundle).svgResponse()
+    pdb = ByconBundler(byc).collationsPlotbundles()
+    ByconPlot(byc, pdb).svgResponse()
 
 
 ################################################################################

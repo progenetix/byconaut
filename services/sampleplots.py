@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys
 from os import path
+from pathlib import Path
 
 from bycon import *
 
@@ -46,12 +47,20 @@ def sampleplots():
     if plot_type not in ["histoplot", "samplesplot", "histoheatplot"]:
         plot_type = "histoplot"
     byc.update({"output": plot_type})
-    RSS = ByconResultSets(byc).datasetsResults()
-    pdb = ByconBundler(byc).resultsets_frequencies_bundles(RSS)
 
-    # getting the variants for the ssamples is time consuming so only optional
-    if "samples" in plot_type:
-        pdb.update( ByconBundler(byc).resultsets_callset_bundles(RSS) )
+    pb = ByconBundler(byc)
+
+    file_id = byc["form_data"].get("file_id", "___no-input-file___")
+    inputfile = Path( path.join( *byc["local_paths"][ "server_tmp_dir_loc" ], file_id ) )
+    if inputfile.is_file():
+        pdb = pb.pgxseg_to_plotbundle(inputfile)
+    else:
+        RSS = ByconResultSets(byc).datasetsResults()
+        pdb = pb.resultsets_frequencies_bundles(RSS)
+
+        # getting the variants for the samples is time consuming so only optional
+        if "samples" in plot_type:
+            pdb.update( ByconBundler(byc).resultsets_callset_bundles(RSS) )
 
     ByconPlot(byc, pdb).svgResponse()
 

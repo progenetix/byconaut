@@ -28,6 +28,7 @@ service_path_aliases:
   # samplesPlotter: samplesPlotter
   samplematrix: samplematrix
   sampletable: sampletable
+  samplesPlotter: sampleplots
   sampleplots: sampleplots
   schemas: schemas
   uploader: uploader
