@@ -47,7 +47,7 @@ def frequencymaps_creator():
     generate_genomic_mappings(byc)
     generate_genome_bins(byc)
     
-    print(f"=> Using data values from {ds_id} for {byc["genomic_interval_count"]} intervals...")
+    print(f'=> Using data values from {ds_id} for {byc.get("genomic_interval_count", 0)} intervals...')
 
     data_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
     data_db = data_client[ ds_id ]

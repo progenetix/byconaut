@@ -4,11 +4,12 @@ from os import environ, path
 from PIL import Image, ImageColor, ImageDraw
 
 from cgi_parsing import prjsonnice, test_truthy, prdbug
-from genome_utils import bands_from_cytobands, retrieve_gene_id_coordinates
+from genome_utils import retrieve_gene_id_coordinates
 
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ) )
 sys.path.append( services_lib_path )
 from clustering_utils import cluster_frequencies, cluster_samples
+from cytoband_utils import bands_from_cytobands
 
 # http://progenetix.org/cgi/bycon/services/samplesplot.py?plotChros=8,9,17&labels=8:120000000-123000000:Some+Interesting+Region&plot_gene_symbols=MYCN,REL,TP53,MTAP,CDKN2A,MYC,ERBB2,CDK1&filters=pgx:icdom-85003&plotType=histoplot
 # http://progenetix.org/services/samplesplot?datasetIds=progenetix&referenceName=9&variantType=DEL&start=21500000&start=21975098&end=21967753&end=22500000&filters=NCIT:C3058&plotType=histoplot&plotGeneSymbols=CDKN2A,MTAP,EGFR,BCL6
@@ -35,9 +36,11 @@ class ByconPlot:
         self.byc = byc
         self.env = byc.get("env", "server")
         self.plot_defaults = byc.get("plot_defaults", {})
+        self.cytolimits = byc.get("cytolimits", {})
         self.plot_data_bundle = plot_data_bundle
         self.svg = None
         self.plot_time_init = datetime.now()
+
 
     # -------------------------------------------------------------------------#
     # ----------------------------- public ------------------------------------#
@@ -143,10 +146,12 @@ class ByconPlot:
 
         # calculate the base
         chr_b_s = 0
+        
+        c_l_s = dict(self.cytolimits)
 
         for chro in self.plv["plot_chros"]:
-            c_l = self.byc["cytolimits"][chro]
-            chr_b_s += c_l["size"]
+            c_l = c_l_s[str(chro)]
+            chr_b_s += int(c_l.get("size", 0))
 
         pyf = self.plv["plot_area_height"] * 0.5 / self.plv["plot_axis_y_max"]
         gaps = len(self.plv["plot_chros"]) - 1
@@ -155,7 +160,7 @@ class ByconPlot:
         b2pf = genome_width / chr_b_s  # TODO: only exists if using stack
 
         title = self.plv.get("plot_title", "")
-        if len(title) < 3:
+        if not title:
             if self.plv["results_number"] == 1:
                 title = self.__format_resultset_title()
 
@@ -221,7 +226,6 @@ class ByconPlot:
             "plot_title": "No matching CNV data"
         })
 
-
         self.__plot_add_title()
 
     # --------------------------------------------------------------------------#
@@ -249,8 +253,6 @@ class ByconPlot:
     # --------------------------------------------------------------------------#
 
     def __plot_add_title(self):
-        if len(self.plv.get("plot_title", "")) < 3:
-            return
         prdbug(self.byc, f'{inspect.stack()[1][3]} from {inspect.stack()[2][3]}')
 
         self.plv["Y"] += self.plv["plot_title_font_size"]
@@ -362,7 +364,6 @@ class ByconPlot:
 
             for k, v in cs_c.items():
                 c_defs += f'\n  <stop offset="{k}" stop-color="{v}" />'
-
             c_defs += f'\n</linearGradient>'
 
         self.plv["pls"].insert(0, c_defs)
@@ -372,6 +373,7 @@ class ByconPlot:
     # --------------------------------------------------------------------------#
 
     def __plot_add_samplestrips(self):
+        # prdbug(self.byc, f'..... plot_type is {self.plv["plot_type"]}')
         if not "sample" in self.plv["plot_type"]:
             return
         prdbug(self.byc, f'{inspect.stack()[1][3]} from {inspect.stack()[2][3]}')
@@ -381,15 +383,18 @@ class ByconPlot:
         self.plv.update({"plot_strip_bg_i": len(self.plv["pls"]) - 1})
 
         if len(self.plv["results"]) > 0:
-
+            dataset_ids = list(set([s.get("dataset_id", "NA") for s in self.plv["results"]]))
             self.__plot_order_samples()
             for s in self.plv["results"]:
                 self.__plot_add_one_samplestrip(s)
                 if self.plv["plot_labelcol_font_size"] > 5 and len(self.plv["results"]) > 1:
                     cs_id = s.get("callset_id", "")
+                    ds_lab = ""
+                    if len(dataset_ids) > 1:
+                        ds_lab = f', {s.get("dataset_id", "")}'
                     if len(cs_id) > 0:
                         cs_id = f' ({cs_id})'
-                    g_lab = f'{s.get("biosample_id", "")}{cs_id}'
+                    g_lab = f'{s.get("biosample_id", "")}{ds_lab}{cs_id}'
                     self.__samplestrip_add_left_label(g_lab)
 
         self.plv["plot_last_area_ye"] = self.plv["Y"]
@@ -445,26 +450,37 @@ class ByconPlot:
         x = self.plv["plot_area_x0"]
         h = self.plv["plot_samplestrip_height"]
 
-        cnv_c = {
-            "DUP": self.plv["plot_dup_color"],
-            "DEL": self.plv["plot_del_color"]
-        }
+        pvts = self.plot_defaults.get("plot_variant_types", {})
+        col_c = {}
+        for vt, cd in pvts.items():
+            ck = cd.get("color_key", "___none___")
+            col_c.update({vt: self.plv.get(ck, "rgb(111,111,111)")})
 
         for chro in self.plv["plot_chros"]:
 
             c_l = self.byc["cytolimits"][str(chro)]
             chr_w = c_l["size"] * self.plv["plot_b2pf"]
 
-            c_v_s = list(filter(lambda d: d["reference_name"] == chro, v_s.copy()))
+            c_v_s = list(filter(lambda d: d["location"]["chromosome"] == chro, v_s.copy()))
 
             for p_v in c_v_s:
-                s_v = int(p_v.get("start", 0))
-                l = round(int(p_v.get("variant_length", 1)) * self.plv["plot_b2pf"], 1)
+                # prdbug(self.byc, p_v)
+                if "variant_state" in p_v:
+                    t = p_v["variant_state"].get("id", "___none___")
+                else:
+                    t = p_v.get("variant_dupdel", "___none___")
+                c = col_c.get(t, "rgb(111,111,111)")
+
+                if "location" in p_v:
+                    s_v = int(p_v["location"].get("start", 0))
+                    e_v = int(p_v["location"].get("end", s_v + 1))
+                else:
+                    s_v = int(p_v.get("start", 0))
+                    e_v = int(p_v.get("end", s_v + 1))
+                l = round((e_v - s_v) * self.plv["plot_b2pf"], 1)
                 if l < 0.5:
                     l = 0.5
-                s = round(x + s_v * self.plv["plot_b2pf"], 1)
-                t = p_v.get("variant_dupdel", "NA")
-                c = cnv_c.get(t, "rgb(111,111,111)")
+                s = round(x + s_v * self.plv["plot_b2pf"], 1)           
 
                 self.plv["pls"].append(
                     f'<rect x="{s}" y="{self.plv["Y"]}" width="{l}" height="{h}" style="fill: {c} " />')
@@ -479,15 +495,12 @@ class ByconPlot:
     # --------------------------------------------------------------------------#
 
     def __plot_add_cluster_tree(self):
-
-        itemHeight = self.plv["plot_clusteritem_height"]
-
         d = self.plv.get("dendrogram", False)
-
         if d is False:
             return
         prdbug(self.byc, f'{inspect.stack()[1][3]} from {inspect.stack()[2][3]}')
 
+        ci_h = self.plv["plot_clusteritem_height"]
         p_s_c = self.plv.get("plot_dendrogram_color", '#ee0000')
         p_s_w = self.plv.get("plot_dendrogram_stroke", 1)
 
@@ -496,11 +509,11 @@ class ByconPlot:
 
         t_y_0 = self.plv["plot_first_area_y0"]
         t_x_0 = self.plv["plot_area_x0"] + self.plv["plot_area_width"]
-        t_y_f = itemHeight * 0.1
+        t_y_f = ci_h * 0.1
 
-        # finding the largest x-value of the dendrogram for scaling
         x_max = self.plv["plot_dendrogram_width"]
 
+        # finding the largest x-value of the dendrogram for scaling
         for i, node in enumerate(d_x_s):
             for j, x in enumerate(node):
                 if x > x_max:
@@ -515,7 +528,7 @@ class ByconPlot:
                 y = d_y_s[i][j] * t_y_f - self.plv["cluster_head_gap"]
 
                 for h, f_set in enumerate(self.plv["results"]):
-                    h_y_e = h * (itemHeight + self.plv["cluster_head_gap"])
+                    h_y_e = h * (ci_h + self.plv["cluster_head_gap"])
                     if y > h_y_e:
                         y += self.plv["cluster_head_gap"]
 
@@ -1053,6 +1066,7 @@ class ByconPlot:
                 s = int(m_v.get("start", 0))
                 e = int(m_v.get("end", 0))
                 label = m_v.get("label", "")
+                color = m_v.get("color", "#dddddd")
 
                 m_s = x + s * b2pf
                 m_e = x + e * b2pf
@@ -1087,9 +1101,9 @@ class ByconPlot:
                 l_y_p = marker_y_e + l_i * p_m_lane_h + p_m_lane_h - p_m_l_p - p_m_lane_p - 1
 
                 self.plv["pls"].append(
-                    f'<rect x="{round(m_s, 1)}" y="{marker_y_0}" width="{round(m_w, 1)}" height="{m_h}" class="marker" style="opacity: 0.4; " />')
+                    f'<rect x="{round(m_s, 1)}" y="{marker_y_0}" width="{round(m_w, 1)}" height="{m_h}" class="marker" style="fill: {color}; opacity: 0.4; " />')
                 self.plv["pls"].append(
-                    f'<rect x="{round(m_l_s, 1)}" y="{m_y_e}" width="{round(m_l_w, 1)}" height="{p_m_l_h}" class="marker" style="opacity: 0.1; " />')
+                    f'<rect x="{round(m_l_s, 1)}" y="{m_y_e}" width="{round(m_l_w, 1)}" height="{p_m_l_h}" class="marker" style="fill: {color}; opacity: 0.1; " />')
                 self.plv["pls"].append(f'<text x="{m_c}" y="{l_y_p}" class="marker">{label}</text>')
 
             x += chr_w
@@ -1135,8 +1149,7 @@ class ByconPlot:
             else:
                 label = ""
 
-            l_c = self.plv.get("plot_regionlabel_color", "#ddceff")
-
+            l_c = self.plv.get("plot_regionlabel_color", "#dddddd")
             m = self.__make_marker_object(c, s, e, l_c, label)
 
             self.plv["plot_labels"].update(m)
@@ -1203,6 +1216,7 @@ class ByconPlot:
     # --------------------------------------------------------------------------#
 
     def __make_marker_object(self, chromosome, start, end, color, label=""):
+        prdbug(self.byc, f'label color: {color}')
 
         m = None
 

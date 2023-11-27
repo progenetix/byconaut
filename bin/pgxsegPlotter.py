@@ -12,7 +12,7 @@ from bycon_plot import *
 from interval_utils import generate_genome_bins
 
 """
-
+./bin/pgxsegPlotter.py -i ./imports/test.pgxseg -o ./exports/test.svg
 """
 
 ################################################################################
@@ -40,20 +40,33 @@ def pgxseg_plotter():
         print('Only ".pgxseg" input files are accepted.')
         exit()
 
+    if not byc["args"].outputfile:
+        print("No output file specified (-o, --outputfile) => quitting ...")
+        exit()
+    outfile = byc["args"].outputfile
+    if not outfile.endswith(".svg"):
+        print("The output file has to end with `.svg` => quitting ...")
+        exit()
+
+    todos = {
+        "samplesplot": input("Create samples plot?\n(y|N): "),
+        "histoplot": input(f'Create histogram plot?\n(Y|n): ')
+    }
+
     pb = ByconBundler(byc)
     pdb = pb.pgxseg_to_plotbundle(inputfile)
 
-    byc.update({"output":"samplesplot"})
-    if byc["args"].outputfile:
-        outfile = byc["args"].outputfile
-    else:
-        outfile = re.sub(".pgxseg", "_sampleplots.svg", inputfile)
+    if not "n" in todos.get("samplesplot", "n").lower():
+        byc.update({"output": "samplesplot"})
+        s_file = re.sub(".svg", "_samplesplot.svg", outfile)
+        print(f'==> writing samplesplot to \n    {s_file}')
+        ByconPlot(byc, pdb).svg2file(s_file)
 
-    ByconPlot(byc, pdb).svg2file(outfile)
-
-    byc.update({"output":"histoplot"})
-    outfile = re.sub(".pgxseg", "_histoplot.svg", inputfile)
-    ByconPlot(byc, pdb).svg2file(outfile)
+    if not "n" in todos.get("histoplot", "y").lower():
+        byc.update({"output": "histoplot"})
+        h_file = re.sub(".svg", "_histoplot.svg", outfile)
+        print(f'==> writing histoplot to \n    {h_file}')
+        ByconPlot(byc, pdb).svg2file(h_file)
 
 ################################################################################
 ################################################################################

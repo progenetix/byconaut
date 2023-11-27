@@ -6,6 +6,7 @@ from bycon import *
 
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
 sys.path.append( services_lib_path )
+from cytoband_utils import parse_cytoband_file, cytobands_label_from_positions
 from service_helpers import *
 from service_response_generation import *
 
@@ -28,6 +29,7 @@ def genespans():
     """
     initialize_bycon_service(byc, sys._getframe().f_code.co_name)
     run_beacon_init_stack(byc)
+    parse_cytoband_file(byc)
 
     # form id assumes start match (e.g. for autocompletes)
     byc[ "config" ][ "filter_flags" ].update({"precision": "start"})

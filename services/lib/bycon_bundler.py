@@ -52,7 +52,6 @@ class ByconBundler:
             "callsets": [],
             "biosamples": [],
             "individuals": [],
-            "ds_id": None,
             "info": {
                 "errors": []
             }
@@ -63,7 +62,6 @@ class ByconBundler:
             "callsets_by_id": {},
             "individuals_by_id": {},
             "biosamples_by_id": {},
-            "ds_id": None,
             "info": {
                 "errors": []
             }
@@ -175,13 +173,12 @@ class ByconBundler:
         for p_o in bb.get("callsets", []):
             cs_id = p_o.get("id")
             p_o.update({
-                "ds_id": bb.get("ds_id", ""),
-                "variants":[]
+                "variants": list(filter(lambda v: v.get("callset_id", "___none___") == cs_id, bb["variants"]))
             })
-            for v in bb["variants"]:
-                if v.get("callset_id", "") == cs_id:
-                    p_o["variants"].append(ByconVariant(self.byc).byconVariant(v))
 
+            # for v in bb["variants"]:
+            #     if v.get("callset_id", "___none___") == cs_id:
+            #         p_o["variants"].append(ByconVariant(self.byc).byconVariant(v))
             c_p_l.append(p_o)
             
         self.callsetVariantsBundles = c_p_l
@@ -203,14 +200,14 @@ class ByconBundler:
     def resultsets_frequencies_bundles(self, datasets_results={}):
         self.datasets_results = datasets_results
         self.__callsets_bundle_from_result_set()
-        self.intervalFrequenciesBundles.append(self.__callsetBundleCreateIset())
+        self.__callsetBundleCreateIsets()
         return {"interval_frequencies_bundles": self.intervalFrequenciesBundles}
 
 
     #--------------------------------------------------------------------------#
 
     def callsets_frequencies_bundles(self):       
-        self.intervalFrequenciesBundles.append(self.__callsetBundleCreateIset())
+        self.__callsetBundleCreateIsets()
         return self.intervalFrequenciesBundles
 
 
@@ -322,8 +319,9 @@ class ByconBundler:
             var_coll = mongo_client[ds_id]["variants"]
             cs_id = p_o.get("callset_id", "___none___")
             v_q = {"callset_id": cs_id}
-            for v in var_coll.find(v_q):
-               p_o["variants"].append(ByconVariant(self.byc).byconVariant(v))
+            p_o.update({"variants": list(var_coll.find(v_q))})
+            # for v in var_coll.find(v_q):
+            #     p_o["variants"].append(ByconVariant(self.byc).byconVariant(v))
 
             c_p_l.append(p_o)
 
@@ -419,21 +417,22 @@ class ByconBundler:
 
     #--------------------------------------------------------------------------#
 
-    def __callsetBundleCreateIset(self, label=""):
-        intervals, cnv_cs_count = interval_counts_from_callsets(self.bundle["callsets"], self.byc)
-        ds_id = self.bundle.get("ds_id", "")
-        iset = {
-            "dataset_id": ds_id,
-            "group_id": ds_id,
-            "label": label,
-            "sample_count": cnv_cs_count,
-            "interval_frequencies": []
-        }
+    def __callsetBundleCreateIsets(self, label=""):
+        self.dataset_ids = list(set([cs.get("dataset_id", "NA") for cs in self.bundle["callsets"]]))
+        for ds_id in self.dataset_ids:
+            dscs = list(filter(lambda cs: cs.get("dataset_id", "NA") == ds_id, self.bundle["callsets"]))
+            intervals, cnv_cs_count = interval_counts_from_callsets(self.bundle["callsets"], self.byc)
+            iset = {
+                "dataset_id": ds_id,
+                "group_id": ds_id,
+                "label": label,
+                "sample_count": cnv_cs_count,
+                "interval_frequencies": []
+            }
+            for intv_i, intv in enumerate(intervals):
+                iset["interval_frequencies"].append(intv.copy())
+            self.intervalFrequenciesBundles.append(iset)
 
-        for intv_i, intv in enumerate(intervals):
-            iset["interval_frequencies"].append(intv.copy())
-
-        return iset
 
     #--------------------------------------------------------------------------#
 

@@ -24,7 +24,7 @@ the fallback). Plot options are available as usual.
 * http://progenetix.org/services/sampleplots/pgxbs-kftvjv8w?plotType=samplesplot&datasetIds=cellz
 * http://progenetix.org/services/sampleplots?plotType=samplesplot&datasetIds=cellz&filters=cellosaurus:CVCL_0030
 * http://progenetix.org/services/sampleplots?filters=pgx:icdom-81703
-
+* http://progenetix.org/services/sampleplots/?testMode=true&plotType=samplesplot
 """
 
 ################################################################################

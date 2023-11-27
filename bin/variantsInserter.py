@@ -7,6 +7,11 @@ import sys, datetime
 
 from bycon import *
 
+loc_path = path.dirname( path.abspath(__file__) )
+services_lib_path = path.join( loc_path, pardir, "services", "lib" )
+sys.path.append( services_lib_path )
+from bycon_bundler import ByconBundler
+from datatable_utils import import_datatable_dict_line
 """
 
 """
@@ -43,6 +48,8 @@ def variantsInserter():
         tmi = input("Do you want to run in TEST MODE (i.e. no database insertions/updates)?\n(Y|n): ")
         if not "n" in tmi.lower():
             byc.update({"test_mode": True})
+
+    if byc["test_mode"] is True:
             print("... running in TEST MODE")
 
     vb = ByconBundler(byc)
@@ -96,15 +103,13 @@ def variantsInserter():
                 print(f'==>> deleted {v_dels.deleted_count} variants from {b_del}')
 
     bios_v_counts = {}
-
-    if not byc["test_mode"]:
-        bar = Bar("Writing ", max = var_no, suffix='%(percent)d%%'+" of "+str(var_no) )
+    
+    bar = Bar("Writing ", max = var_no, suffix='%(percent)d%%'+" of "+str(var_no) ) if not byc["test_mode"] else False
 
     for c, v in enumerate(variants.data, 1):
 
-        if not byc["test_mode"]:
-                bar.next()
-
+        bar.next() if not byc["test_mode"] else False
+                
         bs_id = v.get("biosample_id", False)
         if not bs_id in bios_v_counts.keys():
             bios_v_counts.update({bs_id: 0})
@@ -120,6 +125,7 @@ def variantsInserter():
         })
 
         insert_v = import_datatable_dict_line(byc, insert_v, variants.fieldnames, v, "genomicVariant")
+        prdbug(byc, insert_v)
         insert_v = ByconVariant(byc).pgxVariant(insert_v)
         insert_v.update({"updated": datetime.datetime.now().isoformat()})
 

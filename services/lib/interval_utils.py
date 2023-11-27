@@ -1,8 +1,12 @@
-import re
+import re, sys
 import numpy as np
 from copy import deepcopy
+from os import path, pardir
 
-from bycon import cytobands_label_from_positions
+services_lib_path = path.join( path.dirname( path.abspath(__file__) ) )
+sys.path.append( services_lib_path )
+
+from cytoband_utils import parse_cytoband_file, cytobands_label_from_positions
 
 ################################################################################
 
@@ -59,6 +63,7 @@ end:
 ################################################################################
 
 def generate_genome_bins(byc):
+    parse_cytoband_file(byc)
     __generate_cytoband_intervals(byc)
     __generate_genomic_intervals(byc)
     byc.update({"genomic_interval_count": len(byc["genomic_intervals"])})
@@ -245,7 +250,7 @@ def interval_cnv_arrays(cs_vars, byc):
 
         if v_i_id in digests:
             if "local" in byc["env"]:
-                print("¡¡¡ {} already counted for {}".format(v_i_id, v_cs_id))
+                print(f'\n¡¡¡ {v_i_id} already counted for {v_cs_id}')
         else:
             digests.append(v_i_id)
 
@@ -384,13 +389,13 @@ def interval_counts_from_callsets(callsets, byc):
 ################################################################################
 
 def _has_overlap(interval, v):
-    if not interval["reference_name"] == v["reference_name"]:
+    if interval["reference_name"] != v["reference_name"]:
         return False
 
-    if not interval["end"] > v["location"]["start"]:
+    if v["location"]["start"] >= interval["end"]:
         return False
 
-    if not interval["start"] < v["location"]["end"]:
+    if v["location"]["end"] <= interval["start"]:
         return False
 
     return True

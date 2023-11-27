@@ -118,7 +118,7 @@ def import_datatable_dict_line(byc, parent, fieldnames, lineobj, primary_scope="
         # this makes only sense for updating existing data; if there would be
         # no value, the parameter would just be excluded from the update object
         # if there was an empy value
-        if "__delete__" in v.lower():
+        if v.lower() in ("___delete___", "__delete__", "none", "___none___", "-"):
             v = ""
 
         parameter_type = par_defs.get("type", "string")
