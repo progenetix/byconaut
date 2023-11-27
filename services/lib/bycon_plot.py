@@ -37,6 +37,7 @@ class ByconPlot:
         self.env = byc.get("env", "server")
         self.plot_defaults = byc.get("plot_defaults", {})
         self.cytolimits = byc.get("cytolimits", {})
+        self.form_data = byc.get("form_data", {})
         self.plot_data_bundle = plot_data_bundle
         self.svg = None
         self.plot_time_init = datetime.now()
@@ -100,13 +101,60 @@ class ByconPlot:
         self.plot_pipeline_duration = self.plot_pipeline_end - self.plot_pipeline_start
         prdbug(self.byc, f'... plot pipeline duration for {p_t} was {self.plot_pipeline_duration.total_seconds()} seconds')
 
+
+    # -------------------------------------------------------------------------#
+
+    def __get_plot_parameters(self):
+
+        p_d_p = self.plot_defaults.get("parameters", {})
+        form = self.form_data
+
+        # this is in case there was a `plotPars` argument from command line
+        plot_pars = form.get("plot_pars")
+
+        if plot_pars:
+            for ppv in plot_pars.split('&'):
+                pp, pv = ppv.split('=')
+                if not pv:
+                    continue
+                form.update({pp: pv})
+        form.pop("plot_pars", None)
+
+        for p_k, p_d in p_d_p.items():
+            if p_k in form:
+                p_k_t = p_d_p[p_k].get("type", "string")
+                p_d = form.get(p_k)
+
+                prdbug(self.byc, f'{p_k}: {p_d} ({p_k_t}), type {type(p_d)}')
+
+                if "array" in p_k_t:
+                    p_i_t = p_d_p[p_k].get("items", "string")
+                    if type(p_d) is not list:
+                        p_d = re.split(',', p_d)
+                    if "int" in p_i_t:
+                        p_d = list(map(int, p_d))
+                    elif "number" in p_i_t:
+                        p_d = list(map(float, p_d))
+                    else:
+                        p_d = list(map(str, p_d))
+                    if len(p_d) > 0:
+                        self.plv.update({p_k: p_d})
+                elif "int" in p_k_t:
+                    self.plv.update({p_k: int(p_d)})
+                elif "num" in p_k_t:
+                    self.plv.update({p_k: float(p_d)})
+                elif "bool" in p_k_t:
+                    self.plv.update({p_k: p_d})
+                else:
+                    self.plv.update({p_k: str(p_d)})
+
+
     # -------------------------------------------------------------------------#
 
     def __initialize_plot_values(self, plot_type):
         prdbug(self.byc, f'{inspect.stack()[1][3]} from {inspect.stack()[2][3]}')
         p_d_p = self.plot_defaults.get("parameters", {})
         p_t_s = self.plot_defaults.get("plot_types", {})
-
 
         d_k = p_t_s[plot_type].get("data_key")
 
@@ -135,7 +183,7 @@ class ByconPlot:
         else:
             self.plv.update({"plot_dendrogram_width": 0})
 
-        get_plot_parameters(self.plv, self.byc)
+        self.__get_plot_parameters()
 
         pax = self.plv["plot_margins"] + self.plv["plot_labelcol_width"] + self.plv["plot_axislab_y_width"]
 
@@ -1298,55 +1346,6 @@ style="margin: auto; font-family: Helvetica, sans-serif;">
 
 ################################################################################
 ################################################################################
-################################################################################
-
-def get_plot_parameters(plv, byc):
-
-    p_d_p = byc["plot_defaults"].get("parameters", {})
-    form = byc["form_data"]
-
-    # this is in case there was a `plotPars` argument from command line
-    plot_pars = form.get("plot_pars")
-
-    if plot_pars:
-        for ppv in plot_pars.split('&'):
-            pp, pv = ppv.split('=')
-            if not pv:
-                continue
-            form.update({pp: pv})
-    form.pop("plot_pars", None)
-
-    for p_k, p_d in p_d_p.items():
-        if p_k in form:
-            p_k_t = p_d_p[p_k].get("type", "string")
-            p_d = form[p_k]
-
-            prdbug(byc, f'{p_k}: {p_d} ({p_k_t}), type {type(p_d)}')
-
-            if "array" in p_k_t:
-                p_i_t = p_d_p[p_k].get("items", "string")
-                if type(p_d) is not list:
-                    p_d = re.split(',', p_d)
-                if "int" in p_i_t:
-                    p_d = list(map(int, p_d))
-                elif "number" in p_i_t:
-                    p_d = list(map(float, p_d))
-                else:
-                    p_d = list(map(str, p_d))
-                if len(p_d) > 0:
-                    plv.update({p_k: p_d})
-            elif "int" in p_k_t:
-                plv.update({p_k: int(p_d)})
-            elif "num" in p_k_t:
-                plv.update({p_k: float(p_d)})
-            elif "bool" in p_k_t:
-                plv.update({p_k: p_d})
-            else:
-                plv.update({p_k: str(p_d)})
-
-    return plv
-
-
 ################################################################################
 
 def print_svg_response(this, env="server", status_code=200):
