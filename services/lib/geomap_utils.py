@@ -30,8 +30,6 @@ def read_geomarker_table_web(byc):
         item_size = line.get("item_size", "")
         item_label = line.get("item_label", "")
         item_link = line.get("item_link", "")
-        marker_type = line.get("marker_type", "circle")
-        marker_icon = line.get("marker_icon", "")
 
         if not re.match(r'^\-?\d+?(?:\.\d+?)?$', str(group_lat) ):
             continue
@@ -40,7 +38,7 @@ def read_geomarker_table_web(byc):
         if not re.match(r'^\d+?(?:\.\d+?)?$', str(item_size) ):
             item_size = 1
 
-        m_k = "{}::LatLon::{}::{}".format(line["group_label"], line["group_lat"], line["group_lon"])
+        m_k = f'{group_label}::LatLon::{group_lat}::{group_lon}'
 
         # TODO: load schema for this
         if not m_k in markers.keys():
@@ -55,8 +53,8 @@ def read_geomarker_table_web(byc):
                         "city": None,
                         "country": None,
                         "label": group_label,
-                        "marker_type": marker_type,
-                        "marker_icon": marker_icon,
+                        "marker_type": line.get("marker_type", "circle"),
+                        "marker_icon": line.get("marker_icon", ""),
                         "marker_count": 0,
                         "items": []
                     }
@@ -78,10 +76,12 @@ def read_geomarker_table_web(byc):
 
 ################################################################################
 
-def print_map_from_geolocations(byc, geolocs):
+def print_map_from_geolocations(byc, geolocs_db_results):
 
     if not "map" in byc["output"]:
         return
+
+    geolocs = [x["geo_location"] for x in geolocs_db_results if "geo_location" in x]
 
     m_p = byc["geoloc_definitions"].get("map_params", {})
     p_p = __update_geo_plot_params_from_form(byc)
@@ -206,7 +206,7 @@ def __marker_max_from_geo_locations(geolocs):
 
     m_max_count = 1
     for g_l in geolocs:
-        c = float( g_l["geo_location"]["properties"].get("marker_count", 1) )
+        c = float( g_l["properties"].get("marker_count", 1) )
         if c > m_max_count:
             m_max_count = c
 
@@ -216,15 +216,10 @@ def __marker_max_from_geo_locations(geolocs):
 
 def __map_marker_from_geo_location(byc, geoloc, p_p, m_max_count):
 
-    p = geoloc["geo_location"]["properties"]
-    g = geoloc["geo_location"]["geometry"]
+    p = geoloc.get("properties", {})
+    g = geoloc.get("geometry", {})
 
     marker = p_p.get("marker_type", "circle")
-    # if m_max_count == 1:
-    #     marker = "marker"
-
-
-
     m_max_r = p_p.get("marker_max_r", 1000)
     m_f = int(int(m_max_r) / math.sqrt(4 * m_max_count / math.pi))
 

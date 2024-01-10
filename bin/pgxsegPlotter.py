@@ -57,13 +57,13 @@ def pgxseg_plotter():
     pdb = pb.pgxseg_to_plotbundle(inputfile)
 
     if not "n" in todos.get("samplesplot", "n").lower():
-        byc.update({"output": "samplesplot"})
+        byc.update({"plot_type": "samplesplot"})
         s_file = re.sub(".svg", "_samplesplot.svg", outfile)
         print(f'==> writing samplesplot to \n    {s_file}')
         ByconPlot(byc, pdb).svg2file(s_file)
 
     if not "n" in todos.get("histoplot", "y").lower():
-        byc.update({"output": "histoplot"})
+        byc.update({"plot_type": "histoplot"})
         h_file = re.sub(".svg", "_histoplot.svg", outfile)
         print(f'==> writing histoplot to \n    {h_file}')
         ByconPlot(byc, pdb).svg2file(h_file)

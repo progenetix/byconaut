@@ -132,7 +132,6 @@ def export_pgxseg_download(datasets_results, ds_id, byc):
     data_client = pymongo.MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
     v_coll = data_client[ ds_id ][ "variants" ]
     ds_results = datasets_results.get(ds_id, {})
-    # prdbug(byc, ds_results)
     if not "variants._id" in ds_results:
         # TODO: error message here
         return
@@ -377,7 +376,6 @@ def export_vcf_download(datasets_results, ds_id, byc):
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">"""
     )
 
-    v_d = byc["variant_parameters"]
     v_o = {
         "#CHROM": ".",
         "POS": ".",
@@ -425,10 +423,8 @@ def export_vcf_download(datasets_results, ds_id, byc):
     print("\t".join(v_o.keys()))
 
     bv = ByconVariant(byc)
+
     for d in variant_ids:
-
-        prdbug(byc, d)
-
         d_vs = [var for var in v_instances if var.get('variant_internal_id', "__none__") == d]
         vcf_v = bv.vcfVariant(d_vs[0])
         

@@ -38,14 +38,12 @@ def dbstats():
         "error_response": r.errorResponse()
     })
 
-    info_db = byc[ "config" ][ "housekeeping_db" ]
-    coll = byc[ "config" ][ "beacon_info_coll" ]
+    info_db = byc["housekeeping_db"]
+    coll = byc["beacon_info_coll"]
     stats = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))[ info_db ][ coll ].find( { }, { "_id": 0 } ).sort( "date", -1 ).limit( 1 )
 
     results = [ ]
     for stat in stats:
-        prdbug(byc, stat)
-        # byc["service_response"]["info"].update({ "date": stat["date"] })
         for ds_id, ds_vs in stat["datasets"].items():
             if len(byc[ "dataset_ids" ]) > 0:
                 if not ds_id in byc[ "dataset_ids" ]:

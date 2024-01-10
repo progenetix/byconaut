@@ -28,7 +28,7 @@ def export_datatable_download(results, byc):
     if not "local" in byc["env"]:
  
         print('Content-Type: text/tsv')
-        if byc["download_mode"] is True:
+        if byc.get("download_mode", False) is True:
             print('Content-Disposition: attachment; filename='+byc["response_entity_id"]+'.tsv')
         print('status: 200')
         print()

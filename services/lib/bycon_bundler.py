@@ -37,6 +37,7 @@ class ByconBundler:
         self.datasets_results = None
         self.dataset_ids = self.byc.get("dataset_ids", [])
         self.filters = byc.get("filters", [])
+        self.min_number = byc["form_data"].get("min_number", 0)
         self.method = byc.get("method", "___none___")
         self.header = []
         self.data = []
@@ -381,11 +382,7 @@ class ByconBundler:
 
             vars_ided[cs_id].append(update_v)
 
-            # prdbug(self.byc, cs_id)
-
         for cs_id, cs_vars in vars_ided.items():
-            # prdbug(self.byc, {cs_id: len(cs_vars)})
-
             maps, cs_cnv_stats, cs_chro_stats = interval_cnv_arrays(cs_vars, self.byc)
             cs_ided[cs_id].update({"cnv_statusmaps": maps})
             cs_ided[cs_id].update({"cnv_stats": cs_cnv_stats})
@@ -422,6 +419,10 @@ class ByconBundler:
         for ds_id in self.dataset_ids:
             dscs = list(filter(lambda cs: cs.get("dataset_id", "NA") == ds_id, self.bundle["callsets"]))
             intervals, cnv_cs_count = interval_counts_from_callsets(self.bundle["callsets"], self.byc)
+
+            if cnv_cs_count < self.min_number:
+                continue
+
             iset = {
                 "dataset_id": ds_id,
                 "group_id": ds_id,
@@ -463,11 +464,15 @@ class ByconBundler:
                 if not fmap_name in collation_f:
                     continue
 
+                fmap_count = collation_f[ fmap_name ].get("analysis_count", 0)
+                if fmap_count < self.min_number:
+                    continue
+
                 r_o = {
                     "dataset_id": ds_id,
                     "group_id": f_val,
                     "label": re.sub(r';', ',', collation_c["label"]),
-                    "sample_count": collation_f[ fmap_name ].get("analysis_count", 0),
+                    "sample_count": fmap_count,
                     "interval_frequencies": collation_f[ fmap_name ]["intervals"] }
                     
                 self.intervalFrequenciesBundles.append(r_o)

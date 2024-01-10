@@ -48,7 +48,7 @@ def schemas():
         comps = schema_name.split('.')
         schema_name = comps.pop(0)
 
-        prdbug(byc, schema_name)
+        prdbug(schema_name, byc.get("debug_mode"))
 
         s = read_schema_file(byc, schema_name, "")
         if s:

@@ -31,7 +31,6 @@ def variantsInserter():
     parse_variants(byc)
     select_dataset_ids(byc)
 
-    v_d = byc["variant_parameters"]
     args = byc.get("args", {})
 
     if len(byc["dataset_ids"]) != 1:
@@ -125,7 +124,7 @@ def variantsInserter():
         })
 
         insert_v = import_datatable_dict_line(byc, insert_v, variants.fieldnames, v, "genomicVariant")
-        prdbug(byc, insert_v)
+        prdbug(insert_v, byc.get("debug_mode"))
         insert_v = ByconVariant(byc).pgxVariant(insert_v)
         insert_v.update({"updated": datetime.datetime.now().isoformat()})
 

@@ -43,10 +43,9 @@ def geolocations():
         "error_response": r.errorResponse()
     })
 
-    services_db = byc["config"].get("services_db")
-    geo_coll = byc["config"].get("geolocs_coll")
+    services_db = byc.get("services_db")
+    geo_coll = byc.get("geolocs_coll")
     
-    # TODO: move the map table reading to a sane place 
     if "file" in byc["form_data"]:
         results = read_geomarker_table_web(byc)
     else:

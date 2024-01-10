@@ -10,6 +10,7 @@ service_path_aliases:
   endpoints: endpoints
   collations: collations
   collationplots: collationplots
+  collationPlots: collationplots
   cytomapper: cytomapper
   dbstats: dbstats
   deliveries: deliveries
@@ -32,7 +33,7 @@ service_path_aliases:
   sampleplots: sampleplots
   schemas: schemas
   uploader: uploader
-  variantsPlotter: variantsPlotter
+  uploadplotter: uploadplotter
   vcf: vcfvariants
   vcfvariants: vcfvariants
 

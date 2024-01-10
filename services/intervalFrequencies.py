@@ -64,7 +64,6 @@ def interval_frequencies():
     byc.update({"output": file_type})
 
     pdb = ByconBundler(byc).collationsPlotbundles()
-    prdbug(byc, pdb)
     check_pgxseg_frequencies_export(byc, pdb.get("interval_frequencies_bundles", []))
     check_pgxmatrix_frequencies_export(byc, pdb.get("interval_frequencies_bundles", []))
     # ByconPlot(byc, pdb).svgResponse()

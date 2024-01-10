@@ -32,7 +32,7 @@ def genespans():
     parse_cytoband_file(byc)
 
     # form id assumes start match (e.g. for autocompletes)
-    byc[ "config" ][ "filter_flags" ].update({"precision": "start"})
+    byc["filter_flags"].update({"precision": "start"})
 
     r = ByconautServiceResponse(byc)
     byc.update({
@@ -43,17 +43,13 @@ def genespans():
     gene_id = rest_path_value("genespans")
     if gene_id:
         # REST path id assumes exact match
-        byc[ "config" ][ "filter_flags" ].update({"precision": "exact"})
+        byc["filter_flags"].update({"precision": "exact"})
     else:
         gene_id = byc[ "form_data" ].get("gene_id")
 
     if not gene_id:
         response_add_error(byc, 422, "No geneId value provided!" )
         cgi_break_on_errors(byc)
-
-    # redoing this since possibly modified in the geneId retrieval above
-    get_global_filter_flags(byc)
-    # received_request_summary_add_custom_parameter(byc, "geneId", gene_id)
 
     results, e = retrieve_gene_id_coordinates(gene_id, byc["filter_flags"].get("precision", "start"), byc)
     response_add_error(byc, 422, e )

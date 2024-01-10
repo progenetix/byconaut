@@ -32,7 +32,7 @@ def collations_plotter():
     run_beacon_init_stack(byc)
     generate_genome_bins(byc)
 
-    byc.update({"output":"histoplot"})
+    byc.update({"plot_type":"histoplot"})
 
     if len(byc["dataset_ids"]) < 1:
         print("Please indicate one or more dataset ids using `-d`")

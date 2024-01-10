@@ -17,6 +17,7 @@ class ByconautServiceResponse:
 
     def __init__(self, byc: dict, response_schema="byconautServiceResponse"):
         self.byc = byc
+        self.debug_mode = byc.get("debug_mode", False)
         self.test_mode = byc.get("test_mode", False)
         self.beacon_defaults = byc.get("beacon_defaults", {})
         self.services_defaults = byc.get("services_defaults", {})

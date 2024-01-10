@@ -65,7 +65,7 @@ def parse_cytoband_file(byc):
 
 def bands_from_cytobands(chr_bands, byc):
 
-    cb_pat = re.compile( byc["variant_parameters"]["parameters"]["cyto_bands"]["pattern"] )
+    cb_pat = re.compile( byc["argument_definitions"]["cyto_bands"]["pattern"] )
     error = ""
 
     end_re = re.compile(r"^([pq]\d.*?)\.?\d$")
@@ -216,77 +216,6 @@ def cytobands_label( cytobands ):
 
 ################################################################################
 
-def translate_reference_ids(byc):
-
-    """
-    Input: "refseq_chromosomes" object:
-    Example:
-    ```
-      chr3:
-        chr: "3"
-        genbank_id: "CM000665.2"
-        refseq_id: "refseq:NC_000003.12"
-        length: 198295559
-    ```
-    Return: added objects in byc["variant_parameters"]
-      - "chro_refseq_ids" - refseq id for each chromosome
-          - "15": "refseq:NC_000015.10"
-      - "refseq_chronames": chromosome for each refseq id
-          - "refseq:NC_000015.10": "15"
-      - "refseq_aliases": all alternative names for a refseq id are keys
-          - "15": "refseq:NC_000015.10"
-          - "chr15": "refseq:NC_000015.10"
-          - "refseq:NC_000015.10": "refseq:NC_000015.10"
-          - "NC_000015.10": "refseq:NC_000015.10"
-          - "CM000677.2": "refseq:NC_000015.10"
-        "chro_aliases": all aliases for a stripped chromosome name
-          - "15": "15"
-          - "chr15": "15"
-          - "refseq:NC_000015.10": "15"
-          - "NC_000015.10": "15"
-          - "CM000677.2": "15"
-    """
-
-    v_d_refsc = byc.get("refseq_chromosomes")
-    if v_d_refsc is None:
-        return
-
-    c_r = {}    # keys are the bare chromosome names e.g. "15"
-    r_c = {}    # keys are the refseq_id
-    r_a = {}    # keys are all options, values the refseq_id
-    c_a = {}    # keys are all options, values the chromosome
-
-    for c, c_d in v_d_refsc.items():
-        refseq_stripped = re.sub("refseq:", "", c_d["refseq_id"])
-        c_r.update({ c_d["chr"]: c_d["refseq_id"] })
-        r_c.update({ c_d["refseq_id"]: c_d["chr"] })
-        r_a.update({
-            c: c_d["refseq_id"],
-            c_d["chr"]: c_d["refseq_id"],
-            c_d["refseq_id"]: c_d["refseq_id"],
-            refseq_stripped: c_d["refseq_id"],
-            c_d["genbank_id"]: c_d["refseq_id"]
-        }),
-        c_a.update({
-            c: c_d["chr"],
-            c_d["chr"]: c_d["chr"],
-            c_d["refseq_id"]: c_d["chr"],
-            refseq_stripped: c_d["chr"],
-            c_d["genbank_id"]: c_d["chr"]
-        })
-
-    byc.update({
-        "genome_aliases": {
-            "chro_refseq_ids": c_r,
-            "refseq_chronames": r_c,
-            "refseq_aliases": r_a,
-            "chro_aliases": c_a
-        }
-    })
-
-
-################################################################################
-
 def variants_from_revish(bs_id, cs_id, technique, iscn, byc):
 
     v_s, v_e = deparse_ISCN_to_variants(iscn, byc)
@@ -312,14 +241,14 @@ def variants_from_revish(bs_id, cs_id, technique, iscn, byc):
 
 def deparse_ISCN_to_variants(iscn, byc):
 
-    v_d = byc["variant_parameters"]
+    a_d = byc.get("argument_definitions", {})
     g_a = byc.get("genome_aliases", {})
     i_d = byc["interval_definitions"]
     v_t_defs = byc.get("variant_type_definitions")
 
     iscn = "".join(iscn.split())
     variants = []
-    cb_pat = re.compile( v_d["parameters"]["cyto_bands"]["pattern"] )
+    cb_pat = re.compile( a_d["cyto_bands"]["pattern"] )
     errors = []
 
     for cnv_t, cnv_defs in v_t_defs.items():
@@ -389,7 +318,7 @@ def cytobands_label_from_positions(byc, chro, start, end):
 
 def bands_from_chrobases(chro_bases, byc):
 
-    cb_pat = re.compile( byc["variant_parameters"]["parameters"]["chro_bases"]["pattern"] )
+    cb_pat = re.compile( byc["argument_definitions"]["chro_bases"]["pattern"] )
     if not cb_pat.match(chro_bases):
         return [], "NA", 0, 0
     chro, cb_start, cb_end = cb_pat.match(chro_bases).group(2,3,5)

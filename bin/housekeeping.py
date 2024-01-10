@@ -93,8 +93,8 @@ def housekeeping():
 
     if "y" in todos.get("datasets_counts", "n").lower():
 
-        i_db = byc[ "config" ][ "housekeeping_db" ]
-        i_coll = byc[ "config" ][ "beacon_info_coll"]
+        i_db = byc["housekeeping_db"]
+        i_coll = byc["beacon_info_coll"]
 
         print(f'\n{__hl()}==> Updating dataset statistics in "{i_db}.{i_coll}"')
 

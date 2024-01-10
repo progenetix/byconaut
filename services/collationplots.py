@@ -58,7 +58,7 @@ def collationplots():
     plot_type = byc["form_data"].get("plot_type", "histoplot")
     if plot_type not in ["histoplot", "samplesplot", "histoheatplot"]:
         plot_type = "histoplot"
-    byc.update({"output": plot_type})
+    byc.update({"plot_type": plot_type})
 
     pdb = ByconBundler(byc).collationsPlotbundles()
     ByconPlot(byc, pdb).svgResponse()

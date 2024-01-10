@@ -152,7 +152,7 @@ def frequencymaps_creator():
                     })
 
                     
-                    prdbug(byc, f'\n{c_id}: {cs_no_cm} exact of {cs_no} total code matches ({coll["code_matches"]} indicated)')
+                    prdbug(f'\n{c_id}: {cs_no_cm} exact of {cs_no} total code matches ({coll["code_matches"]} indicated)', byc.get("debug_mode"))
 
                     if not byc["test_mode"]:
                         fm_coll.update_one( { "id": c_id }, { '$set': cm_obj }, upsert=False )
@@ -207,7 +207,7 @@ def _cs_cursor_from_bios_query(byc, bios_coll, ind_coll, cs_coll, coll_id, scope
     bios_no = len(bios_ids)
     
     if pre_b > bios_no:
-        prdbug(byc, f'\nWARNING: {pre_b} samples for {coll_id}, while {bios_no} after excluding normals by EFO:0009654')
+        prdbug(f'\nWARNING: {pre_b} samples for {coll_id}, while {bios_no} after excluding normals by EFO:0009654', byc.get("debug_mode"))
        
     cs_query = { "biosample_id": { "$in": bios_ids } , "variant_class": { "$ne": "SNV" } }
     cs_cursor = cs_coll.find(cs_query)

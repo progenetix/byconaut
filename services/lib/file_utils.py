@@ -55,6 +55,7 @@ def read_www_tsv_to_dictlist(www, max_count=0):
 
     return dictlist, fieldnames
 
+
 ################################################################################
 
 def callset_guess_probefile_path(callset, byc):
@@ -70,7 +71,7 @@ def callset_guess_probefile_path(callset, byc):
         return False
 
     d = Path( path.join( *byc["local_paths"]["server_callsets_dir_loc"]))
-    n = byc["config"].get("callset_probefile_name", "___none___")
+    n = byc.get("callset_probefile_name", "___none___")
 
     if not d.is_dir():
         return False

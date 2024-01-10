@@ -49,8 +49,6 @@ def sampletable():
 
     collated_results = []
     for ds_id, data in rsd.items():
-        prdbug(byc, ds_id)
-
         collated_results += data
 
     export_datatable_download(collated_results, byc)

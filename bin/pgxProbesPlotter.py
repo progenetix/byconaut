@@ -48,7 +48,7 @@ def pgx_probes_plotter():
         "callsets_probes_bundles": [ {"id": "TBD", "probes": cs_probes }]
     }
 
-    byc.update({"output":"arrayplot"})
+    byc.update({"plot_type":"arrayplot"})
     if byc["args"].outputfile:
         outfile = byc["args"].outputfile
     else:

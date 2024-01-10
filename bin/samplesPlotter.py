@@ -31,6 +31,11 @@ def samples_plotter():
     initialize_bycon_service(byc, "biosamples")
     run_beacon_init_stack(byc)
     generate_genome_bins(byc)
+    args_update_form(byc)
+
+    # parameter test
+
+    form = byc.get("form_data", {})
 
     if not byc["args"].datasetIds:
         print("No dataset id(s) were specified (-d, --datasetIds) => quitting ...")
@@ -42,27 +47,38 @@ def samples_plotter():
     if not outfile.endswith(".svg"):
         print("The output file has to end with `.svg` => quitting ...")
         exit()
-    if len(byc.get("filters", [])) < 1:
-        print("No filter(s) were specified (--filters) => quitting ...")
+
+    q_pars = ("filters", "biosample_ids", "analysis_ids", "individual_ids")
+    par_test = []
+    for q in q_pars:
+        par_test += form.get(q, [])
+    if len(par_test) < 1 :
+        print("No `--filters` or `--biosampleIds` etc. were specified => quitting ...")
         exit()
+
+    # / parameter test
+
+    # output types selection
 
     todos = {
         "samplesplot": input("Create samples plot?\n(y|N): "),
         "histoplot": input(f'Create histogram plot?\n(Y|n): ')
     }
 
+    # processing ...
+
     RSS = ByconResultSets(byc).datasetsResults()
     pdb = ByconBundler(byc).resultsets_frequencies_bundles(RSS)
 
     if "y" in todos.get("samplesplot", "n").lower():
-        byc.update({"output": "samplesplot"})
+        byc.update({"plot_type": "samplesplot"})
         pdb.update( ByconBundler(byc).resultsets_callset_bundles(RSS) )        
         s_file = re.sub(".svg", "_samplesplot.svg", outfile)
         print(f'==> Writing to {s_file}')
         ByconPlot(byc, pdb).svg2file(s_file)
 
     if "y" in todos.get("histoplot", "y").lower():
-        byc.update({"output": "histoplot"})
+        byc.update({"plot_type": "histoplot"})
         h_file = re.sub(".svg", "_histoplot.svg", outfile)
         print(f'==> Writing to {h_file}')
         ByconPlot(byc, pdb).svg2file(h_file)

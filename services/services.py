@@ -38,7 +38,6 @@ def services():
     mod = inspect.getmodule(frm[0])
 
     # updates `beacon_defaults`, `dataset_definitions` and `local_paths`
-    prdbug(byc, f'--- services loc dir {loc_dir}')
     update_rootpars_from_local(loc_dir, byc)
     read_service_prefs(service, conf_dir, byc)
 
@@ -55,9 +54,6 @@ def services():
     args_update_form(byc)
 
     r_p_id = byc.get("request_entity_path_id", "info")
-
-    prdbug(byc, r_p_id)
-    prdbug(byc, s_a_s.keys())
 
     # check for rewrites
     if r_p_id in r_w:

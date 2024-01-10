@@ -1,5 +1,6 @@
 import base64, inspect, io, re, sys
 from datetime import datetime, date
+from humps import decamelize
 from os import environ, path
 from PIL import Image, ImageColor, ImageDraw
 
@@ -11,9 +12,9 @@ sys.path.append( services_lib_path )
 from clustering_utils import cluster_frequencies, cluster_samples
 from cytoband_utils import bands_from_cytobands
 
-# http://progenetix.org/cgi/bycon/services/samplesplot.py?plotChros=8,9,17&labels=8:120000000-123000000:Some+Interesting+Region&plot_gene_symbols=MYCN,REL,TP53,MTAP,CDKN2A,MYC,ERBB2,CDK1&filters=pgx:icdom-85003&plotType=histoplot
-# http://progenetix.org/services/samplesplot?datasetIds=progenetix&referenceName=9&variantType=DEL&start=21500000&start=21975098&end=21967753&end=22500000&filters=NCIT:C3058&plotType=histoplot&plotGeneSymbols=CDKN2A,MTAP,EGFR,BCL6
-# http://progenetix.org/services/samplesplot?datasetIds=progenetix&referenceName=9&variantType=DEL&start=21500000&start=21975098&end=21967753&end=22500000&filters=NCIT:C3058&plotType=samplesplot&plotGeneSymbols=CDKN2A,MTAP,EGFR,BCL6
+# http://progenetix.org//services/sampleplots?&filters=pgx:icdom-85003&plotType=histoplot&skip=0&limit=100&plotPars=plot_chros=8,9,17::labels=8:120000000-123000000:Some+Interesting+Region::plot_gene_symbols=MYCN,REL,TP53,MTAP,CDKN2A,MYC,ERBB2,CDK1::plot_width=800&filters=pgx:icdom-85003&plotType=histoplot
+# http://progenetix.org/services/samplesplot?datasetIds=progenetix&referenceName=9&variantType=DEL&start=21500000&start=21975098&end=21967753&end=22500000&filters=NCIT:C3058&plotType=histoplot&plotPars=plot_gene_symbols=CDKN2A,MTAP,EGFR,BCL6
+# http://progenetix.org/services/samplesplot?datasetIds=progenetix&referenceName=9&variantType=DEL&start=21500000&start=21975098&end=21967753&end=22500000&filters=NCIT:C3058&plotType=samplesplot&plotPars=plot_gene_symbols=CDKN2A,MTAP,EGFR,BCL6
 
 ################################################################################
 ################################################################################
@@ -35,6 +36,8 @@ class ByconPlot:
     def __init__(self, byc: dict, plot_data_bundle: dict):
         self.byc = byc
         self.env = byc.get("env", "server")
+        self.debug_mode = byc.get("debug_mode", False)
+        self.plot_type = byc.get("plot_type", "___none___")
         self.plot_defaults = byc.get("plot_defaults", {})
         self.cytolimits = byc.get("cytolimits", {})
         self.form_data = byc.get("form_data", {})
@@ -73,17 +76,18 @@ class ByconPlot:
     # -------------------------------------------------------------------------#
 
     def __plot_pipeline(self):
-        prdbug(self.byc, f'{inspect.stack()[1][3]} from {inspect.stack()[2][3]}')
+        dbm = f'{inspect.stack()[1][3]} from {inspect.stack()[2][3]}'
+        prdbug(dbm, self.debug_mode)
 
         self.plot_pipeline_start = datetime.now()
 
         p_t_s = self.plot_defaults.get("plot_types", {})
-        p_t = self.byc.get("output", "___none___")
+        p_t = self.plot_type
 
-        if p_t not in p_t_s.keys():
+        if self.plot_type not in p_t_s.keys():
             return
 
-        self.__initialize_plot_values(p_t)
+        self.__initialize_plot_values()
 
         if self.__plot_respond_empty_results() is False:
             self.__plot_add_title()
@@ -99,7 +103,8 @@ class ByconPlot:
         self.svg = self.__create_svg()
         self.plot_pipeline_end = datetime.now()
         self.plot_pipeline_duration = self.plot_pipeline_end - self.plot_pipeline_start
-        prdbug(self.byc, f'... plot pipeline duration for {p_t} was {self.plot_pipeline_duration.total_seconds()} seconds')
+        dbm = f'... plot pipeline duration for {p_t} was {self.plot_pipeline_duration.total_seconds()} seconds'
+        prdbug(dbm, self.debug_mode)
 
 
     # -------------------------------------------------------------------------#
@@ -109,23 +114,29 @@ class ByconPlot:
         p_d_p = self.plot_defaults.get("parameters", {})
         form = self.form_data
 
+        pps = {}
+
         # this is in case there was a `plotPars` argument from command line
         plot_pars = form.get("plot_pars")
 
         if plot_pars:
-            for ppv in plot_pars.split('&'):
+            for ppv in re.split(r'::|&', plot_pars):
                 pp, pv = ppv.split('=')
+                pp = decamelize(pp)
                 if not pv:
                     continue
-                form.update({pp: pv})
+                pps.update({pp: pv})
         form.pop("plot_pars", None)
+        dbm = f'... plotPars: {pps}'
+        prdbug(dbm, self.debug_mode)
 
         for p_k, p_d in p_d_p.items():
-            if p_k in form:
+            if p_k in pps:
                 p_k_t = p_d_p[p_k].get("type", "string")
-                p_d = form.get(p_k)
+                p_d = pps.get(p_k)
 
-                prdbug(self.byc, f'{p_k}: {p_d} ({p_k_t}), type {type(p_d)}')
+                dbm = f'{p_k}: {p_d} ({p_k_t}), type {type(p_d)}'
+                prdbug(dbm, self.debug_mode)
 
                 if "array" in p_k_t:
                     p_i_t = p_d_p[p_k].get("items", "string")
@@ -151,21 +162,22 @@ class ByconPlot:
 
     # -------------------------------------------------------------------------#
 
-    def __initialize_plot_values(self, plot_type):
-        prdbug(self.byc, f'{inspect.stack()[1][3]} from {inspect.stack()[2][3]}')
+    def __initialize_plot_values(self):
+        dbm = f'{inspect.stack()[1][3]} from {inspect.stack()[2][3]}'
+        prdbug(dbm, self.debug_mode)
+
         p_d_p = self.plot_defaults.get("parameters", {})
         p_t_s = self.plot_defaults.get("plot_types", {})
 
-        d_k = p_t_s[plot_type].get("data_key")
+        d_k = p_t_s[self.plot_type].get("data_key")
+        d_t = p_t_s[self.plot_type].get("data_type", "analyses")
 
         # TODO: get rid of the "results"?
         self.plv = {
-            "plot_type": plot_type,
             "results": self.plot_data_bundle.get(d_k, []),
             "results_number": len(self.plot_data_bundle.get(d_k, [])),
-            "data_type": p_t_s[plot_type].get("data_type", "analyses")
+            "data_type": d_t,
         }
-        # prdbug(self.byc, {"plot_type": plot_type, "plv": self.plv})
 
         self.__filter_empty_callsets_results()
 
@@ -241,8 +253,10 @@ class ByconPlot:
     # --------------------------------------------------------------------------#
 
     def __filter_empty_callsets_results(self):
-        prdbug(self.byc, f'{inspect.stack()[1][3]} from {inspect.stack()[2][3]}')
-        if not "samplesplot" in self.plv["plot_type"]:
+        dbm = f'{inspect.stack()[1][3]} from {inspect.stack()[2][3]}'
+        prdbug(dbm, self.debug_mode)
+
+        if not "samplesplot" in self.plot_type:
             return
 
         p_t_s = self.plot_defaults.get("plot_types", {})
@@ -263,7 +277,9 @@ class ByconPlot:
     def __plot_respond_empty_results(self):
         if self.plv["results_number"] > 0:
             return False
-        prdbug(self.byc, f'{inspect.stack()[1][3]} from {inspect.stack()[2][3]}')
+        
+        dbm = f'{inspect.stack()[1][3]} from {inspect.stack()[2][3]}'
+        prdbug(dbm, self.debug_mode)
 
         if self.plv["force_empty_plot"] is True:
             self.plv.update({"results": [{"variants":[]}]})
@@ -421,8 +437,7 @@ class ByconPlot:
     # --------------------------------------------------------------------------#
 
     def __plot_add_samplestrips(self):
-        # prdbug(self.byc, f'..... plot_type is {self.plv["plot_type"]}')
-        if not "sample" in self.plv["plot_type"]:
+        if not "sample" in self.plot_type:
             return
         prdbug(self.byc, f'{inspect.stack()[1][3]} from {inspect.stack()[2][3]}')
 
@@ -591,14 +606,14 @@ class ByconPlot:
     # --------------------------------------------------------------------------#
 
     def __plot_add_histodata(self):
-        if "histo" not in self.plv["plot_type"]:
+        if "histo" not in self.plot_type:
             return
         prdbug(self.byc, f'{inspect.stack()[1][3]} from {inspect.stack()[2][3]}')
 
         self.plv.update({"plot_first_area_y0": self.plv["Y"]})
 
         self.__plot_order_histograms()
-        if "heat" in self.plv["plot_type"]:
+        if "heat" in self.plot_type:
             self.plv.update({"cluster_head_gap": 0})
             self.plv.update({"plot_clusteritem_height": self.plv["plot_samplestrip_height"]})
             for f_set in self.plv["results"]:
@@ -948,7 +963,7 @@ class ByconPlot:
     def __plot_add_probesplot(self):
         """
         Prototyping bitmap drawing for probe plots etc.
-        Invoked w/ &output=arrayplot
+        Invoked w/ &plotType=arrayplot
         https://pillow.readthedocs.io/en/stable/reference/ImageDraw.html
         
         #### Draw examples
@@ -972,7 +987,7 @@ class ByconPlot:
         ```
         """
 
-        if not "samplesplot" in self.plv["plot_type"]:
+        if not "samplesplot" in self.plot_type:
             return
         prdbug(self.byc, f'{inspect.stack()[1][3]} from {inspect.stack()[2][3]}')
 
