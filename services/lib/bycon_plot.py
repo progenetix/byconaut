@@ -261,17 +261,11 @@ class ByconPlot:
         genome_width = paw - gap_sw
         b2pf = genome_width / chr_b_s  # TODO: only exists if using stack
 
-        title = self.plv.get("plot_title", "")
-        # if not title:
-        #     if self.plv["results_number"] == 1:
-        #         title = self.__format_resultset_title()
-
         lab_f_s = round(self.plv["plot_samplestrip_height"] * 0.65, 1)
         if lab_f_s < self.plv["plot_labelcol_font_size"]:
             self.plv.update({"plot_labelcol_font_size": lab_f_s})
 
         self.plv.update({
-            "plot_title": title,
             "cytoband_shades": self.plot_defaults.get("cytoband_shades", {}),
             "styles": [
                 f'.plot-area {{fill: {self.plv.get("plot_area_color", "#66ddff")}; fill-opacity: {self.plv.get("plot_area_opacity", 0.8)};}}',

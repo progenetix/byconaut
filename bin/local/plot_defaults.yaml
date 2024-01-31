@@ -56,8 +56,12 @@ plot_types:
 
 plot_parameters:
 
-  # Plot parameters can be modified in the URL's query string.
-  # The bycon package accepts both snake_case and camelCase versions.
+  # To limit the amount of pre-defined parameters accepted through the `bycon`
+  # interface we are using a special syntax for plot parameters. Plot parameters
+  # (see below for all pre-defined ones) are provided as a single string to `plotPars`
+  # parameter, with individual parameter pairs concatenated by `::`
+  #     * in GET: `plotPars=plot_chros=8,9,17::labels=8:120000000-123000000:Some+Interesting+Region::plot_gene_symbols=MYCN,TP53,MTAP,CDKN2A,MYC,ERBB2::plot_width=800`
+  #     * in CMD: `--plotPars "plot_chros=8,9,17::labels=8:120000000-123000000:Some Interesting Region::plot_gene_symbols=MYCN,TP53,MTAP,CDKN2A,MYC,ERBB2::plot_width=800"`
   # TODO:
   # * `#` character needs to be escaped in URL (`%23`) => fix for ommitting it...
 
@@ -66,6 +70,7 @@ plot_parameters:
 
   plot_title:
     description: title above the plot
+    default: ""
 
   plot_group_by:
     description: group samples in histograms by a filter type (NCIT, PMID...)
@@ -95,7 +100,7 @@ plot_parameters:
   plot_samples_cluster_type:
     description: >-
       selection of which measurees are used to generate the clustering matrix
-      * `intcoverage` uses the 2x3k (gain, loss) 1MB intervals
+      * `intcoverage` uses the ~2x3k (gain, loss) 1MB intervals
       * `chrostats` only uses the CNV coverage per chromosomal arm (separately
         for gains and losses)
     default: intcoverage
@@ -114,7 +119,8 @@ plot_parameters:
       - ward
       - weighted
 
-  # color definitions for the variants; the keys are mapped to the `plot_variant_types`
+  # color definitions for the variants
+  # the keys are mapped to the `plot_variant_types` defined below
 
   plot_dup_color:
     default: "#FFC633"
@@ -128,7 +134,6 @@ plot_parameters:
     default: "#0066FF"
   plot_snv_color:
     default: "#FF3300"
-
 
   plot_chros:
     type: array
@@ -149,21 +154,18 @@ plot_parameters:
     type: integer
     default: 100
 
+  plot_axis_y_max:
+    description: >-
+      * frequency value the maximum of the Y-axis corresponds to
+      * use this to e.g. spread values if a max. of less than 100 is expected
+    type: integer
+    default: 100
+
   plot_samplestrip_height:
     description: >-
       height of a single sample strip
     type: integer
     default: 12
-
-  plot_clusteritem_height:
-    description: >-
-      height of the items to be clustered; set sample height as default
-    type: integer
-    default: 12
-
-  plot_axis_y_max:
-    type: integer
-    default: 100
 
   plot_margins:
     description: outer plot margins, in px
@@ -201,6 +203,8 @@ plot_parameters:
     default: 0.5
 
   plot_chro_height:
+    description: >-
+      height (well, width...) of the chromosomes in the ideogram strip
     type: integer
     default: 14
 
@@ -213,18 +217,18 @@ plot_parameters:
     default: "#ffffff"
 
   plot_area_color:
-    description: color of the plot background
+    description: color of the plot area background
     default: "#eef6ff"
-
-  plot_heat_intensity:
-    description: factor for frequency heatmap value brightness
-    type: number
-    default: 1
 
   plot_area_opacity:
     description: opacity of the plot background
     type: number
     default: 0.8
+
+  plot_heat_intensity:
+    description: factor for frequency heatmap value brightness
+    type: number
+    default: 1
 
   plot_grid_stroke:
     type: integer
