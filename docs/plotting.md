@@ -73,11 +73,11 @@ all variants per sample.
       sample retrieval and plotting and with some plot modifications:
         * limits the output to 100 samples (`limit=100`)
         * removes samples w/o CNVs (`plot_filter_empty_samples=y`)
-* [/beacon/sampleplots?filters=pgx:icdom-95003&plotPars=plotGeneSymbols=MYCN&limit=100&plotType=samplesplot](http://progenetix.org/beacon/sampleplots?filters=pgx:icdom-95003&plotPars=plotGeneSymbols=MYCN::limit=100&plotType=samplesplot)
+* [/services/sampleplots?filters=pgx:icdom-95003&plotPars=plotGeneSymbols=MYCN&limit=100&plotType=samplesplot](http://progenetix.org/services/sampleplots?filters=pgx:icdom-95003&plotPars=plotGeneSymbols=MYCN::limit=100&plotType=samplesplot)
     - this example gets samples for ICD-O Morphology 95003/3 (a.k.a. `pgx:icdom-95003`)
     - limits the output to the first 1000 samples (`limit=1000`)
     - adds a label for the **MYCN** gene
-* [/beacon/sampleplots?filters=pgx:icdom-95003&plotPars=plotGeneSymbols=MYCN&limit=100](http://progenetix.org/beacon/sampleplots?filters=pgx:icdom-95003&plotPars=plotGeneSymbols=MYCN&limit=100)
+* [/services/sampleplots?filters=pgx:icdom-95003&plotPars=plotGeneSymbols=MYCN&limit=100](http://progenetix.org/services/sampleplots?filters=pgx:icdom-95003&plotPars=plotGeneSymbols=MYCN&limit=100)
     - this is the same selection and labeling but defaulting to the `histoplot`
       option since no `plotType` parameter is indicated
 
