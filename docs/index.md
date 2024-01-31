@@ -48,38 +48,7 @@ mongorestore --db $database .../mongodump/examplez/
 
 ## Data maintenance scripts
 
-### `analysesStatusmapsRefresher` (CNV)
-
-The `analysesStatusmapsRefresher` script creates CNV status data for binned
-genomic intervals, for each CNV callset (_i.e._ the CNV data of all corresponding
-variants from the same experiment/sample).
-
-
-#### Examples
-
-* `bin/analysesStatusmapsRefresher.py -d examplez`
-
-### `collationsCreator`
-
-**`collations`** provide aggregate data for all samples etc. matching a given
-classification, external reference or other entity code, including hierarchy
-data for term expansion when matching the code. The hierarchy data is provided
-in `rsrc/classificationTrees/__filterType__/numbered-hierarchies.tsv` as a list
-of ordered branches in the format `code | label | depth | order`.
-
-#### Examples
-
-* `bin/collationsCreator.py -d examplez --collationTypes "icdom,icdot"`
-* `bin/collationsCreator.py -d progenetix`
-
-### `frequencymapsCreator` (CNV)
-
-**`frequencymaps`** contain pre-computed frequencies for CNV data, aggregating
-the binned statusmaps data from all analyses belonging to a given collation.
-
-#### Examples
-
-* `bin/frequencymapsCreator.py -d examplez`
+Please see the [helper apps documentation](applications/#data-transformation-database-maintenance).
 
 ## Utility apps
 

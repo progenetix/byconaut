@@ -6,10 +6,15 @@ import sys, datetime
 
 from bycon import *
 
-services_lib_path = path.join( path.dirname( path.abspath(__file__) ), pardir, "services", "lib" )
+loc_path = path.dirname( path.abspath(__file__) )
+services_lib_path = path.join( loc_path, pardir, "services", "lib" )
 sys.path.append( services_lib_path )
+from cytoband_utils import variants_from_revish
+from export_file_generation import pgxseg_biosample_meta_line, pgxseg_header_line, pgxseg_variant_line
 from file_utils import read_tsv_to_dictlist
 from interval_utils import generate_genome_bins
+from bycon_bundler import ByconBundler
+from datatable_utils import import_datatable_dict_line
 
 """
 bin/ISCNsegmenter.py -i imports/ccghtest.tab -o exports/cghvars.tsv
