@@ -27,6 +27,7 @@ def parse_cytoband_file(byc):
         for c_band in csv.DictReader(filter(lambda row: row.startswith('#') is False, cb_f), fieldnames=cb_keys, delimiter='\t'):
             c_bands.append(c_band)
 
+
     #--------------------------------------------------------------------------#
 
     # !!! making sure the chromosomes are sorted !!!

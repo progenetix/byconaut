@@ -46,7 +46,7 @@ def collationplots():
     generate_genome_bins(byc)
 
     plot_type = byc["form_data"].get("plot_type", "___none___")
-    if plot_type not in ["histoplot", "histoheatplot", "histosparklines"]:
+    if plot_type not in ["histoplot", "histoheatplot", "histosparkplot"]:
         plot_type = "histoplot"
     
     byc["form_data"].update({"plot_type": plot_type})

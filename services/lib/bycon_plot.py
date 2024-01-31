@@ -122,9 +122,31 @@ class ByconPlot:
 
     # -------------------------------------------------------------------------#
 
+    def __set_plot_defaults(self):
+
+        p_d_p = self.plot_defaults.get("plot_parameters", {})
+        p_t = self.plot_type
+        p_t_s = self.plot_types
+        p_d_m = p_t_s[p_t].get("mods", {})
+
+        for p_k, p_d in p_d_p.items():
+            if "default" in p_d:
+                self.plv.update({p_k: p_d["default"]})
+                if p_k in p_d_m:
+                    self.plv.update({p_k: p_d_m[p_k]})
+            else:
+                self.plv.update({p_k: ""})
+
+        m_t = p_t_s[p_t].get("modded")
+        if m_t:
+            self.plot_type = m_t
+
+
+    # -------------------------------------------------------------------------#
+
     def __get_plot_parameters(self):
 
-        p_d_p = self.plot_defaults.get("parameters", {})
+        p_d_p = self.plot_defaults.get("plot_parameters", {})
         p_t_s = self.plot_types
         form = self.form_data
 
@@ -188,27 +210,10 @@ class ByconPlot:
         dbm = f'{inspect.stack()[1][3]} from {inspect.stack()[2][3]}'
         prdbug(dbm, self.debug_mode)
 
-        p_t = self.plot_type
-        p_d_p = self.plot_defaults.get("parameters", {})
+        self.__set_plot_defaults()
+
         p_t_s = self.plot_types
-        p_d_m = p_t_s[p_t].get("mods", {})
-
-        prdbug(p_t, self.debug_mode)
-        prdbug(p_d_m, self.debug_mode)
-
-        for p_k, p_d in p_d_p.items():
-            if "default" in p_d:
-                self.plv.update({p_k: p_d["default"]})
-                if p_k in p_d_m:
-                    self.plv.update({p_k: p_d_m[p_k]})
-            else:
-                self.plv.update({p_k: ""})
-
-        m_t = p_t_s[p_t].get("modded")
-        if m_t:
-            self.plot_type = m_t
-            p_t = m_t
-
+        p_t = self.plot_type
         d_k = p_t_s[p_t].get("data_key")
         d_t = p_t_s[p_t].get("data_type", "analyses")
 

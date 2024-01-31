@@ -48,7 +48,7 @@ def callsets_refresher():
 
     # re-doing the interval generation for non-standard CNV binning
     # genome_binning_from_args(byc)
-    generate_genomic_mappings(byc)
+    set_genome_rsrc_path(byc)
     generate_genome_bins(byc)
 
     data_client = MongoClient(host=byc["mongohost"])

@@ -27,7 +27,7 @@ def pgx_probes_plotter():
 
     initialize_bycon_service(byc)
     parse_variants(byc)
-    generate_genomic_mappings(byc)
+    set_genome_rsrc_path(byc)
     generate_genome_bins(byc)
 
     input_file = byc["form_data"].get("inputfile")

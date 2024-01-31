@@ -1,11 +1,31 @@
+#------------------------------------------------------------------------------#
+# Plot Types
+#------------------------------------------------------------------------------#
+
+# The plot type can be selected with the `plotType` argument/parameter of the
+# `bycon` package.
+
 plot_types:
+
   histoplot:
+    description: >-
+      The default option, used to plot histograms of the CNV frequencies per
+      data collection ("collation") or aggregated sample data.
     data_key: interval_frequencies_bundles
     data_type: collations
+
   histoheatplot:
+    description: >-
+      A "heatmap" style version of the histogram plot, where a single gain/loss
+      frequency result is transformed into a small heat color strip.
     data_key: interval_frequencies_bundles
     data_type: collations
-  histosparklines:
+
+  histosparkplot:
+    description: >-
+      A version of the histogram with predefined parameters for representing a
+      small and unlabeled plot, e.g. for use in hover previews. As in the normal
+      histogram parameters can be overridden.
     data_key: interval_frequencies_bundles
     data_type: collations
     mods:
@@ -22,7 +42,11 @@ plot_types:
       plot_labelcol_width: 0
       plot_axis_y_max: 80
     modded: histoplot
+
   samplesplot:
+    description: >-
+      A plot of the called CNV segments per sample, with the samples ordered by
+      their clustering (_i.e._ similarity of binned CNV data).
     data_key: callsets_variants_bundles
     data_type: samples
 
@@ -30,64 +54,14 @@ plot_types:
 #------------------------------------------------------------------------------#
 #------------------------------------------------------------------------------#
 
-plot_variant_types:
-  DUP:
-    color_key: plot_dup_color
-    label: copy number gain
-  DEL:
-    color_key: plot_del_color
-    label: copy number loss
-  EFO:0030065:
-    color_key: plot_loh_color
-    label: copy-neutral loss of heterozygosity
-  EFO:0030067:
-    color_key: plot_del_color
-    label: copy number loss
-  EFO:0030068:
-    color_key: plot_del_color
-    label: low-level copy number loss
-  EFO:0020073:
-    color_key: plot_homodel_color
-    label: high-level copy number loss
-  EFO:0030069:
-    color_key: plot_homodel_color
-    label: complete genomic deletion
-  EFO:0030070:
-    color_key: plot_dup_color
-    label: copy number gain
-  EFO:0030071:
-    color_key: plot_dup_color
-    label: low-level copy number gain
-  EFO:0030072:
-    color_key: plot_amp_color
-    label: high-level copy number gain
-  EFO:0030073:
-    color_key: plot_amp_color
-    label: focal genome amplification
-  EFO:0001059:
-    color_key: plot_snv_color
-    label: sequence_alteration
+plot_parameters:
 
-# legacy_parameters:
-
-#   # These remap parameters from the PGX legacy method to current names.
-#   # Please don't use   ╮(╯▽╰)╭ 
-
-#   plot_dup_color: color_var_dup_hex
-#   plot_del_color: color_var_del_hex
-#   plot_width: size_plotimage_w_px
-#   plot_region_labels: labels
-#   plot_gene_symbols: gene_symbols
-#   plot_group_by: group_by
-
-#------------------------------------------------------------------------------#
-#------------------------------------------------------------------------------#
-#------------------------------------------------------------------------------#
-
-parameters:
-
-  # Plot parameters can be modified in the URL's query string.
-  # The bycon package accepts both snake_case and camelCase versions.
+  # To limit the amount of pre-defined parameters accepted through the `bycon`
+  # interface we are using a special syntax for plot parameters. Plot parameters
+  # (see below for all pre-defined ones) are provided as a single string to `plotPars`
+  # parameter, with individual parameter pairs concatenated by `::`
+  #     * in GET: `plotPars=plot_chros=8,9,17::labels=8:120000000-123000000:Some+Interesting+Region::plot_gene_symbols=MYCN,TP53,MTAP,CDKN2A,MYC,ERBB2::plot_width=800`
+  #     * in CMD: `--plotPars "plot_chros=8,9,17::labels=8:120000000-123000000:Some Interesting Region::plot_gene_symbols=MYCN,TP53,MTAP,CDKN2A,MYC,ERBB2::plot_width=800"`
   # TODO:
   # * `#` character needs to be escaped in URL (`%23`) => fix for ommitting it...
 
@@ -144,7 +118,8 @@ parameters:
       - ward
       - weighted
 
-  # color definitions for the variants; the keys are mapped to the `plot_variant_types`
+  # color definitions for the variants
+  # the keys are mapped to the `plot_variant_types` defined below
 
   plot_dup_color:
     default: "#FFC633"
@@ -158,7 +133,6 @@ parameters:
     default: "#0066FF"
   plot_snv_color:
     default: "#FF3300"
-
 
   plot_chros:
     type: array
@@ -415,3 +389,44 @@ cytoband_shades:
     0%: rgb(163,55,247)
     100%: rgb(138,43,226)
 
+#------------------------------------------------------------------------------#
+#------------------------------------------------------------------------------#
+#------------------------------------------------------------------------------#
+
+plot_variant_types:
+  DUP:
+    color_key: plot_dup_color
+    label: copy number gain
+  DEL:
+    color_key: plot_del_color
+    label: copy number loss
+  EFO:0030065:
+    color_key: plot_loh_color
+    label: copy-neutral loss of heterozygosity
+  EFO:0030067:
+    color_key: plot_del_color
+    label: copy number loss
+  EFO:0030068:
+    color_key: plot_del_color
+    label: low-level copy number loss
+  EFO:0020073:
+    color_key: plot_homodel_color
+    label: high-level copy number loss
+  EFO:0030069:
+    color_key: plot_homodel_color
+    label: complete genomic deletion
+  EFO:0030070:
+    color_key: plot_dup_color
+    label: copy number gain
+  EFO:0030071:
+    color_key: plot_dup_color
+    label: low-level copy number gain
+  EFO:0030072:
+    color_key: plot_amp_color
+    label: high-level copy number gain
+  EFO:0030073:
+    color_key: plot_amp_color
+    label: focal genome amplification
+  EFO:0001059:
+    color_key: plot_snv_color
+    label: sequence_alteration
