@@ -39,6 +39,8 @@ as well as some other statistics (e.g. CNV coverage per chromosomal arms ...).
 * `bin/analysesStatusmapsRefresher.py -d progenetix --filters "pgx:icdom-81703"`
 * `bin/analysesStatusmapsRefresher.py -d cellz --filters "cellosaurus:CVCL_0312"`
 
+--------------------------------------------------------------------------------
+
 ### `collationsCreator`
 
 The `collationsCreator` script updates the dataset specific `collations` collections
@@ -61,6 +63,8 @@ provide additions and overrides in the `byconaut/local` directory.
 
 * `bin/collationsCreator.py -d progenetix`
 * `bin/collationsCreator.py -d examplez --collationTypes "PMID"`
+
+--------------------------------------------------------------------------------
 
 ### `frequencymapsCreator`
 
