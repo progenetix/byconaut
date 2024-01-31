@@ -30,31 +30,31 @@ def pgx_probes_plotter():
     generate_genomic_mappings(byc)
     generate_genome_bins(byc)
 
-    if not byc["args"].inputfile:
+    input_file = byc["form_data"].get("inputfile")
+    output_file = byc["form_data"].get("outputfile")
+
+    if not input_file:
         print("No input file specified (-i, --inputfile) => read_probedata_file(filepath, byc):quitting ...")
         exit()
 
-    inputfile = byc["args"].inputfile
-    if not "probe" in inputfile:
-        print('Only probe files are accepted.')
+    if not "probe" in input_file:
+        print('Only probe files are accepted (should have "...probes..." in name).')
         exit()
 
     pb = ByconBundler(byc)
 
     # TODO: method for multiple?
-    cs_probes = pb.read_probedata_file(inputfile)
+    cs_probes = pb.read_probedata_file(input_file)
     
     plot_data_bundle = {
         "callsets_probes_bundles": [ {"id": "TBD", "probes": cs_probes }]
     }
 
-    byc.update({"plot_type":"arrayplot"})
-    if byc["args"].outputfile:
-        outfile = byc["args"].outputfile
-    else:
-        outfile = re.sub(".tsv", "_sampleplots.svg", inputfile)
+    byc["form_data"].update({"plot_type":"probesplot"})
+    if not output_file:
+        output_file = re.sub(".tsv", "_sampleplots.svg", input_file)
 
-    ByconPlot(byc, plot_data_bundle).svg2file(outfile)
+    ByconPlot(byc, plot_data_bundle).svg2file(output_file)
 
 ################################################################################
 ################################################################################

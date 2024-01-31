@@ -2,11 +2,11 @@ import scipy.cluster
 
 ################################################################################
 
-def cluster_frequencies(plv, byc):
+def cluster_frequencies(plv):
 
     m = plv.get("plot_cluster_metric", "complete")
 
-    matrix = matrix_from_interval_frequencies(plv, byc)
+    matrix = matrix_from_interval_frequencies(plv)
     linkage = scipy.cluster.hierarchy.linkage(matrix, method=m)
     dendrogram = scipy.cluster.hierarchy.dendrogram(linkage, no_plot=True, orientation="right")
     
@@ -14,7 +14,7 @@ def cluster_frequencies(plv, byc):
 
 ################################################################################
 
-def matrix_from_interval_frequencies(plv, byc):
+def matrix_from_interval_frequencies(plv):
 
     matrix = []
 
@@ -34,7 +34,7 @@ def matrix_from_interval_frequencies(plv, byc):
 
 ################################################################################
 
-def cluster_samples(plv, byc):
+def cluster_samples(plv):
 
     m = plv.get("plot_cluster_metric", "complete")
 

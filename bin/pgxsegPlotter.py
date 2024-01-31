@@ -31,20 +31,21 @@ def pgxseg_plotter():
     run_beacon_init_stack(byc)
     generate_genome_bins(byc)
 
-    if not byc["args"].inputfile:
+    input_file = byc["form_data"].get("inputfile")
+    output_file = byc["form_data"].get("outputfile")
+
+    if not input_file:
         print("No input file specified (-i, --inputfile) => read_pgxseg_2_objects(filepath, byc):quitting ...")
         exit()
 
-    inputfile = byc["args"].inputfile
-    if not inputfile.endswith(".pgxseg"):
+    if not input_file.endswith(".pgxseg"):
         print('Only ".pgxseg" input files are accepted.')
         exit()
 
-    if not byc["args"].outputfile:
+    if not output_file:
         print("No output file specified (-o, --outputfile) => quitting ...")
         exit()
-    outfile = byc["args"].outputfile
-    if not outfile.endswith(".svg"):
+    if not output_file.endswith(".svg"):
         print("The output file has to end with `.svg` => quitting ...")
         exit()
 
@@ -54,17 +55,19 @@ def pgxseg_plotter():
     }
 
     pb = ByconBundler(byc)
-    pdb = pb.pgxseg_to_plotbundle(inputfile)
+    pdb = pb.pgxseg_to_plotbundle(input_file)
 
     if not "n" in todos.get("samplesplot", "n").lower():
-        byc.update({"plot_type": "samplesplot"})
-        s_file = re.sub(".svg", "_samplesplot.svg", outfile)
+        print(byc["form_data"].get("plot_pars"))
+        byc["form_data"].update({"plot_type": "samplesplot"})
+        s_file = re.sub(".svg", "_samplesplot.svg", output_file)
         print(f'==> writing samplesplot to \n    {s_file}')
         ByconPlot(byc, pdb).svg2file(s_file)
 
     if not "n" in todos.get("histoplot", "y").lower():
-        byc.update({"plot_type": "histoplot"})
-        h_file = re.sub(".svg", "_histoplot.svg", outfile)
+        print(byc["form_data"].get("plot_pars"))
+        byc["form_data"].update({"plot_type": "histoplot"})
+        h_file = re.sub(".svg", "_histoplot.svg", output_file)
         print(f'==> writing histoplot to \n    {h_file}')
         ByconPlot(byc, pdb).svg2file(h_file)
 

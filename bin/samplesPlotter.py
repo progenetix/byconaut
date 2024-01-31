@@ -36,15 +36,16 @@ def samples_plotter():
     # parameter test
 
     form = byc.get("form_data", {})
+    output_file = form.get("outputfile")
 
     if not byc["args"].datasetIds:
+        # in this case checking for the command line argument; avoiding defaults
         print("No dataset id(s) were specified (-d, --datasetIds) => quitting ...")
         exit()
-    if not byc["args"].outputfile:
+    if not output_file:
         print("No output file specified (-o, --outputfile) => quitting ...")
         exit()
-    outfile = byc["args"].outputfile
-    if not outfile.endswith(".svg"):
+    if not output_file.endswith(".svg"):
         print("The output file has to end with `.svg` => quitting ...")
         exit()
 
@@ -73,13 +74,13 @@ def samples_plotter():
     if "y" in todos.get("samplesplot", "n").lower():
         byc.update({"plot_type": "samplesplot"})
         pdb.update( ByconBundler(byc).resultsets_callset_bundles(RSS) )        
-        s_file = re.sub(".svg", "_samplesplot.svg", outfile)
+        s_file = re.sub(".svg", "_samplesplot.svg", output_file)
         print(f'==> Writing to {s_file}')
         ByconPlot(byc, pdb).svg2file(s_file)
 
     if "y" in todos.get("histoplot", "y").lower():
         byc.update({"plot_type": "histoplot"})
-        h_file = re.sub(".svg", "_histoplot.svg", outfile)
+        h_file = re.sub(".svg", "_histoplot.svg", output_file)
         print(f'==> Writing to {h_file}')
         ByconPlot(byc, pdb).svg2file(h_file)
 

@@ -34,35 +34,33 @@ def iscn_segmenter():
 	generate_genomic_mappings(byc)
 	generate_genome_bins(byc)
 
-	group_parameter = "histological_diagnosis_id"
-
-	if byc["args"].groupBy:
-		group_parameter = byc["args"].groupBy
+	group_parameter = byc["form_data"].get("groupBy", "histological_diagnosis_id")
+	input_file = byc["form_data"].get("inputfile")
+	output_file = byc["form_data"].get("outputfile")
 
 	technique = "cCGH"
 	iscn_field = "iscn_ccgh"
 	platform_id = "EFO:0010937"
 	platform_label = "comparative genomic hybridization (CGH)"
 	
-	if not byc["args"].inputfile:
+	if not input_file:
 		print("No input file file specified (-i, --inputfile) => quitting ...")
 		exit()
-	inputfile = byc["args"].inputfile
 
-	if not byc["args"].outputfile:
-		outputfile = path.splitext(inputfile)[0]
-		outputfile += "_processed"
+	if not output_file:
+		output_file = path.splitext(input_file)[0]
+		output_file += "_processed"
 		print("""¡¡¡ No output file has been specified (-o, --outputfile) !!!
-Output will be written to {}""".format(outputfile) )
+Output will be written to {}""".format(output_file) )
 	else:
-		outputfile = path.splitext(byc["args"].outputfile)[0]
+		output_file = path.splitext(output_file)[0]
 
 	if byc["test_mode"] is True:
-		outputfile += "_test"
+		output_file += "_test"
 
-	outputfile += ".pgxseg"
+	output_file += ".pgxseg"
 
-	iscn_samples, fieldnames = read_tsv_to_dictlist(inputfile, int(byc["args"].limit))
+	iscn_samples, fieldnames = read_tsv_to_dictlist(input_file, int(byc["form_data"].get("limit", 0)))
 
 	if not iscn_field in fieldnames:
 		print('The samplefile header does not contain the "{}" column => quitting'.format(iscn_field))
@@ -74,7 +72,7 @@ Output will be written to {}""".format(outputfile) )
 	s_w_v_no = 0
 	print("=> The samplefile contains {} samples".format(iscn_no))
 
-	pgxseg = open(outputfile, "w")
+	pgxseg = open(output_file, "w")
 	pgxseg.write( "#meta=>biosample_count={}\n".format(iscn_no) )
 
 	for c, s in enumerate(iscn_samples):
@@ -108,7 +106,7 @@ Output will be written to {}""".format(outputfile) )
 				pgxseg.write(pgxseg_variant_line(v)+"\n")
 
 	print("=> {} samples had variants".format(s_w_v_no))
-	print("Wrote to {}".format(outputfile))
+	print("Wrote to {}".format(output_file))
 
 	exit()
 

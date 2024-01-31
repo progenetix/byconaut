@@ -5,10 +5,11 @@ from progress.bar import Bar
 
 def set_collation_types(byc):
 
-    if not byc["args"].collationTypes:
+    cts = byc["form_data"].get("collation_types")
+
+    if not cts:
         return byc
 
-    cts = re.split(",", byc["args"].collationTypes)
     s_p = {}
     for p in cts:
         if p in byc["filter_definitions"].keys():

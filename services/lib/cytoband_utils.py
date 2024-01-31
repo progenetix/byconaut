@@ -1,7 +1,7 @@
 import csv, datetime, re, time, base36, yaml
 from os import environ, path, pardir
 
-from bycon import generate_id, ByconVariant
+from bycon import generate_id, ByconVariant, ChroNames
 
 ################################################################################
 ################################################################################
@@ -63,9 +63,9 @@ def parse_cytoband_file(byc):
 
 ################################################################################
 
-def bands_from_cytobands(chr_bands, byc):
+def bands_from_cytobands(chr_bands, cytoband_defs, argdefs):
 
-    cb_pat = re.compile( byc["argument_definitions"]["cyto_bands"]["pattern"] )
+    cb_pat = re.compile( argdefs["cyto_bands"]["pattern"] )
     error = ""
 
     end_re = re.compile(r"^([pq]\d.*?)\.?\d$")
@@ -84,7 +84,7 @@ def bands_from_cytobands(chr_bands, byc):
 
     chro, cb_start, cb_end = cb_pat.match(chr_bands).group(1,2,3)
 
-    cytobands = list(filter(lambda d: d[ "chro" ] == chro, byc["cytobands"].copy()))
+    cytobands = list(filter(lambda d: d[ "chro" ] == chro, cytoband_defs.copy()))
     if len(cytobands) < 10:
         return([], "", "", "", "error")
 
@@ -164,7 +164,7 @@ def bands_from_cytobands(chr_bands, byc):
     cb_from = start_bands[0]["i"]
     cb_to = end_bands[-1]["i"] + 1
 
-    matched = byc["cytobands"][cb_from:cb_to]
+    matched = cytoband_defs[cb_from:cb_to]
  
     return matched, chro, int( matched[0]["start"] ), int( matched[-1]["end"]), error
 
@@ -240,9 +240,9 @@ def variants_from_revish(bs_id, cs_id, technique, iscn, byc):
 ################################################################################
 
 def deparse_ISCN_to_variants(iscn, byc):
-
     a_d = byc.get("argument_definitions", {})
-    g_a = byc.get("genome_aliases", {})
+    c_b_d = byc.get("cytobands", [])
+    chro_names = ChroNames(byc)
     i_d = byc["interval_definitions"]
     v_t_defs = byc.get("variant_type_definitions")
 
@@ -268,7 +268,7 @@ def deparse_ISCN_to_variants(iscn, byc):
                 if not cb_pat.match(i_v):
                     continue
 
-                cytoBands, chro, start, end, error = bands_from_cytobands(i_v, byc)
+                cytoBands, chro, start, end, error = bands_from_cytobands(i_v, c_b_d, a_d)
                 if len(error) > 0:
                     errors.append(error)
                     continue
@@ -286,7 +286,7 @@ def deparse_ISCN_to_variants(iscn, byc):
                 v = ({
                     "variant_state": cnv_defs.get("variant_state"),
                     "location": {
-                        "sequence_id": g_a["refseq_aliases"].get(chro),
+                        "sequence_id": chro_names.refseq(chro),
                         "chromosome": chro,
                         "start": start,
                         "end": end
@@ -307,7 +307,6 @@ def deparse_ISCN_to_variants(iscn, byc):
 ################################################################################
 
 def cytobands_label_from_positions(byc, chro, start, end):
-
     cytobands, chro, start, end = cytobands_list_from_positions(byc, chro, start, end)
     cbl = cytobands_label( cytobands )
 
@@ -317,7 +316,6 @@ def cytobands_label_from_positions(byc, chro, start, end):
 ################################################################################
 
 def bands_from_chrobases(chro_bases, byc):
-
     cb_pat = re.compile( byc["argument_definitions"]["chro_bases"]["pattern"] )
     if not cb_pat.match(chro_bases):
         return [], "NA", 0, 0
@@ -329,7 +327,6 @@ def bands_from_chrobases(chro_bases, byc):
 ################################################################################
 
 def cytobands_list_from_positions(byc, chro, start=None, end=None):
-
     if start:
         start = int(start)
         if not end:
@@ -344,7 +341,6 @@ def cytobands_list_from_positions(byc, chro, start=None, end=None):
 
     if isinstance(start, int):
         cytobands = list(filter(lambda d: int(d[ "end" ]) > start, cytobands))
-
     if isinstance(end, int):
         cytobands = list(filter(lambda d: int(d[ "start" ]) < end, cytobands))
     else:

@@ -23,10 +23,10 @@ class ByconBundler:
     # The `ByconBundler` class
 
     This class bundles documents from the main entities which have a complete
-    intersection - e.g. for a set of variants their callsets, biosamples and
+    intersection - e.g. for a set of variants their analyses, biosamples and
     individuals. The bundling does _not_ have to be complete; e.g. bundles may
     be based on only some matched variants (not all variants of the referenced
-    callsets); and bundles may have empty lists for some entities.
+    analyses); and bundles may have empty lists for some entities.
     """
 
     def __init__(self, byc):
@@ -50,7 +50,7 @@ class ByconBundler:
 
         self.bundle = {
             "variants": [],
-            "callsets": [],
+            "analyses": [],
             "biosamples": [],
             "individuals": [],
             "info": {
@@ -171,7 +171,7 @@ class ByconBundler:
         bb = self.bundle
 
         c_p_l = []
-        for p_o in bb.get("callsets", []):
+        for p_o in bb.get("analyses", []):
             cs_id = p_o.get("id")
             p_o.update({
                 "variants": list(filter(lambda v: v.get("callset_id", "___none___") == cs_id, bb["variants"]))
@@ -269,12 +269,12 @@ class ByconBundler:
         for ds_id, ds_res in self.datasets_results.items():
             if not ds_res:
                 continue
-            if not "callsets._id" in ds_res:
+            if not "analyses._id" in ds_res:
                 continue
 
             mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
-            cs_coll = mongo_client[ds_id]["callsets"]
-            cs_r = ds_res["callsets._id"]
+            cs_coll = mongo_client[ds_id]["analyses"]
+            cs_r = ds_res["analyses._id"]
             cs__ids = cs_r["target_values"]
             r_no = len(cs__ids)
             if r_no < 1:
@@ -303,7 +303,7 @@ class ByconBundler:
 
                 # TODO: add optional probe read in
 
-                self.bundle["callsets"].append(p_o)
+                self.bundle["analyses"].append(p_o)
 
         return
 
@@ -315,7 +315,7 @@ class ByconBundler:
         c_p_l = []
 
         mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
-        for p_o in bb.get("callsets", []):
+        for p_o in bb.get("analyses", []):
             ds_id = p_o.get("dataset_id", "___none___")
             var_coll = mongo_client[ds_id]["variants"]
             cs_id = p_o.get("callset_id", "___none___")
@@ -408,17 +408,17 @@ class ByconBundler:
         self.bundle.update({
             "biosamples": list( bios_k.values() ),
             "individuals": list( ind_k.values() ),
-            "callsets": list( cs_k.values() ),
+            "analyses": list( cs_k.values() ),
             "variants": [elem for sublist in ( v_cs_k.values() ) for elem in sublist]
         })
 
     #--------------------------------------------------------------------------#
 
     def __callsetBundleCreateIsets(self, label=""):
-        self.dataset_ids = list(set([cs.get("dataset_id", "NA") for cs in self.bundle["callsets"]]))
+        self.dataset_ids = list(set([cs.get("dataset_id", "NA") for cs in self.bundle["analyses"]]))
         for ds_id in self.dataset_ids:
-            dscs = list(filter(lambda cs: cs.get("dataset_id", "NA") == ds_id, self.bundle["callsets"]))
-            intervals, cnv_cs_count = interval_counts_from_callsets(self.bundle["callsets"], self.byc)
+            dscs = list(filter(lambda cs: cs.get("dataset_id", "NA") == ds_id, self.bundle["analyses"]))
+            intervals, cnv_cs_count = interval_counts_from_callsets(self.bundle["analyses"], self.byc)
 
             if cnv_cs_count < self.min_number:
                 continue

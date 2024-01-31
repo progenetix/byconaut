@@ -33,8 +33,10 @@ def publications_inserter():
     g_url = byc["service_config"]["google_spreadsheet_tsv_url"]
     skip_cols = byc["service_config"]["skipped_columns"]
 
-    if byc["args"].inputfile:
-        pub_file = byc["args"].inputfile
+    input_file = byc["form_data"].get("inputfile")
+
+    if input_file:
+        pub_file = input_file
     else:
         print("No inputfile file specified => pulling the online table ...")
         pub_file = path.join( pkg_root_path, "tmp", "pubtable.tsv" )

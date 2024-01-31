@@ -10,6 +10,11 @@ from cytoband_utils import parse_cytoband_file, cytobands_label_from_positions
 from service_helpers import *
 from service_response_generation import *
 
+"""
+* http://progenetix.test/services/genespans/MYC
+* http://progenetix.test/services/genespans/?geneId=MYC
+"""
+
 ################################################################################
 ################################################################################
 ################################################################################
@@ -32,26 +37,26 @@ def genespans():
     parse_cytoband_file(byc)
 
     # form id assumes start match (e.g. for autocompletes)
-    byc["filter_flags"].update({"precision": "start"})
 
     r = ByconautServiceResponse(byc)
     byc.update({
         "service_response": r.emptyResponse(),
         "error_response": r.errorResponse()
     })
+    dbpars = {
+        "mongohost": byc.get("mongohost", "localhost"),
+        "services_db": byc.get("services_db", "___none___"),
+        "genes_coll": byc.get("genes_coll", "___none___")
+    }
 
     gene_id = rest_path_value("genespans")
     if gene_id:
         # REST path id assumes exact match
-        byc["filter_flags"].update({"precision": "exact"})
+        results, e = GeneInfo(dbpars).returnGene(gene_id)
     else:
         gene_id = byc[ "form_data" ].get("gene_id")
+        results, e = GeneInfo(dbpars).returnGenelist(gene_id)
 
-    if not gene_id:
-        response_add_error(byc, 422, "No geneId value provided!" )
-        cgi_break_on_errors(byc)
-
-    results, e = retrieve_gene_id_coordinates(gene_id, byc["filter_flags"].get("precision", "start"), byc)
     response_add_error(byc, 422, e )
     cgi_break_on_errors(byc)
 
@@ -83,16 +88,14 @@ def genespans():
 
 def _gene_add_cytobands(gene, byc):
 
-    g_a = byc.get("genome_aliases", {})
-    c_a = g_a.get("chro_aliases", {})
-
+    chro_names = ChroNames(byc)
     gene.update({"cytobands": None})
 
     acc = gene.get("accession_version", "NA")
-    if acc not in c_a:
+    if acc not in chro_names.chroAliases():
         return gene
 
-    chro = c_a.get( acc, "")
+    chro = chro_names.chro(acc)
     start = gene.get("start")
     end = gene.get("end")
     if not start or not end:

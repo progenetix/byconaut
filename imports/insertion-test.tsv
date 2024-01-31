@@ -1,0 +1,3 @@
+biosample_id	variant_id	callset_id	individual_id	reference_name	start	end	reference_sequence	sequence	variant_classification	variant_state_id	specific_so	case_id	sample_id	snv_type
+pgxbs-kftvi562	 	pgxcs-lp78triy	pgxind-kftx3w39	17	7674862	7674862	-	T	Frame_Shift_Ins	SO:0001059	SO:0000667	pgx:TCGA.eb611a76-eecf-452c-bfbe-ab49b362f49c	pgx:TCGA.69c35309-ae0a-4596-bd6e-f82f1845452c	INS
+pgxbs-kftvi0ix	 	pgxcs-lp7517c7	pgxind-kftx3tri	X	154930568	154930568	none	T	Frame_Shift_Ins	SO:0001059	SO:0000667	pgx:TCGA.eff14fed-8a21-41c5-8ed3-75346a06e44e	pgx:TCGA.05f0b31e-7fec-4d39-b5bf-bbf9b01173b0	INS

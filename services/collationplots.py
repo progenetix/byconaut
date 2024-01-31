@@ -18,7 +18,7 @@ from service_response_generation import *
 
 """podmd
 
-* https://progenetix.org/services/collationPlots/?datasetIds=progenetix&filters=NCIT:C7376,PMID:22824167,pgx:icdom-85003
+* https://progenetix.org/services/collationplots/?datasetIds=progenetix&filters=NCIT:C7376,PMID:22824167,pgx:icdom-85003
 * https://progenetix.org/services/intervalFrequencies/?datasetIds=progenetix&filters=NCIT:C7376,PMID:22824167&output=histoplot
 * https://progenetix.org/services/intervalFrequencies/?datasetIds=progenetix&id=pgxcohort-TCGAcancers
 * https://progenetix.org/cgi/bycon/services/intervalFrequencies.py/?output=pgxseg&datasetIds=progenetix&filters=NCIT:C7376
@@ -45,6 +45,11 @@ def collationplots():
     run_beacon_init_stack(byc)
     generate_genome_bins(byc)
 
+    plot_type = byc["form_data"].get("plot_type", "___none___")
+    if plot_type not in ["histoplot", "histoheatplot", "histosparklines"]:
+        plot_type = "histoplot"
+    
+    byc["form_data"].update({"plot_type": plot_type})
     id_from_path = rest_path_value("collationplots")
     if id_from_path:
         byc[ "filters" ] = [ {"id": id_from_path } ]
@@ -54,11 +59,6 @@ def collationplots():
     if not "filters" in byc:
         response_add_error(byc, 422, "No value was provided for collation `id` or `filters`.")  
         cgi_break_on_errors(byc)
-
-    plot_type = byc["form_data"].get("plot_type", "histoplot")
-    if plot_type not in ["histoplot", "samplesplot", "histoheatplot"]:
-        plot_type = "histoplot"
-    byc.update({"plot_type": plot_type})
 
     pdb = ByconBundler(byc).collationsPlotbundles()
     ByconPlot(byc, pdb).svgResponse()

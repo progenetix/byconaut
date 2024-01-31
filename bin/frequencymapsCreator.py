@@ -55,7 +55,7 @@ def frequencymaps_creator():
     fm_coll = data_db[ "frequencymaps" ]
     ind_coll = data_db["individuals"]
     bios_coll = data_db[ "biosamples" ]
-    cs_coll = data_db["callsets"]
+    cs_coll = data_db["analyses"]
 
     coll_ids = _filter_coll_ids(coll_coll, byc)    
     coll_no = len(coll_ids)
@@ -108,7 +108,7 @@ def frequencymaps_creator():
             "collation_type": coll["collation_type"],
             "child_terms": coll["child_terms"],
             "updated": datetime.datetime.now().isoformat(),
-            "counts": {"biosamples": bios_no, "callsets": cs_no },
+            "counts": {"biosamples": bios_no, "analyses": cs_no },
             "frequencymap": {
                 "interval_count": byc["genomic_interval_count"],
                 "binning": byc["interval_definitions"].get("genome_binning", ""),
@@ -194,7 +194,7 @@ def _cs_cursor_from_bios_query(byc, bios_coll, ind_coll, cs_coll, coll_id, scope
     if scope == "individuals":
         ind_ids = ind_coll.distinct( "id" , query )
         bios_ids = bios_coll.distinct( "id" , {"individual_id":{"$in": ind_ids } } )
-    elif scope == "callsets":
+    elif scope == "analyses":
         bios_ids = cs_coll.distinct( "biosample_id" , query )
     else:
         bios_ids = bios_coll.distinct( "id" , query )

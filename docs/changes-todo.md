@@ -1,7 +1,7 @@
 # Changes & TODOs
 
-Most of the changes will be documented in [`bycon`](https://bycon.progenetix.org).
-This page just lists some very specific `byconaut` changes and plans.
+Changes are now documented in [`bycon`](https://bycon.progenetix.org).
+This page may lists some very specific `byconaut` changes and plans.
 
 ## Changes
 
@@ -15,7 +15,3 @@ This page just lists some very specific `byconaut` changes and plans.
 
 * moved MongoDB index generation to `housekeeping.py`
 * started to organize actions in `housekeeping.py` w/ user prompts
-
-## To Do
-
-A lot...

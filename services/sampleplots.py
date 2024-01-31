@@ -25,6 +25,7 @@ the fallback). Plot options are available as usual.
 * http://progenetix.org/services/sampleplots?plotType=samplesplot&datasetIds=cellz&filters=cellosaurus:CVCL_0030
 * http://progenetix.org/services/sampleplots?filters=pgx:icdom-81703
 * http://progenetix.org/services/sampleplots/?testMode=true&plotType=samplesplot
+* http://progenetix.org/services/sampleplots?filters=pgx:icdom-81703&plotType=histoplot&plotPars=plot_chro_height=0::plot_title_font_size=0::plot_area_height=18::plot_margins=0::plot_axislab_y_width=0::plot_grid_stroke=0::plot_footer_font_size=0::plot_width=400
 """
 
 ################################################################################
@@ -43,14 +44,11 @@ def sampleplots():
     run_beacon_init_stack(byc)
     generate_genome_bins(byc)
 
-    plot_type = byc["form_data"].get("plot_type", "histoplot")
-    if plot_type not in ["histoplot", "samplesplot", "histoheatplot"]:
-        plot_type = "histoplot"
-    byc.update({"plot_type": plot_type})
+    plot_type = byc["form_data"].get("plot_type", "___none___")
+    file_id = byc["form_data"].get("file_id", "___no-input-file___")
 
     pb = ByconBundler(byc)
 
-    file_id = byc["form_data"].get("file_id", "___no-input-file___")
     inputfile = Path( path.join( *byc["local_paths"][ "server_tmp_dir_loc" ], file_id ) )
     if inputfile.is_file():
         pdb = pb.pgxseg_to_plotbundle(inputfile)

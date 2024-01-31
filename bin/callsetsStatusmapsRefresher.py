@@ -24,7 +24,7 @@ from interval_utils import generate_genome_bins, interval_cnv_arrays
 * `bin/callsetsStatusmapsRefresher.py -d 1000genomesDRAGEN -s variants`
 * `bin/callsetsStatusmapsRefresher.py -d progenetix -s biosamples -f "icdom-81703"`
 * `bin/callsetsStatusmapsRefresher.py`
-  - default; new statusmaps for all `progenetix` callsets
+  - default; new statusmaps for all `progenetix` analyses
 """
 ################################################################################
 
@@ -51,9 +51,9 @@ def callsets_refresher():
     generate_genomic_mappings(byc)
     generate_genome_bins(byc)
 
-    data_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
+    data_client = MongoClient(host=byc["mongohost"])
     data_db = data_client[ ds_id ]
-    cs_coll = data_db[ "callsets" ]
+    cs_coll = data_db[ "analyses" ]
     v_coll = data_db[ "variants" ]
 
     record_queries = ByconQuery(byc).recordsQuery()
@@ -64,18 +64,18 @@ def callsets_refresher():
 
     no_cnv_type = 0
 
-    if not "callsets._id" in ds_results.keys():
+    if not "analyses._id" in ds_results.keys():
         cs_ids = []
         for cs in cs_coll.find( {} ):
             cs_ids.append(cs["_id"])
         cs_no = len(cs_ids)
-        print(f'¡¡¡ Using all {cs_no} callsets from {ds_id} !!!')
+        print(f'¡¡¡ Using all {cs_no} analyses from {ds_id} !!!')
     else:
-        cs_ids = ds_results["callsets._id"]["target_values"]
+        cs_ids = ds_results["analyses._id"]["target_values"]
         cs_no = len(cs_ids)
 
-    print(f'Re-generating statusmaps with {byc["genomic_interval_count"]} intervals for {cs_no} callsets...')
-    bar = Bar("{} callsets".format(ds_id), max = cs_no, suffix='%(percent)d%%'+" of "+str(cs_no) )
+    print(f'Re-generating statusmaps with {byc["genomic_interval_count"]} intervals for {cs_no} analyses...')
+    bar = Bar("{} analyses".format(ds_id), max = cs_no, suffix='%(percent)d%%'+" of "+str(cs_no) )
     counter = 0
     updated = 0
 
@@ -120,9 +120,9 @@ def callsets_refresher():
 
     bar.finish()
 
-    print(f"{counter} callsets were processed")
-    print(f"{no_cnv_type} callsets were not from CNV calling")
-    print(f'{updated} callsets were updated for\n    `cnv_statusmaps`\n    `cnv_stats`\n    `cnv_chro_stats`\nusing {byc["genomic_interval_count"]} bins ({byc["interval_definitions"].get("genome_binning", "")})')
+    print(f"{counter} analyses were processed")
+    print(f"{no_cnv_type} analyses were not from CNV calling")
+    print(f'{updated} analyses were updated for\n    `cnv_statusmaps`\n    `cnv_stats`\n    `cnv_chro_stats`\nusing {byc["genomic_interval_count"]} bins ({byc["interval_definitions"].get("genome_binning", "")})')
 
 ################################################################################
 ################################################################################

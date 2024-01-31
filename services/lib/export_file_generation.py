@@ -211,14 +211,14 @@ def export_callsets_matrix(datasets_results, ds_id, byc):
     ds_results = datasets_results[ds_id]
     p_r = byc["pagination"]
 
-    if not "callsets._id" in ds_results:
+    if not "analyses._id" in ds_results:
         return
 
-    cs_r = ds_results["callsets._id"]
+    cs_r = ds_results["analyses._id"]
 
     mongo_client = pymongo.MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
     bs_coll = mongo_client[ ds_id ][ "biosamples" ]
-    cs_coll = mongo_client[ ds_id ][ "callsets" ]
+    cs_coll = mongo_client[ ds_id ][ "analyses" ]
 
     open_text_streaming(byc["env"], "interval_callset_matrix.pgxmatrix")
 
@@ -423,7 +423,6 @@ def export_vcf_download(datasets_results, ds_id, byc):
     print("\t".join(v_o.keys()))
 
     bv = ByconVariant(byc)
-
     for d in variant_ids:
         d_vs = [var for var in v_instances if var.get('variant_internal_id', "__none__") == d]
         vcf_v = bv.vcfVariant(d_vs[0])

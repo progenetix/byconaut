@@ -28,18 +28,16 @@ def main():
 def variantsInserter():
 
     initialize_bycon_service(byc)
-    parse_variants(byc)
-    select_dataset_ids(byc)
-
-    args = byc.get("args", {})
+    run_beacon_init_stack(byc)
 
     if len(byc["dataset_ids"]) != 1:
         print("No single existing dataset was provided with -d ...")
         exit()
 
     ds_id = byc["dataset_ids"][0]
+    input_file = byc["form_data"].get("inputfile")
 
-    if not args.inputfile:
+    if not input_file:
         print("No input file file specified (-i, --inputfile) => quitting ...")
         exit()
 
@@ -52,7 +50,7 @@ def variantsInserter():
             print("... running in TEST MODE")
 
     vb = ByconBundler(byc)
-    variants = vb.read_pgx_file(args.inputfile)
+    variants = vb.read_pgx_file(input_file)
 
     var_no = len(variants.data)
     up_v_no = 0
@@ -60,7 +58,7 @@ def variantsInserter():
     delBiosVars, delSOvars, delCNVvars = ["n", "n", "n"]
 
     if not byc["test_mode"]:
-        delBiosVars = input("Delete variants from matched biosamples before insertion?\n¡¡¡ This will remove ALL variants for each  `biosample_id` !!!\n(y|N): ")
+        delBiosVars = input("Delete variants from matched biosamples before insertion?\n¡¡¡ This will remove ALL variants for each `biosample_id` !!!\n(y|N): ")
         if not "y" in delBiosVars.lower():
             delSOvars = input('Delete only the sequence variants ("SO:...") from matched biosamples before insertion?\n(y|N): ')
             delCNVvars = input('Delete only the CNV variants ("EFO:...") from matched biosamples before insertion?\n(y|N): ')

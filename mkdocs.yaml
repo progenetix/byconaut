@@ -9,6 +9,7 @@ repo_url: https://github.com/progenetix/byconaut
 nav:
   - Documentation Home: /
   - Changes & To Do: changes-todo
+  - Plotting: plotting
   - bycon Documentation: http://progenetix.org
   - Progenetix Site: http://progenetix.org
   - Baudisgroup: http://info.baudisgroup.org

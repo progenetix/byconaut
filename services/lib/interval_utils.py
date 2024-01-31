@@ -330,10 +330,10 @@ def _round_frac(val, maxval, digits=3):
 
 ################################################################################
 
-def interval_counts_from_callsets(callsets, byc):
+def interval_counts_from_callsets(analyses, byc):
     """
     This method will analyze a set (either list or MongoDB Cursor) of Progenetix
-    callsets with CNV statusmaps and return a list of standard genomic interval
+    analyses with CNV statusmaps and return a list of standard genomic interval
     objects with added per-interval quantitative data.
     """
 
@@ -341,11 +341,11 @@ def interval_counts_from_callsets(callsets, byc):
     int_fs = deepcopy(byc["genomic_intervals"])
     int_no = len(int_fs)
 
-    # callsets can be either a list or a MongoDB Cursor (which has to be re-set)
-    if type(callsets).__name__ == "Cursor":
-        callsets.rewind()
+    # analyses can be either a list or a MongoDB Cursor (which has to be re-set)
+    if type(analyses).__name__ == "Cursor":
+        analyses.rewind()
 
-    cs_no = len(list(callsets))
+    cs_no = len(list(analyses))
     f_factor = 0
 
     if cs_no > 0:
@@ -361,10 +361,10 @@ def interval_counts_from_callsets(callsets, byc):
         covs = np.zeros((cs_no, int_no))
         vals = np.zeros((cs_no, int_no))
 
-        if type(callsets).__name__ == "Cursor":
-            callsets.rewind()
+        if type(analyses).__name__ == "Cursor":
+            analyses.rewind()
 
-        for i, cs in enumerate(callsets):
+        for i, cs in enumerate(analyses):
             covs[i] = cs["cnv_statusmaps"][pars[t]["cov_l"]]
             vals[i] = cs["cnv_statusmaps"][pars[t]["val_l"]]
 
@@ -380,8 +380,8 @@ def interval_counts_from_callsets(callsets, byc):
                 t + "_mean": means[i]
             })
 
-    if type(callsets).__name__ == "Cursor":
-        callsets.close()
+    if type(analyses).__name__ == "Cursor":
+        analyses.close()
 
     return int_fs, cs_no
 

@@ -21,7 +21,6 @@ for cancer in TCGA_cancers:
         { '$sample': { 'size': 100 } }
     ])
     for bis_document in bis_records:
-
         progenetix_biosample_id_list.append(bis_document['id'])
         ind_records=db['individuals'].find({'id':bis_document['individual_id']})
         for ind_document in ind_records:
@@ -54,7 +53,7 @@ for cancer in TCGA_cancers:
                     progenetix_variant_id_list.append(var_document['id'])
             cal_records=db['variants'].find({'biosample_id':bis_document['id']})
             for cal_document in cal_records:
-                if len(list(client['examplez']['callsets'].find({'id':cal_document['id']}))) ==0:
+                if len(list(client['examplez']['analyses'].find({'id':cal_document['id']}))) ==0:
                     progenetix_callset_id_list.append(cal_document['id'])
 cellz_biosample_id_list=[]
 cellz_individual_id_list=[]
@@ -85,7 +84,7 @@ for celline in child_cellines:
                 cellz_variant_id_list.append(var_document['id'])
         cal_records=client['cellz']['variants'].find({'biosample_id':bis_document['id']})
         for cal_document in cal_records:
-            if len(list(client['examplez']['callsets'].find({'id':cal_document['id']}))) ==0:
+            if len(list(client['examplez']['analyses'].find({'id':cal_document['id']}))) ==0:
                 cellz_callset_id_list.append(cal_document['id'])
 import csv
 with open("../imports/examplez_progenetix_biosamples.csv", 'w', newline='') as csvfile:
@@ -94,3 +93,4 @@ with open("../imports/examplez_progenetix_biosamples.csv", 'w', newline='') as c
 with open("../imports/examplez_cellz_biosamples.csv", 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(cellz_biosample_id_list)
+

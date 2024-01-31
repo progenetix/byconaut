@@ -37,13 +37,13 @@ mongorestore --db $database .../mongodump/examplez/
 2. update the local `bycon` installation for your database information andlocal parameters
     * database name(s)
     * `filter_definitions` for parameter mapping
-3. Create metadata collections - `callsets`, `biosamples` and `individuals`
-4. Create `statusmaps` and CNV statistics for the callsets collection
+3. Create metadata collections - `analyses`, `biosamples` and `individuals`
+4. Create `statusmaps` and CNV statistics for the analyses collection
     * only relevant for CNV database use cases
 5. Create the `collations` collection which uses `filter_definitions` and the
    corresponding values to aggregate information for query matching, term expansion ...
 6. Create `frequencymaps` for binned CNV data
-    * relies on existence of `statusmaps` in `callsets` and `collations`
+    * relies on existence of `statusmaps` in `analyses` and `collations`
     * only needed for CNV data
 
 ## Data maintenance scripts
@@ -75,7 +75,7 @@ of ordered branches in the format `code | label | depth | order`.
 ### `frequencymapsCreator` (CNV)
 
 **`frequencymaps`** contain pre-computed frequencies for CNV data, aggregating
-the binned statusmaps data from all callsets belonging to a given collation.
+the binned statusmaps data from all analyses belonging to a given collation.
 
 #### Examples
 

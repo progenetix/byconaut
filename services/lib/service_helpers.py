@@ -25,8 +25,8 @@ def set_selected_delivery_keys(method, method_keys, form_data):
 
 ################################################################################
 
-def response_add_error(byc, code=200, message=False):
-    if message is False:
+def response_add_error(byc, code=200, message=None):
+    if not message:
         return
     if len(str(message)) < 1:
         return
