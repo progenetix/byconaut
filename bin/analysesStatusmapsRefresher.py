@@ -15,15 +15,14 @@ from interval_utils import generate_genome_bins, interval_cnv_arrays
 
 """
 
-## `callsetsStatusmapsRefresher`
+## `analysesStatusmapsRefresher`
 
 """
 
 ################################################################################
 """
-* `bin/callsetsStatusmapsRefresher.py -d 1000genomesDRAGEN -s variants`
-* `bin/callsetsStatusmapsRefresher.py -d progenetix -s biosamples -f "icdom-81703"`
-* `bin/callsetsStatusmapsRefresher.py`
+* `bin/analysesStatusmapsRefresher.py -d progenetix -f "icdom-81703"`
+* `bin/analysesStatusmapsRefresher.py`
   - default; new statusmaps for all `progenetix` analyses
 """
 ################################################################################

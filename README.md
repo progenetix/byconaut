@@ -57,16 +57,16 @@ the [`byconaut`](https://github.com/progenetix/byconaut/) repository using the
 
 ## Data maintenance scripts
 
-### `callsetsStatusmapsRefresher` (CNV)
+### `analysesStatusmapsRefresher` (CNV)
 
-The `callsetsStatusmapsRefresher` script creates CNV status data for binned
+The `analysesStatusmapsRefresher` script creates CNV status data for binned
 genomic intervals, for each CNV callset (_i.e._ the CNV data of all corresponding
 variants from the same experiment/sample).
 
 
 #### Examples
 
-* `bin/callsetsStatusmapsRefresher.py -d examplez`
+* `bin/analysesStatusmapsRefresher.py -d examplez`
 
 ### `collationsCreator`
 

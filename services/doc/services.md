@@ -1,5 +1,5 @@
 ---
-title: Bycon <i>services</i>
+title: Byconaut <i>services</i>
 ---
 
 The _bycon_ environment provides a number of data services which make use of

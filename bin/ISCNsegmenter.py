@@ -31,7 +31,7 @@ def iscn_segmenter():
 	initialize_bycon_service(byc)
 	set_processing_modes(byc)
 	parse_variants(byc)
-	generate_genomic_mappings(byc)
+	set_genome_rsrc_path(byc)
 	generate_genome_bins(byc)
 
 	group_parameter = byc["form_data"].get("groupBy", "histological_diagnosis_id")

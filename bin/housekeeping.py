@@ -66,8 +66,8 @@ def housekeeping():
     #>------------------------- analyses -------------------------------------<#
 
     if "y" in todos.get("update_cs_statusmaps", "y").lower():
-        print(f'==> executing "{dir_path}/callsetsStatusmapsRefresher.py -d {ds_id}"')
-        system(f'{dir_path}/callsetsStatusmapsRefresher.py -d {ds_id}')
+        print(f'==> executing "{dir_path}/analysesStatusmapsRefresher.py -d {ds_id}"')
+        system(f'{dir_path}/analysesStatusmapsRefresher.py -d {ds_id}')
 
     #>------------------------ / analyses ------------------------------------<#
 
