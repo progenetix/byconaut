@@ -46,7 +46,7 @@ def geolocations():
     services_db = byc.get("services_db")
     geo_coll = byc.get("geolocs_coll")
     
-    if "file" in byc["form_data"]:
+    if "inputfile" in byc["form_data"]:
         results = read_geomarker_table_web(byc)
     else:
         query, geo_pars = geo_query(byc)

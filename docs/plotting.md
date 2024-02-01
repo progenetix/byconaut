@@ -70,9 +70,9 @@ if not indicated.
 
 ##### Examples
 
-The examples below link to `progenetix.org`.
+The examples below link to {{config.api_site_label}}.
 
-* [/services/collationplots/?filters=NCIT:C35562,NCIT:C3709](https://progenetix.org/services/collationplots/?filters=NCIT:C35562,NCIT:C3709)
+* [/services/collationplots/?filters=NCIT:C35562,NCIT:C3709]({{config.api_web_root}}/services/collationplots/?filters=NCIT:C35562,NCIT:C3709)
     - a combination of 2 histograms
 * [/services/collationplots?filters=NCIT:C35562,NCIT:C3709&datasetIds=progenetix,cellz](https://progenetix.org/services/collationplots?filters=NCIT:C35562,NCIT:C3709&datasetIds=progenetix,cellz)
     - a combination of 2 histograms

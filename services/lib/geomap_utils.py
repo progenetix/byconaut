@@ -13,7 +13,7 @@ def read_geomarker_table_web(byc):
 
     geolocs = []
 
-    f_a = byc["form_data"].get("file", "")
+    f_a = byc["form_data"].get("inputfile", "")
 
     if not "http" in f_a:
         return geolocs
@@ -191,7 +191,7 @@ def __update_geo_plot_params_from_form(byc):
 
     p_p = byc["geoloc_definitions"].get("plot_params", {})
 
-    p_p.update({"file": byc["form_data"].get("file", "")})
+    p_p.update({"inputfile": byc["form_data"].get("inputfile", "")})
 
     for p_p_k, p_p_v in p_p.items():
 

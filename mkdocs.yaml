@@ -4,6 +4,9 @@ site_author: Michael Baudis
 repo_name: byconaut
 repo_url: https://github.com/progenetix/byconaut
 
+api_site_label: progenetix.org
+api_web_root: https://progenetix.org
+
 ###############################################################################
 
 nav:
