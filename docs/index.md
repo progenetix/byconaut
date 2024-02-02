@@ -50,10 +50,3 @@ mongorestore --db $database .../mongodump/examplez/
 
 Please see the [helper apps documentation](applications/#data-transformation-database-maintenance).
 
-## Utility apps
-
-### `ISCNsegmenter`
-
-#### Examples
-
-* `bin/ISCNsegmenter.py -i imports/ccghtest.tab -o exports/cghtest-with-histo.pgxseg`

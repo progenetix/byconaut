@@ -28,8 +28,8 @@ def main():
 def publications_inserter():
 
     initialize_bycon_service(byc, "publications_inserter")
-    set_processing_modes(byc)
-
+    run_beacon_init_stack(byc)
+    
     g_url = byc["service_config"]["google_spreadsheet_tsv_url"]
     skip_cols = byc["service_config"]["skipped_columns"]
 

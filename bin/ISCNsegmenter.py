@@ -34,14 +34,13 @@ def main():
 def iscn_segmenter():
 
 	initialize_bycon_service(byc)
-	set_processing_modes(byc)
-	parse_variants(byc)
-	set_genome_rsrc_path(byc)
+	run_beacon_init_stack(byc)
 	generate_genome_bins(byc)
 
 	group_parameter = byc["form_data"].get("groupBy", "histological_diagnosis_id")
 	input_file = byc["form_data"].get("inputfile")
 	output_file = byc["form_data"].get("outputfile")
+	dt_m = byc.get("datatable_mappings", {})
 
 	technique = "cCGH"
 	iscn_field = "iscn_ccgh"
@@ -88,7 +87,7 @@ Output will be written to {}""".format(output_file) )
 			"callset_id": s.get("callset_id", "exp-"+n),
 			"individual_id": s.get("individual_id", "ind-"+n),
 		}
-		update_bs = import_datatable_dict_line(byc, update_bs, fieldnames, s, "biosample")
+		update_bs = import_datatable_dict_line(dt_m, update_bs, fieldnames, s, "biosample")
 		h_line = pgxseg_biosample_meta_line(byc, update_bs, group_parameter)
 		pgxseg.write( "{}\n".format(h_line) )
 

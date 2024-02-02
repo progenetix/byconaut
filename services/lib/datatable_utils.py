@@ -3,8 +3,7 @@ import csv, re, requests
 from random import sample as randomSamples
 
 # bycon
-from cgi_parsing import prdbug, prjsonnice
-from bycon_helpers import assign_nested_value, get_nested_value
+from bycon import assign_nested_value, get_nested_value, prdbug, prjsonnice
 
 ################################################################################
 
@@ -79,9 +78,9 @@ def export_datatable_download(results, byc):
 
 ################################################################################
 
-def import_datatable_dict_line(byc, parent, fieldnames, lineobj, primary_scope="biosample"):
+def import_datatable_dict_line(datatable_mappings, parent, fieldnames, lineobj, primary_scope="biosample"):
 
-    dt_m = byc["datatable_mappings"]
+    dt_m = datatable_mappings
 
     if not primary_scope in dt_m["definitions"]:
         return

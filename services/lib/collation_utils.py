@@ -17,7 +17,7 @@ def set_collation_types(byc):
                 continue
             s_p.update({p:byc["filter_definitions"][p]})
     if len(s_p.keys()) < 1:
-        print("No existing collation type was provided with -c ...")
+        print("No existing collation type was provided with `--collationTypes` ...")
         exit()
 
     byc.update({"filter_definitions":s_p})

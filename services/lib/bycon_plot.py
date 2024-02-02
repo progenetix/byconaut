@@ -4,8 +4,7 @@ from humps import decamelize
 from os import environ, path
 from PIL import Image, ImageColor, ImageDraw
 
-from cgi_parsing import prjsonnice, test_truthy, prdbug
-from genome_utils import GeneInfo, ChroNames
+from bycon import prjsonnice, test_truthy, prdbug, GeneInfo, ChroNames
 
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ) )
 sys.path.append( services_lib_path )

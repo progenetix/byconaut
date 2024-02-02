@@ -4,10 +4,9 @@ from os import environ, path
 from pymongo import MongoClient
 from copy import deepcopy
 
-from cgi_parsing import prdbug
 from interval_utils import interval_cnv_arrays, interval_counts_from_callsets
 from variant_mapping import ByconVariant
-from bycon_helpers import return_paginated_list
+from bycon_helpers import return_paginated_list, prdbug
 
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ) )
 sys.path.append( services_lib_path )
@@ -30,12 +29,14 @@ class ByconBundler:
     """
 
     def __init__(self, byc):
-
-        self.byc = byc
+        self.byc = byc     # needed to for some called classes (ByconVariant...)
         self.errors = []
+        self.debug_mode = byc.get("debug_mode", False)
         self.filepath = None
+        self.local_paths = byc.get("local_paths", {})
         self.datasets_results = None
-        self.dataset_ids = self.byc.get("dataset_ids", [])
+        self.dataset_ids = byc.get("dataset_ids", [])
+        self.datatable_mappings = byc.get("datatable_mappings", {})
         self.filters = byc.get("filters", [])
         self.min_number = byc["form_data"].get("min_number", 0)
         self.method = byc.get("method", "___none___")
@@ -176,10 +177,6 @@ class ByconBundler:
             p_o.update({
                 "variants": list(filter(lambda v: v.get("callset_id", "___none___") == cs_id, bb["variants"]))
             })
-
-            # for v in bb["variants"]:
-            #     if v.get("callset_id", "___none___") == cs_id:
-            #         p_o["variants"].append(ByconVariant(self.byc).byconVariant(v))
             c_p_l.append(p_o)
             
         self.callsetVariantsBundles = c_p_l
@@ -245,7 +242,7 @@ class ByconBundler:
                 continue
 
             bios = {"id": bs_id} 
-            bios = import_datatable_dict_line(self.byc, bios, fieldnames, bios_d, "biosample")
+            bios = import_datatable_dict_line(self.datatable_mappings, bios, fieldnames, bios_d, "biosample")
             cs_id = bios.get("callset_id", re.sub("pgxbs", "pgxcs", bs_id) )
             ind_id = bios.get("individual_id", re.sub("pgxbs", "pgxind", bs_id) )
             ind = {"id": ind_id} 
@@ -253,8 +250,6 @@ class ByconBundler:
 
             bios.update({"individual_id": ind_id})
 
-            # b_k_b["callsets_by_id"].update({ cs_id: import_datatable_dict_line(self.byc, cs, fieldnames, bios_d, "analysis") })
-            # b_k_b["individuals_by_id"].update({ ind_id: import_datatable_dict_line(self.byc, ind, fieldnames, bios_d, "individual") })
             b_k_b["callsets_by_id"].update({ cs_id: cs })
             b_k_b["individuals_by_id"].update({ ind_id: ind })
             b_k_b["biosamples_by_id"].update({ bs_id: bios })
@@ -267,6 +262,7 @@ class ByconBundler:
 
     def __callsets_bundle_from_result_set(self):
         for ds_id, ds_res in self.datasets_results.items():
+            # prdbug(f'{ds_id} - {ds_res}', self.debug_mode)
             if not ds_res:
                 continue
             if not "analyses._id" in ds_res:
@@ -287,6 +283,7 @@ class ByconBundler:
 
                 cnv_chro_stats = cs.get("cnv_chro_stats", False)
                 cnv_statusmaps = cs.get("cnv_statusmaps", False)
+                prdbug(f'{cs__id} - {cnv_chro_stats}, {cnv_statusmaps}', self.debug_mode)
 
                 if cnv_chro_stats is False or cnv_statusmaps is False:
                     continue
@@ -297,7 +294,7 @@ class ByconBundler:
                     "biosample_id": cs.get("biosample_id", "NA"),
                     "cnv_chro_stats": cs.get("cnv_chro_stats"),
                     "cnv_statusmaps": cs.get("cnv_statusmaps"),
-                    "probefile": callset_guess_probefile_path(cs, self.byc),
+                    "probefile": callset_guess_probefile_path(cs, self.local_paths),
                     "variants": []
                 }
 
@@ -373,7 +370,7 @@ class ByconBundler:
                 "callset_id": cs_id,
             }
 
-            update_v = import_datatable_dict_line(self.byc, update_v, fieldnames, v, "genomicVariant")
+            update_v = import_datatable_dict_line(self.datatable_mappings, update_v, fieldnames, v, "genomicVariant")
             update_v = ByconVariant(self.byc).pgxVariant(update_v)
 
             update_v.update({

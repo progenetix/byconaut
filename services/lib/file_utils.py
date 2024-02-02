@@ -6,11 +6,10 @@ from pymongo import MongoClient
 from copy import deepcopy
 from random import sample as random_samples
 
-from cgi_parsing import prjsonnice
+from bycon import ByconVariant, prjsonnice, return_paginated_list
+
 from datatable_utils import import_datatable_dict_line
 from interval_utils import interval_cnv_arrays, interval_counts_from_callsets
-from variant_mapping import ByconVariant
-from bycon_helpers import return_paginated_list
 
 ################################################################################
 
@@ -58,8 +57,8 @@ def read_www_tsv_to_dictlist(www, max_count=0):
 
 ################################################################################
 
-def callset_guess_probefile_path(callset, byc):
-    local_paths = byc.get("local_paths")
+def callset_guess_probefile_path(callset, local_paths):
+    
     if not local_paths:
         return False
     if not "server_callsets_dir_loc" in local_paths:
@@ -67,8 +66,8 @@ def callset_guess_probefile_path(callset, byc):
     if not "analysis_info" in callset:
         return False
 
-    d = Path( path.join( *byc["local_paths"]["server_callsets_dir_loc"]))
-    n = byc.get("callset_probefile_name", "___none___")
+    d = Path( path.join( *local_paths["server_callsets_dir_loc"]))
+    n = local_paths.get("probefile_name", "___none___")
 
     if not d.is_dir():
         return False

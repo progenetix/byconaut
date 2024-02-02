@@ -36,6 +36,7 @@ def variantsInserter():
 
     ds_id = byc["dataset_ids"][0]
     input_file = byc["form_data"].get("inputfile")
+    dt_m = byc.get("datatable_mappings", {})
 
     if not input_file:
         print("No input file file specified (-i, --inputfile) => quitting ...")
@@ -121,7 +122,7 @@ def variantsInserter():
             "individual_id": v.get("individual_id", re.sub("pgxbs-", "pgxind-", bs_id))
         })
 
-        insert_v = import_datatable_dict_line(byc, insert_v, variants.fieldnames, v, "genomicVariant")
+        insert_v = import_datatable_dict_line(dt_m, insert_v, variants.fieldnames, v, "genomicVariant")
         prdbug(insert_v, byc.get("debug_mode"))
         insert_v = ByconVariant(byc).pgxVariant(insert_v)
         insert_v.update({"updated": datetime.datetime.now().isoformat()})

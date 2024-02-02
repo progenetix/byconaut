@@ -39,4 +39,4 @@ bycon_instance_pars:
     - arraymap
     - grch38
 
-  callset_probefile_name: probes,cn.tsv
+  probefile_name: probes,cn.tsv

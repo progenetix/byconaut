@@ -45,9 +45,6 @@ def callsets_refresher():
     ds_id = byc["dataset_ids"][0]
     print(f'=> Using data values from {ds_id}')
 
-    # re-doing the interval generation for non-standard CNV binning
-    # genome_binning_from_args(byc)
-    set_genome_rsrc_path(byc)
     generate_genome_bins(byc)
 
     data_client = MongoClient(host=byc["mongohost"])

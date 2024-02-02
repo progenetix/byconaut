@@ -24,10 +24,8 @@ def main():
 ################################################################################
 
 def pgx_probes_plotter():
-
     initialize_bycon_service(byc)
-    parse_variants(byc)
-    set_genome_rsrc_path(byc)
+    run_beacon_init_stack(byc)
     generate_genome_bins(byc)
 
     input_file = byc["form_data"].get("inputfile")
