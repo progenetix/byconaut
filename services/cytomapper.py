@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-
 import sys
+from os import path
 
 from bycon import *
 
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
 sys.path.append( services_lib_path )
+from cytoband_utils import *
 from service_helpers import *
 from service_response_generation import *
 
@@ -33,36 +34,36 @@ def cytomapper():
     
     initialize_bycon_service(byc, sys._getframe().f_code.co_name)
     run_beacon_init_stack(byc)
+    parse_cytoband_file(byc)
 
     results = __return_cytobands_results(byc)
 
     r = ByconautServiceResponse(byc)
-    byc.update({
-        "service_response": r.populatedResponse(results),
-        "error_response": r.errorResponse()
-    })
+    response = r.populatedResponse(results)
 
     if len( results ) < 1:
-        response_add_error(byc, 422, "No matching cytobands!" )
-        cgi_break_on_errors(byc)
+        e_m = "No matching cytobands!"
+        e_r = BeaconErrorResponse(byc).error(e_m, 422)
+        print_json_response(e_r, byc["env"])
     if "cyto_bands" in byc["varguments"]:
-        byc["service_response"]["meta"]["received_request_summary"].update({ "cytoBands": byc["varguments"]["cyto_bands"] })
+        response["meta"]["received_request_summary"].update({ "cytoBands": byc["varguments"]["cyto_bands"] })
     elif "chro_bases" in byc["varguments"]:
-        byc["service_response"]["meta"]["received_request_summary"].update({ "chroBases": byc["varguments"]["chro_bases"] })
+        response["meta"]["received_request_summary"].update({ "chroBases": byc["varguments"]["chro_bases"] })
 
-    cgi_print_response( byc, 200 )
+    print_json_response(response, byc["env"])
 
 
 ################################################################################
 
 def __return_cytobands_results(byc):
 
-    g_a = byc.get("genome_aliases", {})
-    r_a = g_a.get("refseq_aliases", {})
+    a_d = byc.get("argument_definitions", {})
+    c_b_d = byc.get("cytobands", [])
+    chro_names = ChroNames(byc)
 
     cytoBands = [ ]
     if "cyto_bands" in byc["varguments"]:
-        cytoBands, chro, start, end, error = bands_from_cytobands(byc["varguments"]["cyto_bands"], byc)
+        cytoBands, chro, start, end, error = bands_from_cytobands(byc["varguments"]["cyto_bands"], c_b_d, a_d)
     elif "chro_bases" in byc["varguments"]:
         cytoBands, chro, start, end = bands_from_chrobases(byc["varguments"]["chro_bases"], byc)
 
@@ -73,7 +74,7 @@ def __return_cytobands_results(byc):
 
     size = int(  end - start )
     chroBases = "{}:{}-{}".format(chro, start, end)
-    sequence_id = r_a.get(chro, chro)
+    sequence_id = chro_names.refseq(chro)
 
     if "text" in byc["output"]:
         open_text_streaming(byc["env"])

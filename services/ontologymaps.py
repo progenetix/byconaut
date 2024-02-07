@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-
 import re, sys
+from os import path
 from pymongo import MongoClient
 
 from bycon import *
@@ -39,7 +39,7 @@ def ontologymaps():
     })
 
     p_filter = rest_path_value("ontologymaps")
-    if p_filter is not None:
+    if p_filter:
         byc[ "filters" ].append({"id": p_filter})
 
     q_list = [ ]
@@ -63,8 +63,9 @@ def ontologymaps():
                             q_list.append( { byc["query_field"]: f_val } )
 
     if len(q_list) < 1:
-        response_add_error(byc, 422, "No correct filter value provided!" )
-    cgi_break_on_errors(byc)
+        e_m = "No correct filter value provided!"
+        e_r = BeaconErrorResponse(byc).error(e_m, 422)
+        print_json_response(e_r, byc["env"])
 
     if len(q_list) > 1:
         query = { '$and': q_list }
@@ -75,7 +76,6 @@ def ontologymaps():
     u_c_d = { }
     mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
     mongo_coll = mongo_client["progenetix"]["ontologymaps"]
-    prdbug(byc, query)
     for o in mongo_coll.find( query, { '_id': False } ):
         for c in o["code_group"]:
             pre, code = re.split("[:-]", c["id"], maxsplit=1)
@@ -106,8 +106,7 @@ def ontologymaps():
 
         results = c_g
 
-    byc.update({"service_response": r.populatedResponse(results)})
-    cgi_print_response( byc, 200 )
+    print_json_response(r.populatedResponse(results), byc["env"])
 
 ################################################################################
 ################################################################################

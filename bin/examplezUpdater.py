@@ -77,7 +77,7 @@ def examplez_updater():
         print(f'Adding records in {e_ds_id}...')
 
     e_bios_coll = mongo_client[ e_ds_id ]['biosamples']
-    e_cs_coll = mongo_client[ e_ds_id ]['callsets']
+    e_cs_coll = mongo_client[ e_ds_id ]['analyses']
     e_ind_coll = mongo_client[ e_ds_id ]['individuals']
     e_var_coll = mongo_client[ e_ds_id ]['variants']
 
@@ -86,7 +86,7 @@ def examplez_updater():
         bar = Bar(f"Writing {len(bios_ids)} from {s_ds_id}...", max = len(bios_ids), suffix='%(percent)d%%'+" of "+str(len(bios_ids)) )
 
         s_bios_coll = mongo_client[ s_ds_id ]['biosamples']
-        s_cs_coll = mongo_client[ s_ds_id ]['callsets']
+        s_cs_coll = mongo_client[ s_ds_id ]['analyses']
         s_ind_coll = mongo_client[ s_ds_id ]['individuals']
         s_var_coll = mongo_client[ s_ds_id ]['variants']
 
@@ -127,7 +127,7 @@ def examplez_updater():
 
             cal_records = list(s_cs_coll.find(biosid_q))
             if len(cal_records) < 1:
-                print(f'¡¡¡ no callsets for {bs_id} - excluded !!!')
+                print(f'¡¡¡ no analyses for {bs_id} - excluded !!!')
                 continue
 
             var_records = list(s_var_coll.find(biosid_q))
@@ -148,7 +148,7 @@ def examplez_updater():
 
     print(f'{e_bios_coll.count_documents({})} biosamples updated/created')
     print(f'{e_ind_coll.count_documents({})} individuals updated/created')
-    print(f'{e_cs_coll.count_documents({})} callsets updated/created')
+    print(f'{e_cs_coll.count_documents({})} analyses updated/created')
     print(f'{e_var_coll.count_documents({})} variants updated/created')
 
     ############################################################################

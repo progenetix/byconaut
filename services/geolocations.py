@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
-
-import cgi
-import re, json
-from os import path, pardir, environ
-import sys
+import re, json, sys
+from os import path, environ
 from pymongo import MongoClient
 
 from bycon import *
@@ -46,21 +43,22 @@ def geolocations():
         "error_response": r.errorResponse()
     })
 
-    services_db = byc["config"].get("services_db")
-    geo_coll = byc["config"].get("geolocs_coll")
+    mdb_c = byc.get("db_config", {})
+    services_db = mdb_c.get("services_db")
+    geo_coll = mdb_c.get("geolocs_coll")
     
-    # TODO: move the map table reading to a sane place 
-    if "file" in byc["form_data"]:
+    if "inputfile" in byc["form_data"]:
         results = read_geomarker_table_web(byc)
     else:
         query, geo_pars = geo_query(byc)
 
         if len(query.keys()) < 1:
-            response_add_error(byc, 422, "No query generated - missing or malformed parameters" )    
-        cgi_break_on_errors(byc)
-
-        results, e = mongo_result_list( services_db, geo_coll, query, { '_id': False } )
-        response_add_error(byc, 422, e)
+            e_m = "No query generated - missing or malformed parameters"
+        else:
+            results, e_m = mongo_result_list(mdb_c, services_db, geo_coll, query, { '_id': False } )
+    if e_m:
+        e_r = BeaconErrorResponse(byc).error(e_m, 422)
+        print_json_response(e_r, byc["env"])
 
     print_map_from_geolocations(byc, results)
 
@@ -73,10 +71,10 @@ def geolocations():
                 "geo_distance": int(byc["form_data"]["geo_distance"])
             }
             query = return_geo_longlat_query(geo_root, geo_pars)
-            results, e = mongo_result_list( services_db, geo_coll, query, { '_id': False } )
-            response_add_error(byc, 422, e)
-    
-    cgi_break_on_errors(byc)
+            results, e_m = mongo_result_list(mdb_c, services_db, geo_coll, query, { '_id': False } )
+    if e_m:
+        e_r = BeaconErrorResponse(byc).error(e_m, 422)
+        print_json_response(e_r, byc["env"])
 
     if "text" in byc["output"]:
         open_text_streaming(byc["env"], "browser")
@@ -90,8 +88,8 @@ def geolocations():
             print("\t".join(s_comps))
         exit()
 
-    byc.update({"service_response": r.populatedResponse(results)})
-    cgi_print_response( byc, 200 )
+    print_json_response(r.populatedResponse(results), byc["env"])
+
 
 ################################################################################
 ################################################################################

@@ -7,6 +7,11 @@ import sys, datetime
 
 from bycon import *
 
+loc_path = path.dirname( path.abspath(__file__) )
+services_lib_path = path.join( loc_path, pardir, "services", "lib" )
+sys.path.append( services_lib_path )
+from bycon_bundler import ByconBundler
+from datatable_utils import import_datatable_dict_line
 """
 
 """
@@ -23,19 +28,17 @@ def main():
 def variantsInserter():
 
     initialize_bycon_service(byc)
-    parse_variants(byc)
-    select_dataset_ids(byc)
-
-    v_d = byc["variant_parameters"]
-    args = byc.get("args", {})
+    run_beacon_init_stack(byc)
 
     if len(byc["dataset_ids"]) != 1:
         print("No single existing dataset was provided with -d ...")
         exit()
 
     ds_id = byc["dataset_ids"][0]
+    input_file = byc["form_data"].get("inputfile")
+    dt_m = byc.get("datatable_mappings", {})
 
-    if not args.inputfile:
+    if not input_file:
         print("No input file file specified (-i, --inputfile) => quitting ...")
         exit()
 
@@ -43,10 +46,12 @@ def variantsInserter():
         tmi = input("Do you want to run in TEST MODE (i.e. no database insertions/updates)?\n(Y|n): ")
         if not "n" in tmi.lower():
             byc.update({"test_mode": True})
+
+    if byc["test_mode"] is True:
             print("... running in TEST MODE")
 
     vb = ByconBundler(byc)
-    variants = vb.read_pgx_file(args.inputfile)
+    variants = vb.read_pgx_file(input_file)
 
     var_no = len(variants.data)
     up_v_no = 0
@@ -54,13 +59,13 @@ def variantsInserter():
     delBiosVars, delSOvars, delCNVvars = ["n", "n", "n"]
 
     if not byc["test_mode"]:
-        delBiosVars = input("Delete variants from matched biosamples before insertion?\n¡¡¡ This will remove ALL variants for each  `biosample_id` !!!\n(y|N): ")
+        delBiosVars = input("Delete variants from matched biosamples before insertion?\n¡¡¡ This will remove ALL variants for each `biosample_id` !!!\n(y|N): ")
         if not "y" in delBiosVars.lower():
             delSOvars = input('Delete only the sequence variants ("SO:...") from matched biosamples before insertion?\n(y|N): ')
             delCNVvars = input('Delete only the CNV variants ("EFO:...") from matched biosamples before insertion?\n(y|N): ')
 
-    mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
-    var_coll = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))[ ds_id ][ "variants" ]
+    mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))    
+    var_coll = mongo_client[ ds_id ][ "variants" ]
 
     bios_ids = set()
     for c, v in enumerate(variants.data):
@@ -96,15 +101,13 @@ def variantsInserter():
                 print(f'==>> deleted {v_dels.deleted_count} variants from {b_del}')
 
     bios_v_counts = {}
-
-    if not byc["test_mode"]:
-        bar = Bar("Writing ", max = var_no, suffix='%(percent)d%%'+" of "+str(var_no) )
+    
+    bar = Bar("Writing ", max = var_no, suffix='%(percent)d%%'+" of "+str(var_no) ) if not byc["test_mode"] else False
 
     for c, v in enumerate(variants.data, 1):
 
-        if not byc["test_mode"]:
-                bar.next()
-
+        bar.next() if not byc["test_mode"] else False
+                
         bs_id = v.get("biosample_id", False)
         if not bs_id in bios_v_counts.keys():
             bios_v_counts.update({bs_id: 0})
@@ -119,7 +122,8 @@ def variantsInserter():
             "individual_id": v.get("individual_id", re.sub("pgxbs-", "pgxind-", bs_id))
         })
 
-        insert_v = import_datatable_dict_line(byc, insert_v, variants.fieldnames, v, "genomicVariant")
+        insert_v = import_datatable_dict_line(dt_m, insert_v, variants.fieldnames, v, "genomicVariant")
+        prdbug(insert_v, byc.get("debug_mode"))
         insert_v = ByconVariant(byc).pgxVariant(insert_v)
         insert_v.update({"updated": datetime.datetime.now().isoformat()})
 

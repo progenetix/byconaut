@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
-import re
+import re, sys
 from os import path, environ, pardir
-import sys
 from pymongo import MongoClient
 
 from bycon import *
@@ -25,19 +24,11 @@ def main():
 ################################################################################
 
 def collations():
-
     initialize_bycon_service(byc, "collations")
     run_beacon_init_stack(byc)
-    prdbug(byc, byc["filters"])
-
     r = ByconautServiceResponse(byc)
+    print_json_response(r.collationsResponse(), byc["env"])
 
-    byc.update({
-        "service_response": r.collationsResponse(),
-        "error_response": r.errorResponse()
-    })
-
-    cgi_print_response( byc, 200 )
 
 ################################################################################
 ################################################################################

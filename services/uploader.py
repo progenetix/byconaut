@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-
-import cgi
-import re
-from os import environ, path, pardir
-import csv
-import sys
+import cgi, re
+from os import environ, path
 from uuid import uuid4
 
 from bycon import *
 
-dir_path = path.dirname( path.abspath(__file__) )
+services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
+sys.path.append( services_lib_path )
+from bycon_bundler import ByconBundler
+from bycon_plot import *
+from interval_utils import generate_genome_bins
 
 ################################################################################
 ################################################################################
@@ -31,21 +31,22 @@ def uploader():
     initialize_bycon_service(byc, "uploader")
     file_id = str(uuid4())
     form = cgi.FieldStorage()
+    base_url = select_this_server(byc)
 
     response = {
         "error": {},
-        "rel_path": "{}/{}".format(byc["local_paths"].get("server_tmp_dir_web", "/tmp"), file_id),
+        "rel_path": f'{byc["local_paths"].get("server_tmp_dir_web", "/tmp")}/{file_id}',
         "loc_path": path.join( *byc["local_paths"][ "server_tmp_dir_loc" ], file_id ),
         "file_id": file_id,
-        "plot_link": '/services/samplePlots/?fileId='+file_id,
-        "host": "http://"+str(environ.get('HTTP_HOST'))
+        "plot_link": '/services/sampleplots/?fileId='+file_id,
+        "host": base_url
     }
 
     if not "upload_file" in form:
         response.update({"error": "ERROR: No `upload_file` parameter in POST..." })
         print_json_response(response)
 
-    file_item = form['upload_file']
+    file_item = form["upload_file"]
     file_name = path.basename(file_item.filename)
     file_type = file_name.split('.')[-1]
     data = file_item.file.read()
@@ -58,7 +59,12 @@ def uploader():
     with open(response["loc_path"], 'wb') as f:
         f.write(data)
 
-    print_json_response(response)
+    if not "plotType" in form:
+        print_json_response(response)
+
+    plot_type = form["plotType"]
+    print_uri_rewrite_response(f'{base_url}/services/sampleplots/?datasetIds=upload&fileId={file_id}&plotType={plot_type}', "")
+
 
 ################################################################################
 ################################################################################

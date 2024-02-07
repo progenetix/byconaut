@@ -3,7 +3,7 @@
 from os import path, pardir, environ
 from pymongo import MongoClient
 from isodate import date_isoformat
-import cgi, cgitb, csv, datetime, requests, sys
+import csv, datetime, requests, sys
 
 # bycon is supposed to be in the same parent directory
 dir_path = path.dirname( path.abspath(__file__) )
@@ -28,13 +28,15 @@ def main():
 def publications_inserter():
 
     initialize_bycon_service(byc, "publications_inserter")
-    set_processing_modes(byc)
-
+    run_beacon_init_stack(byc)
+    
     g_url = byc["service_config"]["google_spreadsheet_tsv_url"]
     skip_cols = byc["service_config"]["skipped_columns"]
 
-    if byc["args"].inputfile:
-        pub_file = byc["args"].inputfile
+    input_file = byc["form_data"].get("inputfile")
+
+    if input_file:
+        pub_file = input_file
     else:
         print("No inputfile file specified => pulling the online table ...")
         pub_file = path.join( pkg_root_path, "tmp", "pubtable.tsv" )
@@ -109,17 +111,16 @@ def publications_inserter():
                         continue
                     if len(str(v)) < 1:
                         continue
-                    if v == "DELETE":
+                    if v.lower() == "delete":
                         v = ""
                     assign_nested_value(n_p, k, v)
 
-            try:
-                if len(pub["PROVENANCE_ID"]) > 4:
-                    geo_info = mongo_client["_byconServicesDB"]["geolocs"].find_one({"id": pub["PROVENANCE_ID"]}, {"_id": 0, "id": 0})
-                    if geo_info is not None:
-                        n_p["provenance"].update({"geo_location":geo_info["geo_location"]})
-            except KeyError:
-                pass
+            city_tag = pub.get("provenance_id", "")
+            if len(pub["provenance_id"]) > 4:
+                geo_info = mongo_client["_byconServicesDB"]["geolocs"].find_one({"id": pub["provenance_id"]}, {"_id": 0, "id": 0})
+                if geo_info is not None:
+                    n_p["provenance"].update({"geo_location":geo_info["geo_location"]})
+            n_p.pop("provenance_id", None)
 
             epmc, e = retrieve_epmc_publications(pmid)
             if e is not False:

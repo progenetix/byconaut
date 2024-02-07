@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
-
-import cgi
-import re, json, yaml
-from os import environ, pardir, path, scandir
-import sys, datetime
+import sys
+from os import path
 from humps import camelize
 
 from bycon import *
@@ -51,19 +48,21 @@ def schemas():
         comps = schema_name.split('.')
         schema_name = comps.pop(0)
 
-        prdbug(byc, schema_name)
+        prdbug(schema_name, byc.get("debug_mode"))
 
         s = read_schema_file(byc, schema_name, "")
-        if s is not False:
+        if s:
 
             print('Content-Type: application/json')
             print('status:200')
             print()
             print(json.dumps(camelize(s), indent=4, sort_keys=True, default=str)+"\n")
             exit()
-    
-    response_add_error(byc, 422, "No correct schema id provided!")
-    cgi_print_response( byc, 422 )
+
+    e_m = "No correct schema id provided!"
+    e_r = BeaconErrorResponse(byc).error(e_m, 422)
+    print_json_response(e_r, byc["env"])
+
 
 ################################################################################
 ################################################################################

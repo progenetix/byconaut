@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
-
-import cgi
-import re, json, yaml
-from os import environ, pardir, path
-import sys, os, datetime
+import sys
+from os import path
 
 from bycon import *
 
@@ -33,22 +30,18 @@ def main():
 def dbstats():
 
     initialize_bycon_service(byc)
-    select_dataset_ids(byc)
-
+    run_beacon_init_stack(byc)
     r = ByconautServiceResponse(byc)
-    byc.update({
-        "service_response": r.emptyResponse(),
-        "error_response": r.errorResponse()
-    })
 
-    info_db = byc[ "config" ][ "housekeeping_db" ]
-    coll = byc[ "config" ][ "beacon_info_coll" ]
-    stats = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))[ info_db ][ coll ].find( { }, { "_id": 0 } ).sort( "date", -1 ).limit( 1 )
+    mdb_c = byc.get("db_config", {})
+    db_host = mdb_c.get("host", "localhost")
+    info_db = mdb_c.get("housekeeping_db")
+    i_coll = mdb_c.get("beacon_info_coll")
+
+    stats = MongoClient(host=db_host)[ info_db ][ i_coll ].find( { }, { "_id": 0 } ).sort( "date", -1 ).limit( 1 )
 
     results = [ ]
     for stat in stats:
-        prdbug(byc, stat)
-        # byc["service_response"]["info"].update({ "date": stat["date"] })
         for ds_id, ds_vs in stat["datasets"].items():
             if len(byc[ "dataset_ids" ]) > 0:
                 if not ds_id in byc[ "dataset_ids" ]:
@@ -57,8 +50,8 @@ def dbstats():
             dbs.update({"counts":ds_vs["counts"]})
             results.append( dbs )
 
-    byc.update({"service_response": r.populatedResponse(results)})
-    cgi_print_response( byc, 200 )
+    print_json_response(r.populatedResponse(results), byc["env"])
+
 
 ################################################################################
 ################################################################################

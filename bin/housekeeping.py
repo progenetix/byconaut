@@ -10,10 +10,13 @@ from progress.bar import Bar
 from bycon import *
 
 dir_path = path.dirname( path.abspath(__file__) )
-pkg_path = path.join( dir_path, pardir )
-sys.path.append( path.join( pkg_path, pardir ) )
+lib_path = path.join(dir_path , "lib")
+sys.path.append( lib_path )
+from mongodb_utils import mongodb_update_indexes
 
-from byconaut import *
+services_lib_path = path.join( dir_path, pardir, "services", "lib" )
+sys.path.append( services_lib_path )
+from collation_utils import *
 
 """
 The housekeeping script contains **non-destructive** maintenance scripts which
@@ -32,6 +35,9 @@ def main():
 def housekeeping():
 
     initialize_bycon_service(byc, "housekeeping")
+
+    mdb_c = byc.get("db_config", {})
+    db_host = mdb_c.get("host", "localhost")
     
     select_dataset_ids(byc)
     if len(byc["dataset_ids"]) != 1:
@@ -42,23 +48,31 @@ def housekeeping():
 
     # collecting the actions
     todos = {
+        "mongodb_index_creation": input("Check & refresh MongoDB indexes?\n(y|N): "),
         "individual_age_days": input("Recalculate `age_days` in individuals?\n(y|N): "),
-        "update_cs_statusmaps": input(f'Update statusmaps in `callsets` for {ds_id}?\n(y|N): '),
+        "update_cs_statusmaps": input(f'Update statusmaps in `analyses` for {ds_id}?\n(y|N): '),
         "update_collations": input(f'Create `collations` for {ds_id}?\n(Y|n): '),
         "update_frequencymaps": input(f'Create `frequencymaps` for {ds_id} collations?\n(Y|n): '),
-        "datasets_counts": input("Recalculate counts for all datasets?\n(y|N): "),
-        "mongodb_index_creation": input("Check & create MongoDB indexes?\n(y|N): ")
+        "datasets_counts": input("Recalculate counts for all datasets?\n(y|N): ")
     }
 
-    data_db = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))[ ds_id ]
+    data_db = MongoClient(host=db_host)[ ds_id ]
 
-    #>------------------------- callsets -------------------------------------<#
+    #>-------------------- MongoDB index updates -----------------------------<#
+
+    if "y" in todos.get("mongodb_index_creation", "n").lower():
+        print(f'\n{__hl()}==> updating indexes for {ds_id}"')
+        mongodb_update_indexes(ds_id, byc)
+
+    #>------------------- / MongoDB index updates ----------------------------<#
+
+    #>------------------------- analyses -------------------------------------<#
 
     if "y" in todos.get("update_cs_statusmaps", "y").lower():
-        print(f'==> executing "{dir_path}/callsetsStatusmapsRefresher.py -d {ds_id}"')
-        system(f'{dir_path}/callsetsStatusmapsRefresher.py -d {ds_id}')
+        print(f'==> executing "{dir_path}/analysesStatusmapsRefresher.py -d {ds_id}"')
+        system(f'{dir_path}/analysesStatusmapsRefresher.py -d {ds_id}')
 
-    #>------------------------ / callsets ------------------------------------<#
+    #>------------------------ / analyses ------------------------------------<#
 
     #>------------------------ individuals -----------------------------------<#
 
@@ -90,10 +104,10 @@ def housekeeping():
 
     if "y" in todos.get("datasets_counts", "n").lower():
 
-        i_db = byc[ "config" ][ "housekeeping_db" ]
-        i_coll = byc[ "config" ][ "beacon_info_coll"]
+        info_db = mdb_c.get("housekeeping_db")
+        i_coll = mdb_c.get("beacon_info_coll")
 
-        print(f'\n{__hl()}==> Updating dataset statistics in "{i_db}.{i_coll}"')
+        print(f'\n{__hl()}==> Updating dataset statistics in "{info_db}.{i_coll}"')
 
         b_info = __dataset_update_counts(byc)
 
@@ -101,7 +115,7 @@ def housekeeping():
         info_coll.delete_many( { "date": b_info["date"] } ) #, upsert=True
         info_coll.insert_one( b_info ) #, upsert=True 
 
-        print(f'\n{__hl()}==> updated entry {b_info["date"]} in {i_db}.{i_coll}')
+        print(f'\n{__hl()}==> updated entry {b_info["date"]} in {info_db}.{i_coll}')
 
     #>--------------------- / info db update ---------------------------------<#
 
@@ -121,22 +135,16 @@ def housekeeping():
 
     #>-------------------- / update frequencymaps ----------------------------<#
 
-    #>-------------------- MongoDB index updates -----------------------------<#
-
-    if "y" in todos.get("mongodb_index_creation", "n").lower():
-        print(f'\n{__hl()}==> updating indexes for {ds_id}"')
-        mongodb_update_indexes(ds_id, byc)
-
-    #>------------------- / MongoDB index updates ----------------------------<#
-
 ################################################################################
 #################################### subs ######################################
 ################################################################################
 
 def __dataset_update_counts(byc):
 
+    mdb_c = byc.get("db_config", {})
+    db_host = mdb_c.get("host", "localhost")
     b_info = { "date": date_isoformat(datetime.datetime.now()), "datasets": { } }
-    mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
+    mongo_client = MongoClient(host=db_host)
 
     # this is independend of the dataset selected for the script & will update
     # for all in any run
@@ -150,7 +158,7 @@ def __dataset_update_counts(byc):
         ds_db = mongo_client[ i_ds_id ]
         b_i_ds = { "counts": { }, "updated": datetime.datetime.now().isoformat() }
         c_n = ds_db.list_collection_names()
-        for c in ["biosamples", "individuals", "variants", "callsets"]:
+        for c in ["biosamples", "individuals", "variants", "analyses"]:
             if c not in c_n:
                 continue
 

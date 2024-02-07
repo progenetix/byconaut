@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-
-from os import path, pardir, environ
-import sys, re
+import re
+from os import path, environ
 from importlib import import_module
 
 from bycon import *
@@ -51,13 +50,9 @@ def services():
 
     byc.update({"request_path_root": "services"})
     rest_path_elements(byc)
-    get_bycon_args(byc)
     args_update_form(byc)
 
     r_p_id = byc.get("request_entity_path_id", "info")
-
-    prdbug(byc, r_p_id)
-    prdbug(byc, s_a_s.keys())
 
     # check for rewrites
     if r_p_id in r_w:
@@ -71,9 +66,9 @@ def services():
     if not f:
         pass
     elif f:
-        # dynamic package/function loading; e.g. `filteringTerms` loads
-        # `filteringTerms` from `filteringTerm.py` which is an alias to
-        # the `filtering_terms` function there...
+        # dynamic package/function loading; e.g. `intervalFrequencies` loads
+        # `intervalFrequencies` from `interval_frequencies.py` which is an alias to
+        # the `interval_frequencies` function there...
         try:
             mod = import_module(f)
             serv = getattr(mod, f)
@@ -83,21 +78,14 @@ def services():
             print('Content-Type: text')
             print('status:422')
             print()
-            print('Service {} WTF error: {}'.format(f, e))
+            print(f'Service {f} WTF error: {e}')
 
             exit()
 
-    byc.update({
-        "service_response": {},
-        "error_response": {
-            "error": {
-                "error_code": 422,
-                "error_message": "No correct service path provided. Please refer to the documentation at http://docs.progenetix.org"
-            }
-        }
-    })
+    e_m = "No correct service path provided. Please refer to the documentation at http://docs.progenetix.org"
+    e_r = BeaconErrorResponse(byc).error(e_m, 422)
+    print_json_response(e_r, byc["env"])
 
-    cgi_print_response(byc, 422)
 
 ################################################################################
 ################################################################################

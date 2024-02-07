@@ -6,7 +6,7 @@ indexed_response_types:
   genomicVariant:
     collection: variants
   analysis:
-    collection: callsets
+    collection: analyses
 
 indexed_special_collections:
   collations:

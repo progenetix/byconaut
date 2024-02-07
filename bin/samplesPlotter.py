@@ -5,7 +5,15 @@ from os import path, environ, pardir
 
 from bycon import *
 
+loc_path = path.dirname( path.abspath(__file__) )
+services_lib_path = path.join( loc_path, pardir, "services", "lib" )
+sys.path.append( services_lib_path )
+from bycon_bundler import ByconBundler
+from bycon_plot import *
+from interval_utils import generate_genome_bins
+
 """
+./bin/samplesPlotter.py -d examplez --filters "pgx:icdom-85003" -o ./exports/samplestest.svg
 """
 
 ################################################################################
@@ -22,45 +30,59 @@ def samples_plotter():
 
     initialize_bycon_service(byc, "biosamples")
     run_beacon_init_stack(byc)
+    generate_genome_bins(byc)
+    args_update_form(byc)
 
-    if not byc["args"].outputfile:
+    # parameter test
+
+    form = byc.get("form_data", {})
+    output_file = form.get("outputfile")
+
+    if not byc["args"].datasetIds:
+        # in this case checking for the command line argument; avoiding defaults
+        print("No dataset id(s) were specified (-d, --datasetIds) => quitting ...")
+        exit()
+    if not output_file:
         print("No output file specified (-o, --outputfile) => quitting ...")
         exit()
-    outfile = byc["args"].outputfile
-    if not outfile.endswith(".svg"):
+    if not output_file.endswith(".svg"):
         print("The output file has to end with `.svg` => quitting ...")
         exit()
-       
-    ds_id = byc["dataset_ids"][0]
-    print(f'=> Using data values from {ds_id}')
+
+    q_pars = ("filters", "biosample_ids", "analysis_ids", "individual_ids")
+    par_test = []
+    for q in q_pars:
+        par_test += form.get(q, [])
+    if len(par_test) < 1 :
+        print("No `--filters` or `--biosampleIds` etc. were specified => quitting ...")
+        exit()
+
+    # / parameter test
+
+    # output types selection
 
     todos = {
         "samplesplot": input("Create samples plot?\n(y|N): "),
         "histoplot": input(f'Create histogram plot?\n(Y|n): ')
     }
 
-    # re-doing the interval generation for non-standard CNV binning
-    # genome_binning_from_args(byc)
-    generate_genomic_mappings(byc)
-    RSS = ByconResultSets(byc)
+    # processing ...
+
+    RSS = ByconResultSets(byc).datasetsResults()
+    pdb = ByconBundler(byc).resultsets_frequencies_bundles(RSS)
 
     if "y" in todos.get("samplesplot", "n").lower():
-
-        byc.update({"output": "samplesplot"})
-        s_file = re.sub(".svg", "_samplesplot.svg", outfile)
-        s_svg = RSS.samplesPlot()
-        svg_fh = open(s_file, "w")
-        svg_fh.write(s_svg)
-        svg_fh.close()
+        byc.update({"plot_type": "samplesplot"})
+        pdb.update( ByconBundler(byc).resultsets_callset_bundles(RSS) )        
+        s_file = re.sub(".svg", "_samplesplot.svg", output_file)
+        print(f'==> Writing to {s_file}')
+        ByconPlot(byc, pdb).svg2file(s_file)
 
     if "y" in todos.get("histoplot", "y").lower():
-
-        byc.update({"output": "histoplot"})
-        h_file = re.sub(".svg", "_histoplot.svg", outfile)
-        h_svg = RSS.histoPlot()
-        svg_fh = open(h_file, "w")
-        svg_fh.write(h_svg)
-        svg_fh.close()
+        byc.update({"plot_type": "histoplot"})
+        h_file = re.sub(".svg", "_histoplot.svg", output_file)
+        print(f'==> Writing to {h_file}')
+        ByconPlot(byc, pdb).svg2file(h_file)
 
 ################################################################################
 ################################################################################

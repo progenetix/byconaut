@@ -6,6 +6,16 @@ import sys, datetime
 
 from bycon import *
 
+loc_path = path.dirname( path.abspath(__file__) )
+services_lib_path = path.join( loc_path, pardir, "services", "lib" )
+sys.path.append( services_lib_path )
+from cytoband_utils import variants_from_revish
+from export_file_generation import pgxseg_biosample_meta_line, pgxseg_header_line, pgxseg_variant_line
+from file_utils import read_tsv_to_dictlist
+from interval_utils import generate_genome_bins
+from bycon_bundler import ByconBundler
+from datatable_utils import import_datatable_dict_line
+
 """
 bin/ISCNsegmenter.py -i imports/ccghtest.tab -o exports/cghvars.tsv
 bin/ISCNsegmenter.py -i imports/progenetix-from-filemaker-ISCN-samples-cCGH.tsv -o exports/progenetix-from-filemaker-ISCN-samples-cCGH-icdom-grouping.pgxseg -g icdo_topography_id
@@ -24,39 +34,37 @@ def main():
 def iscn_segmenter():
 
 	initialize_bycon_service(byc)
-	set_processing_modes(byc)
-	parse_variants(byc)
-	generate_genomic_mappings(byc)
+	run_beacon_init_stack(byc)
+	generate_genome_bins(byc)
 
-	group_parameter = "histological_diagnosis_id"
-
-	if byc["args"].groupBy:
-		group_parameter = byc["args"].groupBy
+	group_parameter = byc["form_data"].get("groupBy", "histological_diagnosis_id")
+	input_file = byc["form_data"].get("inputfile")
+	output_file = byc["form_data"].get("outputfile")
+	dt_m = byc.get("datatable_mappings", {})
 
 	technique = "cCGH"
 	iscn_field = "iscn_ccgh"
 	platform_id = "EFO:0010937"
 	platform_label = "comparative genomic hybridization (CGH)"
 	
-	if not byc["args"].inputfile:
+	if not input_file:
 		print("No input file file specified (-i, --inputfile) => quitting ...")
 		exit()
-	inputfile = byc["args"].inputfile
 
-	if not byc["args"].outputfile:
-		outputfile = path.splitext(inputfile)[0]
-		outputfile += "_processed"
+	if not output_file:
+		output_file = path.splitext(input_file)[0]
+		output_file += "_processed"
 		print("""¡¡¡ No output file has been specified (-o, --outputfile) !!!
-Output will be written to {}""".format(outputfile) )
+Output will be written to {}""".format(output_file) )
 	else:
-		outputfile = path.splitext(byc["args"].outputfile)[0]
+		output_file = path.splitext(output_file)[0]
 
 	if byc["test_mode"] is True:
-		outputfile += "_test"
+		output_file += "_test"
 
-	outputfile += ".pgxseg"
+	output_file += ".pgxseg"
 
-	iscn_samples, fieldnames = read_tsv_to_dictlist(inputfile, int(byc["args"].limit))
+	iscn_samples, fieldnames = read_tsv_to_dictlist(input_file, int(byc["form_data"].get("limit", 0)))
 
 	if not iscn_field in fieldnames:
 		print('The samplefile header does not contain the "{}" column => quitting'.format(iscn_field))
@@ -68,7 +76,7 @@ Output will be written to {}""".format(outputfile) )
 	s_w_v_no = 0
 	print("=> The samplefile contains {} samples".format(iscn_no))
 
-	pgxseg = open(outputfile, "w")
+	pgxseg = open(output_file, "w")
 	pgxseg.write( "#meta=>biosample_count={}\n".format(iscn_no) )
 
 	for c, s in enumerate(iscn_samples):
@@ -79,7 +87,7 @@ Output will be written to {}""".format(outputfile) )
 			"callset_id": s.get("callset_id", "exp-"+n),
 			"individual_id": s.get("individual_id", "ind-"+n),
 		}
-		update_bs = import_datatable_dict_line(byc, update_bs, fieldnames, s, "biosample")
+		update_bs = import_datatable_dict_line(dt_m, update_bs, fieldnames, s, "biosample")
 		h_line = pgxseg_biosample_meta_line(byc, update_bs, group_parameter)
 		pgxseg.write( "{}\n".format(h_line) )
 
@@ -102,7 +110,7 @@ Output will be written to {}""".format(outputfile) )
 				pgxseg.write(pgxseg_variant_line(v)+"\n")
 
 	print("=> {} samples had variants".format(s_w_v_no))
-	print("Wrote to {}".format(outputfile))
+	print("Wrote to {}".format(output_file))
 
 	exit()
 

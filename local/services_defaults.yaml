@@ -9,6 +9,8 @@ service_path_aliases:
   aggregator: aggregator
   endpoints: endpoints
   collations: collations
+  collationplots: collationplots
+  collationPlots: collationplots
   cytomapper: cytomapper
   dbstats: dbstats
   deliveries: deliveries
@@ -21,12 +23,19 @@ service_path_aliases:
   intervalFrequencies: intervalFrequencies
   ontologymaps: ontologymaps
   ontologyMaps: ontologymaps
+  pgxseg: pgxsegvariants
+  pgxsegvariants: pgxsegvariants
   publications: publications
-  samplesPlotter: samplesPlotter
+  # samplesPlotter: samplesPlotter
+  samplematrix: samplematrix
+  sampletable: sampletable
+  samplesPlotter: sampleplots
   sampleplots: sampleplots
   schemas: schemas
   uploader: uploader
-  variantsPlotter: variantsPlotter
+  uploadplotter: uploadplotter
+  vcf: vcfvariants
+  vcfvariants: vcfvariants
 
 rewrites: {}
 

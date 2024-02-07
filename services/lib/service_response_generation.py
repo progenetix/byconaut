@@ -17,6 +17,7 @@ class ByconautServiceResponse:
 
     def __init__(self, byc: dict, response_schema="byconautServiceResponse"):
         self.byc = byc
+        self.debug_mode = byc.get("debug_mode", False)
         self.test_mode = byc.get("test_mode", False)
         self.beacon_defaults = byc.get("beacon_defaults", {})
         self.services_defaults = byc.get("services_defaults", {})
@@ -182,15 +183,16 @@ class ByconCollations:
 
     def __init__(self, byc: dict):
         self.byc = byc
+        self.db_config = byc.get("db_config", {})
         self.test_mode = byc.get("test_mode", False)
         self.test_mode_count = byc.get("test_mode_count", 5)
+        self.delivery_method = byc["form_data"].get("method")
         self.dataset_ids = byc.get("dataset_ids", [])
         self.beacon_defaults = byc.get("beacon_defaults", {})
         self.service_config = byc.get("service_config", {})
         self.entity_defaults = self.beacon_defaults.get("entity_defaults", {"info":{}})
         self.filter_definitions = byc.get("filter_definitions", {})
         self.form_data = byc.get("form_data", {})
-        self.delivery_method = byc.get("method")
         self.filters = byc.get("filters", [])
         self.output = byc.get("output", "___none___")
         self.response_entity_id = byc.get("response_entity_id", "filteringTerm")
@@ -215,7 +217,7 @@ class ByconCollations:
     def __return_collations(self):
 
         f_coll = "collations"
-        d_k = set_selected_delivery_keys(self.delivery_method, self.service_config.get("method_keys"), self.form_data)
+        d_k = set_selected_delivery_keys(self.service_config.get("method_keys"), self.form_data)
 
         c_id = self.form_data.get("id", "")
         # TODO: This should be derived from some entity definitions
@@ -223,7 +225,7 @@ class ByconCollations:
         query = {}
 
         if self.test_mode is True:
-            query, error = mongo_test_mode_query(self.dataset_ids[0], f_coll, self.test_mode_count)
+            query, error = mongo_test_mode_query(self.db_config, self.dataset_ids[0], f_coll, self.test_mode_count)
         elif len(c_id) > 0:
             query = { "id": c_id }
         else:
@@ -258,9 +260,9 @@ class ByconCollations:
 
         for ds_id in self.dataset_ids:
             fields = {"_id": 0}
-            f_s, e = mongo_result_list(ds_id, f_coll, query, fields)
+            f_s, e = mongo_result_list(self.db_config, ds_id, f_coll, query, fields)
             for f in f_s:
-                if "codematches" in self.delivery_method:
+                if "codematches" in str(self.delivery_method):
                     if int(f.get("code_matches", 0)) < 1:
                         continue
 
@@ -288,3 +290,4 @@ class ByconCollations:
 ################################################################################
 ################################################################################
 ################################################################################
+
