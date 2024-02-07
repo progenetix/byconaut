@@ -94,7 +94,8 @@ def retriever():
             byc["service_response"]["response_summary"].update({"exists": True})
             continue
 
-    cgi_print_response( byc, 200 )
+    print_json_response(byc["service_response"], byc["env"])
+
 
 ################################################################################
 ################################################################################

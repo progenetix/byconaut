@@ -39,20 +39,18 @@ def cytomapper():
     results = __return_cytobands_results(byc)
 
     r = ByconautServiceResponse(byc)
-    byc.update({
-        "service_response": r.populatedResponse(results),
-        "error_response": r.errorResponse()
-    })
+    response = r.populatedResponse(results)
 
     if len( results ) < 1:
-        response_add_error(byc, 422, "No matching cytobands!" )
-        cgi_break_on_errors(byc)
+        e_m = "No matching cytobands!"
+        e_r = BeaconErrorResponse(byc).error(e_m, 422)
+        print_json_response(e_r, byc["env"])
     if "cyto_bands" in byc["varguments"]:
-        byc["service_response"]["meta"]["received_request_summary"].update({ "cytoBands": byc["varguments"]["cyto_bands"] })
+        response["meta"]["received_request_summary"].update({ "cytoBands": byc["varguments"]["cyto_bands"] })
     elif "chro_bases" in byc["varguments"]:
-        byc["service_response"]["meta"]["received_request_summary"].update({ "chroBases": byc["varguments"]["chro_bases"] })
+        response["meta"]["received_request_summary"].update({ "chroBases": byc["varguments"]["chro_bases"] })
 
-    cgi_print_response( byc, 200 )
+    print_json_response(response, byc["env"])
 
 
 ################################################################################

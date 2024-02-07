@@ -39,7 +39,7 @@ class ByconBundler:
         self.datatable_mappings = byc.get("datatable_mappings", {})
         self.filters = byc.get("filters", [])
         self.min_number = byc["form_data"].get("min_number", 0)
-        self.method = byc.get("method", "___none___")
+        self.delivery_method = byc["form_data"].get("method")
         self.header = []
         self.data = []
         self.fieldnames = []
@@ -441,7 +441,7 @@ class ByconBundler:
             return
 
         fmap_name = "frequencymap"
-        if "codematches" in self.method:
+        if "codematches" in str(self.delivery_method):
             fmap_name = "frequencymap_codematches"
 
         mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))

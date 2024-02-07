@@ -50,7 +50,6 @@ def services():
 
     byc.update({"request_path_root": "services"})
     rest_path_elements(byc)
-    get_bycon_args(byc)
     args_update_form(byc)
 
     r_p_id = byc.get("request_entity_path_id", "info")
@@ -83,17 +82,10 @@ def services():
 
             exit()
 
-    byc.update({
-        "service_response": {},
-        "error_response": {
-            "error": {
-                "error_code": 422,
-                "error_message": "No correct service path provided. Please refer to the documentation at http://docs.progenetix.org"
-            }
-        }
-    })
+    e_m = "No correct service path provided. Please refer to the documentation at http://docs.progenetix.org"
+    e_r = BeaconErrorResponse(byc).error(e_m, 422)
+    print_json_response(e_r, byc["env"])
 
-    cgi_print_response(byc, 422)
 
 ################################################################################
 ################################################################################

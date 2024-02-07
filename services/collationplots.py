@@ -40,7 +40,6 @@ def main():
 ################################################################################
 
 def collationplots():
-
     initialize_bycon_service(byc, "collationplots")
     run_beacon_init_stack(byc)
     generate_genome_bins(byc)
@@ -57,8 +56,9 @@ def collationplots():
         byc[ "filters" ] = [ {"id": byc["form_data"]["id"]} ]
 
     if not "filters" in byc:
-        response_add_error(byc, 422, "No value was provided for collation `id` or `filters`.")  
-        cgi_break_on_errors(byc)
+        e_m = "No value was provided for collation `id` or `filters`."
+        e_r = BeaconErrorResponse(byc).error(e_m, 422)
+        print_json_response(e_r, byc["env"])
 
     pdb = ByconBundler(byc).collationsPlotbundles()
     ByconPlot(byc, pdb).svgResponse()

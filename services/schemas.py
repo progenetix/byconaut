@@ -58,9 +58,11 @@ def schemas():
             print()
             print(json.dumps(camelize(s), indent=4, sort_keys=True, default=str)+"\n")
             exit()
-    
-    response_add_error(byc, 422, "No correct schema id provided!")
-    cgi_print_response( byc, 422 )
+
+    e_m = "No correct schema id provided!"
+    e_r = BeaconErrorResponse(byc).error(e_m, 422)
+    print_json_response(e_r, byc["env"])
+
 
 ################################################################################
 ################################################################################

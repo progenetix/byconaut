@@ -63,8 +63,9 @@ def ontologymaps():
                             q_list.append( { byc["query_field"]: f_val } )
 
     if len(q_list) < 1:
-        response_add_error(byc, 422, "No correct filter value provided!" )
-    cgi_break_on_errors(byc)
+        e_m = "No correct filter value provided!"
+        e_r = BeaconErrorResponse(byc).error(e_m, 422)
+        print_json_response(e_r, byc["env"])
 
     if len(q_list) > 1:
         query = { '$and': q_list }
@@ -105,8 +106,7 @@ def ontologymaps():
 
         results = c_g
 
-    byc.update({"service_response": r.populatedResponse(results)})
-    cgi_print_response( byc, 200 )
+    print_json_response(r.populatedResponse(results), byc["env"])
 
 ################################################################################
 ################################################################################

@@ -39,10 +39,10 @@ def publications():
         "service_response": r.emptyResponse(),
         "error_response": r.errorResponse()
     })
+    form = byc.get("form_data", {})
 
     # data retrieval & response population
     query, e = _create_filters_query( byc )
-
     geo_q, geo_pars = geo_query( byc )
 
     if geo_q:
@@ -54,16 +54,15 @@ def publications():
             query = { '$and': [ geo_q, query ] }
 
     if len(query.keys()) < 1:
-        response_add_error(byc, 422, "No query could be constructed from the parameters provided." )
-    cgi_break_on_errors(byc)
+        e_m = "No query could be constructed from the parameters provided."
+        e_r = BeaconErrorResponse(byc).error(e_m, 422)
+        print_json_response(e_r, byc["env"])
 
     mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
     pub_coll = mongo_client[ "progenetix" ][ "publications" ]
-
     p_re = re.compile( byc["filter_definitions"]["PMID"]["pattern"] )
-
+    d_k = set_selected_delivery_keys(byc["service_config"].get("method_keys"), form)
     p_l = [ ]
-    d_k = set_selected_delivery_keys(byc.get("method"), byc["service_config"].get("method_keys"), byc.get("form_data"))
     
     for pub in pub_coll.find( query, { "_id": 0 } ):
         s = { }
@@ -96,13 +95,10 @@ def publications():
         p_l.append( s )
 
     mongo_client.close( )
- 
     results = sorted(p_l, key=itemgetter('sortid'), reverse = True)
-
     __check_publications_map_response(byc, results)
+    print_json_response(r.populatedResponse(results), byc["env"])
 
-    byc.update({"service_response": r.populatedResponse(results)})
-    cgi_print_response( byc, 200 )
 
 ################################################################################
 ################################################################################

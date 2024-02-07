@@ -10,11 +10,11 @@ api_web_root: https://progenetix.org
 ###############################################################################
 
 nav:
-  - Insttallation & Overview: /
+  - Installation & Overview: /
   - Helper Applications: applications
   - Plotting: plotting
   - Changes & To Do: changes-todo
-  - bycon Documentation: http://progenetix.org
+  - bycon Documentation: http://bycon.progenetix.org
   - Progenetix Site: http://progenetix.org
   - Baudisgroup: http://info.baudisgroup.org
 

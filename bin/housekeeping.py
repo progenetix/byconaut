@@ -35,6 +35,9 @@ def main():
 def housekeeping():
 
     initialize_bycon_service(byc, "housekeeping")
+
+    mdb_c = byc.get("db_config", {})
+    db_host = mdb_c.get("host", "localhost")
     
     select_dataset_ids(byc)
     if len(byc["dataset_ids"]) != 1:
@@ -53,7 +56,7 @@ def housekeeping():
         "datasets_counts": input("Recalculate counts for all datasets?\n(y|N): ")
     }
 
-    data_db = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))[ ds_id ]
+    data_db = MongoClient(host=db_host)[ ds_id ]
 
     #>-------------------- MongoDB index updates -----------------------------<#
 
@@ -101,10 +104,10 @@ def housekeeping():
 
     if "y" in todos.get("datasets_counts", "n").lower():
 
-        i_db = byc["housekeeping_db"]
-        i_coll = byc["beacon_info_coll"]
+        info_db = mdb_c.get("housekeeping_db")
+        i_coll = mdb_c.get("beacon_info_coll")
 
-        print(f'\n{__hl()}==> Updating dataset statistics in "{i_db}.{i_coll}"')
+        print(f'\n{__hl()}==> Updating dataset statistics in "{info_db}.{i_coll}"')
 
         b_info = __dataset_update_counts(byc)
 
@@ -112,7 +115,7 @@ def housekeeping():
         info_coll.delete_many( { "date": b_info["date"] } ) #, upsert=True
         info_coll.insert_one( b_info ) #, upsert=True 
 
-        print(f'\n{__hl()}==> updated entry {b_info["date"]} in {i_db}.{i_coll}')
+        print(f'\n{__hl()}==> updated entry {b_info["date"]} in {info_db}.{i_coll}')
 
     #>--------------------- / info db update ---------------------------------<#
 
@@ -138,8 +141,10 @@ def housekeeping():
 
 def __dataset_update_counts(byc):
 
+    mdb_c = byc.get("db_config", {})
+    db_host = mdb_c.get("host", "localhost")
     b_info = { "date": date_isoformat(datetime.datetime.now()), "datasets": { } }
-    mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
+    mongo_client = MongoClient(host=db_host)
 
     # this is independend of the dataset selected for the script & will update
     # for all in any run

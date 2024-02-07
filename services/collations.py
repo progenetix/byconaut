@@ -24,18 +24,11 @@ def main():
 ################################################################################
 
 def collations():
-
     initialize_bycon_service(byc, "collations")
     run_beacon_init_stack(byc)
-
     r = ByconautServiceResponse(byc)
+    print_json_response(r.collationsResponse(), byc["env"])
 
-    byc.update({
-        "service_response": r.collationsResponse(),
-        "error_response": r.errorResponse()
-    })
-
-    cgi_print_response( byc, 200 )
 
 ################################################################################
 ################################################################################

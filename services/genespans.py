@@ -43,36 +43,33 @@ def genespans():
         "service_response": r.emptyResponse(),
         "error_response": r.errorResponse()
     })
-    dbpars = {
-        "mongohost": byc.get("mongohost", "localhost"),
-        "services_db": byc.get("services_db", "___none___"),
-        "genes_coll": byc.get("genes_coll", "___none___")
-    }
+    db_config = byc.get("db_config", {})
+    form = byc.get("form_data", {})
 
     gene_id = rest_path_value("genespans")
     if gene_id:
         # REST path id assumes exact match
-        results, e = GeneInfo(dbpars).returnGene(gene_id)
+        results, e = GeneInfo(db_config).returnGene(gene_id)
     else:
         gene_id = byc[ "form_data" ].get("gene_id")
-        results, e = GeneInfo(dbpars).returnGenelist(gene_id)
+        results, e = GeneInfo(db_config).returnGenelist(gene_id)
 
-    response_add_error(byc, 422, e )
-    cgi_break_on_errors(byc)
+    if e:
+        e_r = BeaconErrorResponse(byc).error(e, 422)
+        print_json_response(e_r, byc["env"])
 
     for gene in results:
         _gene_add_cytobands(gene, byc)
 
     e_k_s = byc["service_config"]["method_keys"]["genespan"]
-
-    if "genespan" in byc.get("method", "___none___"):
+    if "genespan" in str(form.get("method", "___none___")):
         for i, g in enumerate(results):
             g_n = {}
             for k in byc["service_config"]["method_keys"]["genespan"]:
                 g_n.update({k: g.get(k, "")})
             results[i] = g_n
 
-    if "text" in byc.get("output", "___none___"):
+    if "text" in form.get("output", "___none___"):
         open_text_streaming(byc["env"])
         for g in results:
             s_comps = []
@@ -81,8 +78,8 @@ def genespans():
             print("\t".join(s_comps))
         exit()
 
-    byc.update({"service_response": r.populatedResponse(results)})
-    cgi_print_response( byc, 200 )
+    print_json_response(r.populatedResponse(results), byc["env"])
+
 
 ################################################################################
 

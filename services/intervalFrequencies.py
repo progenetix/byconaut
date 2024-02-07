@@ -55,8 +55,9 @@ def interval_frequencies():
         byc[ "filters" ] = [ {"id": byc["form_data"]["id"]} ]
 
     if not "filters" in byc:
-        response_add_error(byc, 422, "No value was provided for collation `id` or `filters`.")  
-        cgi_break_on_errors(byc)
+        e_m = "No value was provided for collation `id` or `filters`."
+        e_r = BeaconErrorResponse(byc).error(e_m, 422)
+        print_json_response(e_r, byc["env"])
 
     file_type = byc["form_data"].get("output", "pgxfreq")
     if file_type not in ["pgxfreq", "pgxmatrix"]:
@@ -66,7 +67,6 @@ def interval_frequencies():
     pdb = ByconBundler(byc).collationsPlotbundles()
     check_pgxseg_frequencies_export(byc, pdb.get("interval_frequencies_bundles", []))
     check_pgxmatrix_frequencies_export(byc, pdb.get("interval_frequencies_bundles", []))
-    # ByconPlot(byc, pdb).svgResponse()
 
 ################################################################################
 

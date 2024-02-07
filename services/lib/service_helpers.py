@@ -2,23 +2,23 @@ import re
 
 ################################################################################
 
-def set_selected_delivery_keys(method, method_keys, form_data):
+def set_selected_delivery_keys(method_keys, form_data):
     # the method keys can be overriden with "deliveryKeys"
 
     d_k = []
+    delivery_method = form_data.get("method", "___none___")
 
     if "delivery_keys" in form_data:
         d_k = re.split(",", form_data.get("delivery_keys", []))
         if len(d_k) > 0:
             return d_k
 
-    if not method:
+    if not delivery_method:
         return d_k
-
     if not method_keys:
         return d_k
 
-    d_k = method_keys.get(method, [])
+    d_k = method_keys.get(str(delivery_method), [])
 
     return d_k
 
