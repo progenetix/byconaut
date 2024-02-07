@@ -42,7 +42,6 @@ def endpoints():
 
     e_p = load_yaml_empty_fallback(p)
     if e_p:
-
         print('Content-Type: application/json')
         print('status:200')
         print()
