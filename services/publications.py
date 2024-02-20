@@ -148,17 +148,23 @@ def _create_filters_query(byc):
     q_list = [ ]
     count_pat = re.compile( r'^(\w+?)\:([>=<])(\d+?)$' )
 
+    fds_pres = list(f_d_s.keys())
+
     for f in filters:
         f_val = f["id"]
+        prdbug(f_val)
         if len(f_val) < 1:
             continue
         pre_code = re.split('-|:', f_val)
         pre = pre_code[0]
-        if str(pre) not in f_d_s.keys():
+        prk = pre
+        if "PMID" in pre:
+           prk = "pubmed" 
+
+        if str(prk) not in f_d_s.keys():
             continue
 
-        dbk = byc[ "filter_definitions" ][ pre ][ "db_key" ]
-
+        dbk = f_d_s[ prk ]["db_key"]
         if count_pat.match( f_val ):
             pre, op, no = count_pat.match(f_val).group(1,2,3)
             dbk = f_d_s[ pre ][ "db_key" ]
@@ -178,15 +184,6 @@ def _create_filters_query(byc):
             for the selection of PMID labeled publications.
             podmd"""
             q_list.append( { "id": re.compile(r'^'+f_val ) } )
-        elif pre in f_d_s.keys():
-            # TODO: hacky method for pgxuse => redo
-            q_v = f_val
-            try:
-                if f_d_s[ pre ][ "remove_prefix" ] is True:
-                    q_v = pre_code[1]
-            except:
-                pass
-            q_list.append( { dbk: q_v } )
         else:
             q_list.append( { "id": f_val } )
 
