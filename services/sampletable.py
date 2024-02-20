@@ -34,12 +34,11 @@ def main():
 ################################################################################
 
 def sampletable():
-
     initialize_bycon_service(byc, "biosamples")
     run_beacon_init_stack(byc)
 
-    if not "table" in byc.get("output", "___none___"):
-        byc.update({"output":"table"})
+    if not "table" in byc["form_data"].get("output", "___none___"):
+        byc["form_data"].update({"output":"table"})
 
     table_type = byc["form_data"].get("response_entity_id", "biosample")
     if table_type not in ["biosample", "individual", "analysis"]:

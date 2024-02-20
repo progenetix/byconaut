@@ -6,6 +6,7 @@ from liftover import get_lifter
 
 from bycon import *
 
+services_conf_path = path.join( path.dirname( path.abspath(__file__) ), "config" )
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
 sys.path.append( services_lib_path )
 from service_response_generation import *
@@ -34,25 +35,16 @@ def main():
     try:
         retriever()
     except Exception:
-        print_text_response(traceback.format_exc(), byc["env"], 302)
+        print_text_response(traceback.format_exc(), 302)
    
 ################################################################################
 
 def retriever():
-
-    byc.update({
-        "request_path_root": "services",
-        "request_entity_path_id": "aggregator"
-    })
-    
-    initialize_bycon_service(byc, "aggregator")
+    initialize_bycon_service(byc, "retriever")
+    read_service_prefs("aggregator", services_conf_path, byc)
     run_beacon_init_stack(byc)
 
     r = ByconautServiceResponse(byc)
-    byc.update({
-        "service_response": r.emptyResponse(),
-        "error_response": r.errorResponse()
-    })
 
     b = byc["form_data"].get("selected_beacons", [])
     url = byc["form_data"].get("url", "")
@@ -94,7 +86,7 @@ def retriever():
             byc["service_response"]["response_summary"].update({"exists": True})
             continue
 
-    print_json_response(byc["service_response"], byc["env"])
+    print_json_response(byc["service_response"])
 
 
 ################################################################################

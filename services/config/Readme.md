@@ -1,4 +1,4 @@
-## `bycon/services/config` directory
+## `byconaut/services/config` directory
 
 This directory contains the eponymously named configuration files for the
 `services` apps, as `.yaml` files.

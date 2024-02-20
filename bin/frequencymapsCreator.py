@@ -30,23 +30,20 @@ def main():
 ################################################################################
 
 def frequencymaps_creator():
-
-    initialize_bycon_service(byc)
+    initialize_bycon_service(byc, "frequencymaps_creator")
     run_beacon_init_stack(byc)
+    generate_genome_bins(byc)
 
     if len(byc["dataset_ids"]) > 1:
         print("Please give only one dataset using -d")
         exit()
 
     ds_id = byc["dataset_ids"][0]
-
     set_collation_types(byc)
-
-    generate_genome_bins(byc)
-    
     print(f'=> Using data values from {ds_id} for {byc.get("genomic_interval_count", 0)} intervals...')
 
-    data_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
+    form = byc.get("form_data", {})
+    data_client = MongoClient(host=DB_MONGOHOST)
     data_db = data_client[ ds_id ]
     coll_coll = data_db[ "collations" ]
     fm_coll = data_db[ "frequencymaps" ]
@@ -108,7 +105,7 @@ def frequencymaps_creator():
             "counts": {"biosamples": bios_no, "analyses": cs_no },
             "frequencymap": {
                 "interval_count": byc["genomic_interval_count"],
-                "binning": byc["interval_definitions"].get("genome_binning", ""),
+                "binning": form.get("genome_binning", ""),
                 "biosample_count": bios_no
             }
         }
@@ -125,7 +122,7 @@ def frequencymaps_creator():
         # if cs_no > 1000:
         #     print(" => Processed in {:.2f}s: {:.4f}s per callset".format(proc_time, (proc_time/cs_no)))
 
-        if not byc["test_mode"]:
+        if not BYC["TEST_MODE"]:
             fm_coll.delete_many( { "id": c_id } )
             fm_coll.insert_one( update_obj )
 
@@ -137,7 +134,7 @@ def frequencymaps_creator():
                 if cs_no_cm > 0:
                     cm_obj = { "frequencymap_codematches": {
                             "interval_count": len(byc["genomic_intervals"]),
-                            "binning": byc["interval_definitions"].get("genome_binning", ""),
+                            "binning": form.get("genome_binning", ""),
                             "biosample_count": bios_no_cm
                         }
                     }
@@ -147,11 +144,8 @@ def frequencymaps_creator():
                         "intervals": intervals,
                         "analysis_count": cs_no_cm
                     })
-
-                    
-                    prdbug(f'\n{c_id}: {cs_no_cm} exact of {cs_no} total code matches ({coll["code_matches"]} indicated)', byc.get("debug_mode"))
-
-                    if not byc["test_mode"]:
+                    prdbug(f'\n{c_id}: {cs_no_cm} exact of {cs_no} total code matches ({coll["code_matches"]} indicated)')
+                    if not BYC["TEST_MODE"]:
                         fm_coll.update_one( { "id": c_id }, { '$set': cm_obj }, upsert=False )
 
     bar.finish()
@@ -187,7 +181,6 @@ def _filter_coll_ids(coll_coll, byc):
 ################################################################################
 
 def _cs_cursor_from_bios_query(byc, bios_coll, ind_coll, cs_coll, coll_id, scope, query, exclude_normals=True):
-
     if scope == "individuals":
         ind_ids = ind_coll.distinct( "id" , query )
         bios_ids = bios_coll.distinct( "id" , {"individual_id":{"$in": ind_ids } } )
@@ -204,7 +197,7 @@ def _cs_cursor_from_bios_query(byc, bios_coll, ind_coll, cs_coll, coll_id, scope
     bios_no = len(bios_ids)
     
     if pre_b > bios_no:
-        prdbug(f'\nWARNING: {pre_b} samples for {coll_id}, while {bios_no} after excluding normals by EFO:0009654', byc.get("debug_mode"))
+        prdbug(f'\nWARNING: {pre_b} samples for {coll_id}, while {bios_no} after excluding normals by EFO:0009654')
        
     cs_query = { "biosample_id": { "$in": bios_ids } , "variant_class": { "$ne": "SNV" } }
     cs_cursor = cs_coll.find(cs_query)

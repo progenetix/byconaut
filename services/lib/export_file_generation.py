@@ -1,8 +1,9 @@
 import pymongo
 from os import path, environ
 
-from cgi_parsing import *
 from bycon_helpers import get_nested_value, return_paginated_list
+from cgi_parsing import *
+from config import *
 from variant_mapping import ByconVariant
 
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ) )
@@ -12,19 +13,22 @@ from service_helpers import open_text_streaming, close_text_streaming
 ################################################################################
 
 def stream_pgx_meta_header(ds_id, ds_results, byc):
-
-    b_p = byc.get("pagination")
+    form = byc.get("form_data", {})
+    skip = form.get("skip", 0)
+    limit = form.get("limit", 0)
+    ds_d = byc.get("dataset_definitions", {})
+    ds_ds_d = ds_d.get(ds_id, {})
 
     mongo_client = pymongo.MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
     bs_coll = mongo_client[ ds_id ][ "biosamples" ]
 
-    open_text_streaming(byc["env"])
+    open_text_streaming()
 
     for d in ["id", "assemblyId"]:
-        print("#meta=>{}={}".format(d, byc["dataset_definitions"][ds_id][d]))
+        print(f'#meta=>{d}={ds_ds_d.get(d, "")}')
     # for k, n in s_r_rs["info"]["counts"].items():
     #     print("#meta=>{}={}".format(k, n))
-    print(f'#meta=>pagination.skip={b_p["skip"]};pagination.limit={b_p["limit"]}')
+    print(f'#meta=>pagination.skip={skip};pagination.limit={limit}')
             
     print_filters_meta_line(byc)
 
@@ -41,24 +45,20 @@ def stream_pgx_meta_header(ds_id, ds_results, byc):
 ################################################################################
 
 def pgxseg_biosample_meta_line(byc, biosample, group_id_key="histological_diagnosis_id"):
-
     dt_m = byc["datatable_mappings"]
     io_params = dt_m["definitions"][ "biosample" ]["parameters"]
 
     g_id_k = group_id_key
     g_lab_k = re.sub("_id", "_label", g_id_k)
-
-    line = [ "#sample=>id={}".format(biosample.get("id", "¡¡¡NONE!!!")) ]
-
+    line = [ f'#sample=>id={biosample.get("id", "¡¡¡NONE!!!")}' ]
     for par, par_defs in io_params.items():
-
         in_pgxseg = par_defs.get("compact", False)
+
         if in_pgxseg is False:
             continue
 
         parameter_type = par_defs.get("type", "string")
         pres = par_defs.get("prefix_split", {})
-
         if len(pres.keys()) < 1:
             db_key = par_defs.get("db_key", "___undefined___")
             p_type =par_defs.get("type", "string")
@@ -76,7 +76,6 @@ def pgxseg_biosample_meta_line(byc, biosample, group_id_key="histological_diagno
                     line.append("group_label={}".format(h_v))
                 line.append("{}={}".format(par, h_v))
         else:
-
             par_vals = biosample.get(par, [])
             if not isinstance(par_vals, list):
                 continue
@@ -91,33 +90,25 @@ def pgxseg_biosample_meta_line(byc, biosample, group_id_key="histological_diagno
                         if len(l) > 0:
                             line.append("{}_label___{}={}".format(par, pre, v.get("id")))
                         continue
-
-    h_line = ";".join(line)
-
-    return h_line
+    return ";".join(line)
 
 ################################################################################    
 
 def __pgxmatrix_interval_header(info_columns, byc):
-
     int_line = info_columns.copy()
-
     for iv in byc["genomic_intervals"]:
-        int_line.append("{}:{}-{}:DUP".format(iv["reference_name"], iv["start"], iv["end"]))
+        int_line.append(f'{iv["reference_name"]}:{iv["start"]}-{iv["end"]}:DUP')
     for iv in byc["genomic_intervals"]:
-        int_line.append("{}:{}-{}:DEL".format(iv["reference_name"], iv["start"], iv["end"]))
-
+        int_line.append(f'{iv["reference_name"]}:{iv["start"]}-{iv["end"]}:DEL')
     return int_line
 
 
 ################################################################################
 
 def print_filters_meta_line(byc):
-
     filters = byc.get("filters", [])
     if len(filters) < 1:
         return
-
     f_vs = []
     for f in filters:
         f_vs.append(f.get("id", ""))
@@ -128,8 +119,7 @@ def print_filters_meta_line(byc):
 ################################################################################
 
 def export_pgxseg_download(datasets_results, ds_id, byc):
-
-    data_client = pymongo.MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
+    data_client = pymongo.MongoClient(host=DB_MONGOHOST)
     v_coll = data_client[ ds_id ][ "variants" ]
     ds_results = datasets_results.get(ds_id, {})
     if not "variants._id" in ds_results:
@@ -168,22 +158,18 @@ def print_pgxseg_header_line():
 ################################################################################
 
 def pgxseg_header_line():
-
-    return "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}".format("biosample_id", "reference_name", "start", "end", "log2", "variant_type", "reference_bases", "alternate_bases" )
+    return "\t".join( ["biosample_id", "reference_name", "start", "end", "log2", "variant_type", "reference_bases", "alternate_bases"])
 
 ################################################################################
 
 def pgxseg_variant_line(v_pgxseg):
-
     for p in ("sequence", "reference_sequence"):
         if not v_pgxseg[p]:
             v_pgxseg.update({p: "."})
-
     log_v = "."
     if "info" in v_pgxseg:
         if v_pgxseg["info"]:
             log_v = v_pgxseg["info"].get("cnv_value", ".")
-
     v_l = (
         v_pgxseg.get("biosample_id"),
         v_pgxseg["reference_name"],
@@ -200,27 +186,25 @@ def pgxseg_variant_line(v_pgxseg):
 ################################################################################
 
 def export_callsets_matrix(datasets_results, ds_id, byc):
-
-    g_b = byc["interval_definitions"].get("genome_binning", "")
+    form = byc.get("form_data", {})
+    skip = form.get("skip", 0)
+    limit = form.get("limit", 0)
+    output = form.get("output", "___none___")
+    g_b = form.get("genome_binning", "")
     i_no = len(byc["genomic_intervals"])
 
     m_format = "coverage"
-    if "val" in byc["output"]:
+    if "val" in output:
         m_format = "values"
 
-    ds_results = datasets_results[ds_id]
-    p_r = byc["pagination"]
-
-    if not "analyses._id" in ds_results:
+    cs_r = datasets_results[ds_id].get("analyses._id")
+    if not cs_r:
         return
-
-    cs_r = ds_results["analyses._id"]
-
-    mongo_client = pymongo.MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
+    mongo_client = pymongo.MongoClient(host=DB_MONGOHOST)
     bs_coll = mongo_client[ ds_id ][ "biosamples" ]
     cs_coll = mongo_client[ ds_id ][ "analyses" ]
 
-    open_text_streaming(byc["env"], "interval_callset_matrix.pgxmatrix")
+    open_text_streaming("interval_callset_matrix.pgxmatrix")
 
     for d in ["id", "assemblyId"]:
         d_v = byc["dataset_definitions"][ds_id].get(d)
@@ -238,9 +222,7 @@ def export_callsets_matrix(datasets_results, ds_id, byc):
 
     q_vals = cs_r["target_values"]
     r_no = len(q_vals)
-    skip = byc["pagination"].get("skip", 0)
-    limit = byc["pagination"].get("limit", 0)
-    if r_no > p_r["limit"]:
+    if r_no > limit:
         if test_truthy( byc["form_data"].get("paginate_results", True) ):
             q_vals = return_paginated_list(q_vals, skip, limit)
         print(f'#meta=>"WARNING: Only {len(q_vals)} analyses will be included due to pagination skip {skip} and limit {limit}."')
@@ -288,28 +270,20 @@ def export_callsets_matrix(datasets_results, ds_id, byc):
 ################################################################################
 
 def export_pgxseg_frequencies(byc, results):
-
-    if not "pgxseg" in byc["output"] and not "pgxfreq" in byc["output"]:
-        return
-
-    g_b = byc["interval_definitions"].get("genome_binning", "")
+    form = byc.get("form_data", {})
+    g_b = form.get("genome_binning", "")
     i_no = len(byc["genomic_intervals"])
 
-    open_text_streaming(byc["env"], "interval_frequencies.pgxfreq")
-
+    open_text_streaming("interval_frequencies.pgxfreq")
     print(f'#meta=>genome_binning={g_b};interval_number={i_no}')
     h_ks = ["reference_name", "start", "end", "gain_frequency", "loss_frequency", "no"]
-
     # should get error checking if made callable
-
     for f_set in results:
         m_line = []
         for k in ["group_id", "label", "dataset_id", "sample_count"]:
             m_line.append(k+"="+str(f_set[k]))
         print("#group=>"+';'.join(m_line))
-
     print("group_id\t"+"\t".join(h_ks))
-
     for f_set in results:
         for intv in f_set["interval_frequencies"]:
             v_line = [ ]
@@ -317,17 +291,17 @@ def export_pgxseg_frequencies(byc, results):
             for k in h_ks:
                 v_line.append(str(intv[k]))
             print("\t".join(v_line))
-
     close_text_streaming()
+
 
 ################################################################################
 
 def export_pgxmatrix_frequencies(byc, results):
-
-    g_b = byc["interval_definitions"].get("genome_binning", "")
+    form = byc.get("form_data", {})
+    g_b = form.get("genome_binning", "")
     i_no = len(byc["genomic_intervals"])
 
-    open_text_streaming(byc["env"], "interval_frequencies.pgxmatrix")
+    open_text_streaming("interval_frequencies.pgxmatrix")
 
     print(f'#meta=>genome_binning={g_b};interval_number={i_no}')
 
@@ -362,7 +336,7 @@ def export_vcf_download(datasets_results, ds_id, byc):
     """
 
     # TODO: VCF schema in some config file...
-    open_text_streaming(byc["env"], f"{ds_id}_variants.vcf")
+    open_text_streaming(f"{ds_id}_variants.vcf")
     print(
         """##fileformat=VCFv4.4
 ##reference=GRCh38

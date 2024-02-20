@@ -6,7 +6,6 @@ from operator import itemgetter
 
 from bycon import *
 
-services_conf_path = path.join( path.dirname( path.abspath(__file__) ), "config" )
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
 sys.path.append( services_lib_path )
 from geomap_utils import *
@@ -22,24 +21,29 @@ podmd"""
 ################################################################################
 
 def main():
+
     try:
         publications()
     except Exception:
-        print_text_response(traceback.format_exc(), 302)
+        print_text_response(traceback.format_exc(), byc["env"], 302)
     
 ################################################################################
 
 def publications():
+
     initialize_bycon_service(byc, "publications")
-    read_service_prefs("publications", services_conf_path, byc)
     run_beacon_init_stack(byc)
 
     r = ByconautServiceResponse(byc)
+    byc.update({
+        "service_response": r.emptyResponse(),
+        "error_response": r.errorResponse()
+    })
     form = byc.get("form_data", {})
 
     # data retrieval & response population
-    query = _create_filters_query( byc )
-    geo_q, geo_pars = geo_query(byc["geoloc_definitions"], form)
+    query, e = _create_filters_query( byc )
+    geo_q, geo_pars = geo_query( byc )
 
     if geo_q:
         # for g_k, g_v in geo_pars.items():
@@ -50,12 +54,13 @@ def publications():
             query = { '$and': [ geo_q, query ] }
 
     if len(query.keys()) < 1:
-        BYC["ERRORS"].append("No query could be constructed from the parameters provided.")
-        BeaconErrorResponse(byc).response(422)
+        e_m = "No query could be constructed from the parameters provided."
+        e_r = BeaconErrorResponse(byc).error(e_m, 422)
+        print_json_response(e_r, byc["env"])
 
-    mongo_client = MongoClient(host=DB_MONGOHOST)
+    mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
     pub_coll = mongo_client[ "progenetix" ][ "publications" ]
-    p_re = re.compile( byc["filter_definitions"]["pubmed"]["pattern"] )
+    p_re = re.compile( byc["filter_definitions"]["PMID"]["pattern"] )
     d_k = set_selected_delivery_keys(byc["service_config"].get("method_keys"), form)
     p_l = [ ]
     
@@ -92,7 +97,7 @@ def publications():
     mongo_client.close( )
     results = sorted(p_l, key=itemgetter('sortid'), reverse = True)
     __check_publications_map_response(byc, results)
-    print_json_response(r.populatedResponse(results))
+    print_json_response(r.populatedResponse(results), byc["env"])
 
 
 ################################################################################
@@ -100,44 +105,47 @@ def publications():
 
 def __check_publications_map_response(byc, results):
     form = byc.get("form_data", {})
-    output = form.get("output", "___none___")
-    if not "map" in output:
+    if not "map" in form.get("output", "___none___"):
         return
 
     u_locs = {}
+
     for p in results:
-        counts = p.get("counts", {})
+        if not "counts" in p:
+            pass
+
         geoloc = p["provenance"].get("geo_location", None)
         if geoloc is None:
             pass
+
         l_k = "{}::{}".format(geoloc["geometry"]["coordinates"][1], geoloc["geometry"]["coordinates"][0])
 
         if not l_k in u_locs.keys():
             u_locs.update({l_k:{"geo_location": geoloc}})
             u_locs[l_k]["geo_location"]["properties"].update({"items":[]})
 
-        m_c = counts.get("genomes", 0)
+        m_c = p["counts"].get("genomes", 0)
         m_s = u_locs[l_k]["geo_location"]["properties"].get("marker_count", 0) + m_c
+        # print(m_c, m_s)
 
-        link = f'<a href="/publication/?id={p["id"]}">{p["id"]}</a> ({m_c})'
+        i = "<a href='/publication/?id={}'>{}</a> ({})".format(p["id"], p["id"], m_c)
         u_locs[l_k]["geo_location"]["properties"].update({"marker_count":m_s})
-        u_locs[l_k]["geo_location"]["properties"]["items"].append(link)
+        u_locs[l_k]["geo_location"]["properties"]["items"].append(i)
+
     geolocs =  u_locs.values()
 
     print_map_from_geolocations(byc, geolocs)
 
 ################################################################################
 
-def _create_filters_query(byc):
-    form = byc.get("form_data", {})
-    filters = byc.get("filters", [])
-    filter_precision = form.get("filter_precision", "exact")
-    f_d_s = byc.get("filter_definitions", {})
+def _create_filters_query( byc ):
+
     query = { }
     error = ""
+    f_d_s = byc[ "filter_definitions" ]
 
-    if BYC["TEST_MODE"] is True:
-        test_mode_count = int(form.get('test_mode_count', 5))
+    if byc.get("test_mode", False) is True:
+        test_mode_count = int(byc.get('test_mode_count', 5))
         mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
         data_coll = mongo_client[ "progenetix" ][ "publications" ]
 
@@ -148,7 +156,9 @@ def _create_filters_query(byc):
     q_list = [ ]
     count_pat = re.compile( r'^(\w+?)\:([>=<])(\d+?)$' )
 
-    for f in filters:
+    # TODO: This doesn't apply any more?
+
+    for f in byc[ "filters" ]:
         f_val = f["id"]
         if len(f_val) < 1:
             continue
@@ -169,10 +179,10 @@ def _create_filters_query(byc):
             elif op == "=":
                 op = '$eq'
             else:
-                BYC["ERRORS"].append(f'uncaught filter error: {f_val}')
+                error = "uncaught filter error: {}".format(f_val)
                 continue
             q_list.append( { dbk: { op: int(no) } } )
-        elif "start" in filter_precision or len(pre_code) == 1:
+        elif "start" in byc[ "filter_flags" ][ "precision" ] or len(pre_code) == 1:
             """podmd
             If there was only prefix a regex match is enforced - basically here
             for the selection of PMID labeled publications.
@@ -197,7 +207,7 @@ def _create_filters_query(byc):
     else:
         query = q_list[0]
 
-    return query
+    return query, error
 
 ################################################################################
 ################################################################################

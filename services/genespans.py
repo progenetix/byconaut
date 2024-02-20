@@ -4,6 +4,7 @@ from os import environ, path
 
 from bycon import *
 
+services_conf_path = path.join( path.dirname( path.abspath(__file__) ), "config" )
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
 sys.path.append( services_lib_path )
 from cytoband_utils import parse_cytoband_file, cytobands_label_from_positions
@@ -24,7 +25,7 @@ def main():
     try:
         genespans()
     except Exception:
-        print_text_response(traceback.format_exc(), byc["env"], 302)
+        print_text_response(traceback.format_exc(), 302)
     
 ################################################################################
 
@@ -32,31 +33,25 @@ def genespans():
     """
 
     """
-    initialize_bycon_service(byc, sys._getframe().f_code.co_name)
+    initialize_bycon_service(byc, "genespans")
+    read_service_prefs("genespans", services_conf_path, byc)
     run_beacon_init_stack(byc)
     parse_cytoband_file(byc)
 
     # form id assumes start match (e.g. for autocompletes)
 
     r = ByconautServiceResponse(byc)
-    byc.update({
-        "service_response": r.emptyResponse(),
-        "error_response": r.errorResponse()
-    })
-    db_config = byc.get("db_config", {})
     form = byc.get("form_data", {})
-
     gene_id = rest_path_value("genespans")
     if gene_id:
         # REST path id assumes exact match
-        results, e = GeneInfo(db_config).returnGene(gene_id)
+        results = GeneInfo().returnGene(gene_id)
     else:
         gene_id = byc[ "form_data" ].get("gene_id")
-        results, e = GeneInfo(db_config).returnGenelist(gene_id)
+        results = GeneInfo().returnGenelist(gene_id)
 
-    if e:
-        e_r = BeaconErrorResponse(byc).error(e, 422)
-        print_json_response(e_r, byc["env"])
+    if len(BYC["ERRORS"]) > 0:
+        BeaconErrorResponse(byc).response(422)
 
     for gene in results:
         _gene_add_cytobands(gene, byc)
@@ -70,7 +65,7 @@ def genespans():
             results[i] = g_n
 
     if "text" in form.get("output", "___none___"):
-        open_text_streaming(byc["env"])
+        open_text_streaming()
         for g in results:
             s_comps = []
             for k in e_k_s:
@@ -78,7 +73,7 @@ def genespans():
             print("\t".join(s_comps))
         exit()
 
-    print_json_response(r.populatedResponse(results), byc["env"])
+    print_json_response(r.populatedResponse(results))
 
 
 ################################################################################

@@ -39,7 +39,6 @@ def main():
 ################################################################################
 
 def sampleplots():
-
     initialize_bycon_service(byc, "biosamples")
     run_beacon_init_stack(byc)
     generate_genome_bins(byc)
@@ -50,6 +49,8 @@ def sampleplots():
     pb = ByconBundler(byc)
 
     inputfile = Path( path.join( *byc["local_paths"][ "server_tmp_dir_loc" ], file_id ) )
+    prdbug(inputfile.is_file())
+    prdbug(inputfile)
     if inputfile.is_file():
         pdb = pb.pgxseg_to_plotbundle(inputfile)
     else:

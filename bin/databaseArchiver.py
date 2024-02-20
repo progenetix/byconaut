@@ -24,8 +24,7 @@ def main():
 ################################################################################
 
 def database_archiver():
-
-    initialize_bycon_service(byc)
+    initialize_bycon_service(byc, "database_archiver")
     run_beacon_init_stack(byc)
 
     if len(byc["dataset_ids"]) != 1:

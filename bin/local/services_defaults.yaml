@@ -21,12 +21,13 @@ service_path_aliases:
   ids: ids
   interval_frequencies: intervalFrequencies
   intervalFrequencies: intervalFrequencies
-  ontologymaps: ontologymaps
-  ontologyMaps: ontologymaps
+  ontologymaps: ontologymappings
+  ontologyMaps: ontologymappings
+  ontologymappings: ontologymappings
   pgxseg: pgxsegvariants
   pgxsegvariants: pgxsegvariants
   publications: publications
-  # samplesPlotter: samplesPlotter
+  samplemap: samplemap
   samplematrix: samplematrix
   sampletable: sampletable
   samplesPlotter: sampleplots
@@ -42,6 +43,7 @@ rewrites: {}
 #response_type_aliases:
 path_entry_type_mappings:
 
+  ontologymappings: ontologymap
   ontologymaps: ontologymap
   ontologyMaps: ontologymap
   collations: collation
@@ -49,6 +51,7 @@ path_entry_type_mappings:
   intervalFrequencies: intervalFrequencies
   cytomapper: CytobandMapping
   geolocations: geoLocation
+  samplemap: biosample
 
 
 ################################################################################

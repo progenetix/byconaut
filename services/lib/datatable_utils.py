@@ -3,40 +3,38 @@ import csv, re, requests
 from random import sample as randomSamples
 
 # bycon
-from bycon import assign_nested_value, get_nested_value, prdbug, prjsonnice
+from bycon import assign_nested_value, get_nested_value, prdbug, prjsonnice, ENV
 
 ################################################################################
 
 def export_datatable_download(results, byc):
-
     # TODO: separate table generation from HTTP response
+    form = byc.get("form_data", {})
+    output = form.get("output", "___none___")
 
-    if not "table" in byc["output"]:
-        return
-    if not "datatable_mappings" in byc:
+    prdbug(f'... in export_datatable_download => {output}')
+
+    dt_m = byc.get("datatable_mappings")
+    if not dt_m:
         return
 
-    dt_m = byc["datatable_mappings"]
     r_t = byc.get("response_entity_id", "___none___")
-
     if not r_t in dt_m["definitions"]:
         return
 
     io_params = dt_m["definitions"][ r_t ]["parameters"]
 
-    if not "local" in byc["env"]:
- 
+    if not "local" in ENV:
         print('Content-Type: text/tsv')
-        if byc.get("download_mode", False) is True:
+        if form.get("download_mode", False) is True:
             print('Content-Disposition: attachment; filename='+byc["response_entity_id"]+'.tsv')
         print('status: 200')
         print()
 
-    if "idtable" in byc["output"]:
+    if "idtable" in output:
         io_params = {"id": {"db_key":"id", "type": "string" } }
 
     header = create_table_header(io_params)
-
     print("\t".join( header ))
 
     for pgxdoc in results:

@@ -30,34 +30,30 @@ def main():
 ################################################################################
 
 def collations_creator():
-
-    initialize_bycon_service(byc)
-    select_dataset_ids(byc)
+    initialize_bycon_service(byc, "collations_creator")
+    run_beacon_init_stack(byc)
     
     if len(byc["dataset_ids"]) > 1:
         print("Please give only one dataset using -d")
         exit()
-
     ds_id = byc["dataset_ids"][0]
 
-    print( "Creating collations for " + ds_id)
+    print(f'Creating collations for {ds_id}')
 
     set_collation_types(byc)
 
     for coll_type, coll_defs in byc["filter_definitions"].items():
-
         collationed = coll_defs.get("collationed")
         if not collationed:
             continue
-
         pre = coll_defs["namespace_prefix"]
         pre_h_f = path.join( pkg_path, "rsrc", "classificationTrees", coll_type, "numbered_hierarchies.tsv" )
         collection = coll_defs["scope"]
         db_key = coll_defs["db_key"]
 
-        if "PMID" in coll_type:
+        if "pubmed" in coll_type:
             hier =  _make_dummy_publication_hierarchy(byc)
-        elif  path.exists( pre_h_f ):
+        elif path.exists( pre_h_f ):
             print( "Creating hierarchy for " + coll_type)
             hier =  get_prefix_hierarchy( ds_id, coll_type, pre_h_f, byc)
         else:
@@ -87,39 +83,27 @@ def collations_creator():
             onto_keys.update(child_ids)
 
         sel_hiers = [ ]
-
         no = len(hier.keys())
         matched = 0
-        
-        if not byc["test_mode"]:
-            bar = Bar("Writing "+pre, max = no, suffix='%(percent)d%%'+" of "+str(no) )
-        
+        if not BYC["TEST_MODE"]:
+            bar = Bar("Writing "+pre, max = no, suffix='%(percent)d%%'+" of "+str(no) )      
         for count, code in enumerate(hier.keys(), start=1):
-
-            if not byc["test_mode"]:
+            if not BYC["TEST_MODE"]:
                 bar.next()
-
             children = list( set( hier[ code ][ "child_terms" ] ) & onto_keys )
-
             hier[ code ].update(  { "child_terms": children } )
-
             if len( children ) < 1:
-                if byc["test_mode"]:
+                if BYC["TEST_MODE"]:
                     print(code+" w/o children")
                 continue
-
             code_no = data_coll.count_documents( { db_key: code } )
-
             if code_no < 1:
                 code_no = 0
-
             if len( children ) < 2:
                 child_no = code_no
             else:
                 child_no =  data_coll.count_documents( { db_key: { "$in": children } } )
- 
             if child_no > 0:
-
                 # sub_id = re.sub(pre, coll_type, code)
                 sub_id = code
                 update_obj = hier[ code ].copy()
@@ -138,23 +122,19 @@ def collations_creator():
                     "updated": datetime.datetime.now().isoformat(),
                     "db_key": db_key
                 })
-
                 if "reference" in coll_defs:
                     url = coll_defs["reference"].get("root", "https://progenetix.org/services/ids/")
                     r = coll_defs["reference"].get("replace", ["___nothing___", ""])
                     ref = url+re.sub(r[0], r[1], code)
                     update_obj.update({"reference": ref })
-
                 matched += 1
-
-                if not byc["test_mode"]:
+                if not BYC["TEST_MODE"]:
                     sel_hiers.append( update_obj )
                 else:
                     print("{}:\t{} ({} deep) samples - {} / {} {}".format(sub_id, code_no, child_no, count, no, pre))
 
-
         # UPDATE   
-        if not byc["test_mode"]:
+        if not BYC["TEST_MODE"]:
             bar.finish()
             print("==> Updating database ...")
             if matched > 0:
@@ -169,18 +149,15 @@ def get_prefix_hierarchy( ds_id, coll_type, pre_h_f, byc):
 
     coll_defs = byc["filter_definitions"][coll_type]
     hier = hierarchy_from_file(ds_id, coll_type, pre_h_f, byc)
-
     no = len(hier.keys())
 
     # now adding terms missing from the tree ###################################
-
     print("Looking for missing {} codes in {}.{} ...".format(coll_type, ds_id, coll_defs["scope"]))
     data_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
     data_db = data_client[ ds_id ]
     data_coll = data_db[coll_defs["scope"]]
 
-    db_key = coll_defs.get("db_key", "")
-    
+    db_key = coll_defs.get("db_key", "")    
     onto_ids = _get_ids_for_prefix( data_coll, coll_defs )
 
     added_no = 0
@@ -273,7 +250,7 @@ def get_prefix_hierarchy( ds_id, coll_type, pre_h_f, byc):
 
 def _make_dummy_publication_hierarchy(byc):
 
-    coll_type = "PMID"
+    coll_type = "pubmed"
     coll_defs = byc["filter_definitions"][coll_type]
     data_db = "progenetix"
     data_coll = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))[ data_db ][ "publications" ]
@@ -311,7 +288,7 @@ def _make_dummy_publication_hierarchy(byc):
 
 def _get_dummy_hierarchy(ds_id, coll_type, coll_defs, byc):
 
-    data_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
+    data_client = MongoClient(host=DB_MONGOHOST)
     data_db = data_client[ ds_id ]
     data_coll = data_db[ coll_defs["scope"] ]
     data_pat = coll_defs["pattern"]
@@ -369,8 +346,10 @@ def _get_ids_for_prefix(data_coll, coll_defs):
     db_key = coll_defs["db_key"]
     pre_re = re.compile( coll_defs["pattern"] )
 
+    prdbug(f'_get_ids_for_prefix ... : "{db_key}"" - pattern {pre_re}')
     pre_ids = data_coll.distinct( db_key, { db_key: { "$regex": pre_re } } )
     pre_ids = list(filter(lambda d: pre_re.match(d), pre_ids))
+    prdbug(f'_get_ids_for_prefix ... : found {len(pre_ids)}')
 
     return pre_ids
 

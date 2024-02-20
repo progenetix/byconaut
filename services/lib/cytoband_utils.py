@@ -11,8 +11,9 @@ def parse_cytoband_file(byc):
     """podmd
  
     podmd"""
- 
-    cb_file = path.join( byc["genome_rsrc_path"], "cytoBandIdeo.txt")
+
+    g_rsrc_p = ChroNames(byc).genomePath()
+    cb_file = path.join( g_rsrc_p, "cytoBandIdeo.txt")
     cb_re = re.compile( byc["interval_definitions"][ "cytobands" ][ "pattern" ] )
     cb_keys = [ "chro", "start", "end", "cytoband", "staining" ]
 

@@ -2,16 +2,14 @@ import re
 from os import environ
 from pymongo import MongoClient, GEOSPHERE
 
+from bycon import DB_MONGOHOST
+
 ################################################################################
 
 def mongodb_update_indexes(ds_id, byc):
-
-    mdb_c = byc.get("db_config", {})
-    db_host = mdb_c.get("host", "localhost")
-
     dt_m = byc["datatable_mappings"]
     b_rt_s = byc["service_config"]["indexed_response_types"]
-    mongo_client = MongoClient(host=db_host)
+    mongo_client = MongoClient(host=DB_MONGOHOST)
     data_db = mongo_client[ds_id]
     coll_names = data_db.list_collection_names()
     for r_t, r_d in b_rt_s.items():
@@ -54,7 +52,7 @@ def mongodb_update_indexes(ds_id, byc):
             
 def __index_by_colldef(ds_id, coll_defs):
 
-    mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
+    mongo_client = MongoClient(host=DB_MONGOHOST)
     i_db = mongo_client[ds_id]
     coll_names = i_db.list_collection_names()
 

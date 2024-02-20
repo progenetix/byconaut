@@ -4,7 +4,10 @@ from os import environ, path, pardir
 
 from bycon import *
 
-dir_path = path.dirname( path.abspath(__file__) )
+services_conf_path = path.join( path.dirname( path.abspath(__file__) ), "config" )
+services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
+sys.path.append( services_lib_path )
+from service_helpers import read_service_prefs
 
 """podmd
 The `ids` service forwards compatible, prefixed ids (see `config/ids.yaml`) to specific
@@ -22,23 +25,18 @@ podmd"""
 ################################################################################
 
 def main():
-
     try:
         ids()
     except Exception:
-        print_text_response(traceback.format_exc(), byc["env"], 302)
+        print_text_response(traceback.format_exc(), 302)
     
 ################################################################################
 
 def ids():
-
     set_debug_state(debug=0)
-    s_pref_dir = path.join(dir_path, "config")
-    read_service_prefs( "ids", s_pref_dir, byc )
-
+    read_service_prefs( "ids", services_conf_path, byc )
     id_in = rest_path_value("ids")
     output = rest_path_value(id_in)
-
     f_p_s = byc["service_config"].get("format_patterns", {})
 
     if id_in:
@@ -53,7 +51,6 @@ def ids():
                         pass
                     else:
                         lid = pim+lid
-
                 print_uri_rewrite_response(link, lid)
 
     print('Content-Type: text')
@@ -61,6 +58,7 @@ def ids():
     print()
     print("No correct id provided. Please refer to the documentation at http://info.progenetix.org/tags/services/")
     exit()
+
 
 ################################################################################
 ################################################################################

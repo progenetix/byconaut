@@ -6,7 +6,6 @@ from os import environ
 biosample_id_list=[]
 client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
 
-
 progenetix_biosample_id_list=[]
 progenetix_individual_id_list=[]
 progenetix_variant_id_list=[]

@@ -10,10 +10,14 @@ from file_utils import read_www_tsv_to_dictlist
 ################################################################################
 
 def read_geomarker_table_web(byc):
+
     geolocs = []
+
     f_a = byc["form_data"].get("inputfile", "")
+
     if not "http" in f_a:
         return geolocs
+
     lf, fieldnames = read_www_tsv_to_dictlist(f_a)
 
     markers = {}
@@ -73,16 +77,13 @@ def read_geomarker_table_web(byc):
 ################################################################################
 
 def print_map_from_geolocations(byc, geolocs_db_results):
-    form = byc.get("form_data", {})
-    output = form.get("output", "___none___")
-    if not "map" in output:
-        return
-
     geolocs = [x["geo_location"] for x in geolocs_db_results if "geo_location" in x]
+
     m_p = byc["geoloc_definitions"].get("map_params", {})
     p_p = __update_geo_plot_params_from_form(byc)
     m_max_count = __marker_max_from_geo_locations(geolocs)
     
+    # print(m_max_count)
     leaf_markers = []
     for geoloc in geolocs:
         leaf_markers.append( __map_marker_from_geo_location(byc, geoloc, p_p, m_max_count) )
@@ -151,7 +152,7 @@ the URL, e.g. "&map_w_px=1024".</p>
         t += "<tr><th>Map Parameter</th><th>Value</th></tr>\n"
         for p_p_k, p_p_v in p_p.items():
             if not '<' in str(p_p_v):
-                t += f'<tr><td>{p_p_k}</td><td>{p_p_v}</td></tr>\n'
+                t += "<tr><td>{}</td><td>{}</td></tr>\n".format(p_p_k, p_p_v)
         t += "\n</table>"
         geoMap += t
 
@@ -159,13 +160,15 @@ the URL, e.g. "&map_w_px=1024".</p>
 <html>
 {}
 </html>""".format(geoMap))
-    exit()
 
+    exit()
 
 ################################################################################
 
 def __create_geo__marker_layer(leaf_markers):
+
     markersJS = ""
+
     if len(leaf_markers) > 0:
         markersJS = """
   var markers = [
@@ -175,36 +178,43 @@ def __create_geo__marker_layer(leaf_markers):
   map.addLayer(markersGroup);
   map.fitBounds(markersGroup.getBounds().pad(0.05));
 """.format(",\n".join(leaf_markers))
-    return markersJS
 
+    return markersJS
 
 ################################################################################
 
 def __update_geo_plot_params_from_form(byc):
+
     p_p = byc["geoloc_definitions"].get("plot_params", {})
+
     p_p.update({"inputfile": byc["form_data"].get("inputfile", "")})
+
     for p_p_k, p_p_v in p_p.items():
+
         if p_p_k in byc["form_data"]:
             p_p.update({p_p_k: byc["form_data"].get(p_p_k, p_p_v)})
-    return p_p
 
+    return p_p
 
 ################################################################################
 
 def __marker_max_from_geo_locations(geolocs):
+
     m_max_count = 1
     for g_l in geolocs:
         c = float( g_l["properties"].get("marker_count", 1) )
         if c > m_max_count:
             m_max_count = c
-    return m_max_count
 
+    return m_max_count
 
 ################################################################################
 
 def __map_marker_from_geo_location(byc, geoloc, p_p, m_max_count):
+
     p = geoloc.get("properties", {})
     g = geoloc.get("geometry", {})
+
     marker = p_p.get("marker_type", "circle")
     m_max_r = p_p.get("marker_max_r", 1000)
     m_f = int(int(m_max_r) / math.sqrt(4 * m_max_count / math.pi))
@@ -213,22 +223,25 @@ def __map_marker_from_geo_location(byc, geoloc, p_p, m_max_count):
     if label is None:
         label = p.get("city", "NA")
         country = p.get("country", None)
-        if country:
-            label = f'{label}, {country}'
+        if country is not None:
+            label = "{}, {}".format(label, country)
 
     items = p.get("items", [])
     items = [x for x in items if x is not None]
+    # print(items)
     if len(items) > 0:
         label += "<hr/>{}".format("<br/>".join(items))
     else:
-        label += f'<hr/>latitude: {g["coordinates"][1]}, longitude: {g["coordinates"][0]}'
+        label += "<hr/>latitude: {}, longitude: {}".format(g["coordinates"][1], g["coordinates"][0])
 
     count = float(p.get("marker_count", 1))
     size = count * m_f * float(p_p.get("marker_scale", 2))
+
     marker_icon = p.get("marker_icon", "")
 
     if ".png" in marker_icon or ".jpg" in marker_icon:
         marker = "marker"
+
     if "circle" in marker:
         map_marker = """
 L.{}([{}, {}], {{

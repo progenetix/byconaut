@@ -25,18 +25,13 @@ def main():
     try:
         schemas()
     except Exception:
-        print_text_response(traceback.format_exc(), byc["env"], 302)
+        print_text_response(traceback.format_exc(), 302)
     
 ################################################################################
 
 def schemas():
-   
     initialize_bycon_service(byc, "schemas")
     r = ByconautServiceResponse(byc)
-    byc.update({
-        "service_response": r.emptyResponse(),
-        "error_response": r.errorResponse()
-    })
 
     if "id" in byc["form_data"]:
         schema_name = byc["form_data"].get("id", None)
@@ -44,24 +39,19 @@ def schemas():
         schema_name = byc["request_entity_path_id_value"]
 
     if schema_name:
-
         comps = schema_name.split('.')
         schema_name = comps.pop(0)
-
-        prdbug(schema_name, byc.get("debug_mode"))
-
+        prdbug(schema_name)
         s = read_schema_file(byc, schema_name, "")
         if s:
-
             print('Content-Type: application/json')
             print('status:200')
             print()
             print(json.dumps(camelize(s), indent=4, sort_keys=True, default=str)+"\n")
             exit()
 
-    e_m = "No correct schema id provided!"
-    e_r = BeaconErrorResponse(byc).error(e_m, 422)
-    print_json_response(e_r, byc["env"])
+    BYC["ERRORS"].append("No correct schema id provided!")
+    BeaconErrorResponse(byc).response(422)
 
 
 ################################################################################

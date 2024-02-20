@@ -5,6 +5,7 @@ from pymongo import MongoClient
 
 from bycon import *
 
+services_conf_path = path.join( path.dirname( path.abspath(__file__) ), "config" )
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
 sys.path.append( services_lib_path )
 from bycon_bundler import *
@@ -25,26 +26,24 @@ podmd"""
 ################################################################################
 
 def main():
-
     try:
         interval_frequencies()
     except Exception:
-        print_text_response(traceback.format_exc(), byc["env"], 302)
+        print_text_response(traceback.format_exc(), 302)
 
 ################################################################################
 
 def intervalFrequencies():
-    
     try:
         interval_frequencies()
     except Exception:
-        print_text_response(traceback.format_exc(), byc["env"], 302)
+        print_text_response(traceback.format_exc(), 302)
    
 ################################################################################
 
 def interval_frequencies():
-
-    initialize_bycon_service(byc, sys._getframe().f_code.co_name)
+    initialize_bycon_service(byc, "interval_frequencies")
+    read_service_prefs("interval_frequencies", services_conf_path, byc)
     run_beacon_init_stack(byc)
     generate_genome_bins(byc)
 
@@ -55,36 +54,21 @@ def interval_frequencies():
         byc[ "filters" ] = [ {"id": byc["form_data"]["id"]} ]
 
     if not "filters" in byc:
-        e_m = "No value was provided for collation `id` or `filters`."
-        e_r = BeaconErrorResponse(byc).error(e_m, 422)
-        print_json_response(e_r, byc["env"])
+        BYC["ERRORS"].append("No value was provided for collation `id` or `filters`.")
+        BeaconErrorResponse(byc).response(422)
 
-    file_type = byc["form_data"].get("output", "pgxfreq")
-    if file_type not in ["pgxfreq", "pgxmatrix"]:
+    form = byc.get("form_data", {})
+    file_type = form.get("output", "___none___")
+    if file_type not in ["pgxfreq", "pgxmatrix", "pgxseg"]:
         file_type = "pgxfreq"
-    byc.update({"output": file_type})
-
+    output = file_type
     pdb = ByconBundler(byc).collationsPlotbundles()
-    check_pgxseg_frequencies_export(byc, pdb.get("interval_frequencies_bundles", []))
-    check_pgxmatrix_frequencies_export(byc, pdb.get("interval_frequencies_bundles", []))
 
-################################################################################
+    if "pgxseg" in output or "pgxfreq" in output:
+        export_pgxseg_frequencies(byc, pdb["interval_frequencies_bundles"])
+    elif "matrix" in output:
+        export_pgxmatrix_frequencies(byc, pdb["interval_frequencies_bundles"])
 
-def check_pgxseg_frequencies_export(byc, results):
-
-    if not "pgxseg" in byc["output"] and not "pgxfreq" in byc["output"]:
-        return
-
-    export_pgxseg_frequencies(byc, results)
-
-################################################################################
-
-def check_pgxmatrix_frequencies_export(byc, results):
-
-    if not "pgxmatrix" in byc["output"]:
-        return
-
-    export_pgxmatrix_frequencies(byc, results)
 
 ################################################################################
 ################################################################################

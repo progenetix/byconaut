@@ -24,7 +24,6 @@ def main():
 ################################################################################
 
 def examplez_updater():
-
     # Note: This doesn't use the standard `bycon` dataset id argument input since
     # you may want to create a new database not in the configuration list ...
     parser = argparse.ArgumentParser()
@@ -43,7 +42,6 @@ def examplez_updater():
     }
 
     # collecting the actions
-
     print('Database to create/update:', e_ds_id)
     if e_ds_id in db_names:
         ddb_resp = input(f'Drop existing {e_ds_id} database first?\n(Y|n): ')

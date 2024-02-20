@@ -4,12 +4,9 @@ from progress.bar import Bar
 ################################################################################
 
 def set_collation_types(byc):
-
     cts = byc["form_data"].get("collation_types")
-
     if not cts:
         return byc
-
     s_p = {}
     for p in cts:
         if p in byc["filter_definitions"].keys():
@@ -19,7 +16,6 @@ def set_collation_types(byc):
     if len(s_p.keys()) < 1:
         print("No existing collation type was provided with `--collationTypes` ...")
         exit()
-
     byc.update({"filter_definitions":s_p})
 
     return byc

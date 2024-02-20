@@ -24,7 +24,7 @@ def main():
     try:
         cytomapper()
     except Exception:
-        print_text_response(traceback.format_exc(), byc["env"], 302)
+        print_text_response(traceback.format_exc(), 302)
 
 ################################################################################
 ################################################################################
@@ -42,15 +42,15 @@ def cytomapper():
     response = r.populatedResponse(results)
 
     if len( results ) < 1:
-        e_m = "No matching cytobands!"
-        e_r = BeaconErrorResponse(byc).error(e_m, 422)
-        print_json_response(e_r, byc["env"])
+        BYC["ERRORS"].append("No matching cytobands!")
+        BeaconErrorResponse(byc).response(422)
+
     if "cyto_bands" in byc["varguments"]:
         response["meta"]["received_request_summary"].update({ "cytoBands": byc["varguments"]["cyto_bands"] })
     elif "chro_bases" in byc["varguments"]:
         response["meta"]["received_request_summary"].update({ "chroBases": byc["varguments"]["chro_bases"] })
 
-    print_json_response(response, byc["env"])
+    print_json_response(response)
 
 
 ################################################################################
@@ -60,31 +60,29 @@ def __return_cytobands_results(byc):
     a_d = byc.get("argument_definitions", {})
     c_b_d = byc.get("cytobands", [])
     chro_names = ChroNames(byc)
+    form = byc.get("form_data", {})
+    varguments = byc.get("varguments", {})
 
     cytoBands = [ ]
-    if "cyto_bands" in byc["varguments"]:
-        cytoBands, chro, start, end, error = bands_from_cytobands(byc["varguments"]["cyto_bands"], c_b_d, a_d)
-    elif "chro_bases" in byc["varguments"]:
-        cytoBands, chro, start, end = bands_from_chrobases(byc["varguments"]["chro_bases"], byc)
+    if "cyto_bands" in varguments:
+        cytoBands, chro, start, end, error = bands_from_cytobands(varguments["cyto_bands"], c_b_d, a_d)
+    elif "chro_bases" in varguments:
+        cytoBands, chro, start, end = bands_from_chrobases(varguments["chro_bases"], byc)
 
     if len( cytoBands ) < 1:
         return ()
 
     cb_label = cytobands_label( cytoBands )
-
     size = int(  end - start )
     chroBases = "{}:{}-{}".format(chro, start, end)
     sequence_id = chro_names.refseq(chro)
 
-    if "text" in byc["output"]:
-        open_text_streaming(byc["env"])
+    if "text" in form.get("output", "___none___"):
+        open_text_streaming()
         print("{}\t{}".format(cb_label, chroBases))
         exit()
 
     # TODO: response objects from schema
-    # r_s = byc["response_entity"]["beacon_schema"]["entity_type"]
-    # cb_i = object_instance_from_schema_name(byc, r_s, "")
-    
     results = [
         {
             "info": {

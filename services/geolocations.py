@@ -5,6 +5,7 @@ from pymongo import MongoClient
 
 from bycon import *
 
+services_conf_path = path.join( path.dirname( path.abspath(__file__) ), "config" )
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
 sys.path.append( services_lib_path )
 from geomap_utils import *
@@ -28,37 +29,29 @@ def main():
     try:
         geolocations()
     except Exception:
-        print_text_response(traceback.format_exc(), byc["env"], 302)
+        print_text_response(traceback.format_exc(), 302)
     
 ################################################################################
 
 def geolocations():
-
     initialize_bycon_service(byc, "geolocations")
+    read_service_prefs("geolocations", services_conf_path, byc)
     byc["geoloc_definitions"].update({"geo_root": "geo_location"})
 
     r = ByconautServiceResponse(byc)
-    byc.update({
-        "service_response": r.emptyResponse(),
-        "error_response": r.errorResponse()
-    })
-
-    mdb_c = byc.get("db_config", {})
-    services_db = mdb_c.get("services_db")
-    geo_coll = mdb_c.get("geolocs_coll")
+    form = byc.get("form_data", {})
     
-    if "inputfile" in byc["form_data"]:
+    if "inputfile" in form:
         results = read_geomarker_table_web(byc)
     else:
-        query, geo_pars = geo_query(byc)
-
-        if len(query.keys()) < 1:
-            e_m = "No query generated - missing or malformed parameters"
+        query, geo_pars = geo_query(byc["geoloc_definitions"], form)
+        if not query:
+            BYC["ERRORS"].append("No query generated - missing or malformed parameters")
         else:
-            results, e_m = mongo_result_list(mdb_c, services_db, geo_coll, query, { '_id': False } )
-    if e_m:
-        e_r = BeaconErrorResponse(byc).error(e_m, 422)
-        print_json_response(e_r, byc["env"])
+            results = mongo_result_list(SERVICES_DB, GEOLOCS_COLL, query, { '_id': False } )
+            prdbug(results)
+    if len(BYC["ERRORS"]) > 0:
+        BeaconErrorResponse(byc).response(422)
 
     print_map_from_geolocations(byc, results)
 
@@ -71,13 +64,13 @@ def geolocations():
                 "geo_distance": int(byc["form_data"]["geo_distance"])
             }
             query = return_geo_longlat_query(geo_root, geo_pars)
-            results, e_m = mongo_result_list(mdb_c, services_db, geo_coll, query, { '_id': False } )
-    if e_m:
-        e_r = BeaconErrorResponse(byc).error(e_m, 422)
-        print_json_response(e_r, byc["env"])
+            results = mongo_result_list(SERVICES_DB, GEOLOCS_COLL, query, { '_id': False } )
+    if len(BYC["ERRORS"]) > 0:
+        e_r = BeaconErrorResponse(byc).error(422)
+        print_json_response(e_r)
 
-    if "text" in byc["output"]:
-        open_text_streaming(byc["env"], "browser")
+    if "text" in form.get("output", "___none___"):
+        open_text_streaming()
         for g in results:
             s_comps = []
             for k in ["city", "country", "continent"]:
@@ -88,7 +81,7 @@ def geolocations():
             print("\t".join(s_comps))
         exit()
 
-    print_json_response(r.populatedResponse(results), byc["env"])
+    print_json_response(r.populatedResponse(results))
 
 
 ################################################################################

@@ -5,6 +5,7 @@ from pymongo import MongoClient
 
 from bycon import *
 
+services_conf_path = path.join( path.dirname( path.abspath(__file__) ), "config" )
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
 sys.path.append( services_lib_path )
 from service_helpers import *
@@ -21,24 +22,22 @@ podmd"""
 def main():
 
     try:
-        ontologymaps()
+        ontologymappings()
     except Exception:
-        print_text_response(traceback.format_exc(), byc["env"], 302)
+        print_text_response(traceback.format_exc(), 302)
     
 ################################################################################
 
 def ontologymaps():
-
-    initialize_bycon_service(byc, sys._getframe().f_code.co_name)
+    initialize_bycon_service(byc, "ontologymappings")
+    read_service_prefs("ontologymappings", services_conf_path, byc)
     run_beacon_init_stack(byc)
 
-    r = ByconautServiceResponse(byc)
-    byc.update({
-        "service_response": r.emptyResponse(),
-        "error_response": r.errorResponse()
-    })
+    form = byc.get("form_data", {})
 
-    p_filter = rest_path_value("ontologymaps")
+    r = ByconautServiceResponse(byc)
+
+    p_filter = rest_path_value("ontologymappings")
     if p_filter:
         byc[ "filters" ].append({"id": p_filter})
 
@@ -55,7 +54,7 @@ def ontologymaps():
                 if re.compile( f_d["pattern"] ).match( f_val ):
                     if f_val not in q_dups:
                         q_dups.append(f_val)
-                        if "start" in byc[ "filter_flags" ][ "precision" ]:
+                        if "start" in form.get("filter_precision", "exact"):
                             q_list.append( { byc["query_field"]: { "$regex": "^"+f_val } } )
                         elif f["id"] == pre:
                             q_list.append( { byc["query_field"]: { "$regex": "^"+f_val } } )
@@ -63,9 +62,8 @@ def ontologymaps():
                             q_list.append( { byc["query_field"]: f_val } )
 
     if len(q_list) < 1:
-        e_m = "No correct filter value provided!"
-        e_r = BeaconErrorResponse(byc).error(e_m, 422)
-        print_json_response(e_r, byc["env"])
+        BYC["ERRORS"].append("No correct filter value provided!")
+        BeaconErrorResponse(byc).response(422)
 
     if len(q_list) > 1:
         query = { '$and': q_list }
@@ -74,7 +72,7 @@ def ontologymaps():
 
     c_g = [ ]
     u_c_d = { }
-    mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
+    mongo_client = MongoClient(host=DB_MONGOHOST)
     mongo_coll = mongo_client["progenetix"]["ontologymaps"]
     for o in mongo_coll.find( query, { '_id': False } ):
         for c in o["code_group"]:
@@ -84,14 +82,10 @@ def ontologymaps():
 
     u_c = [ ]
     for k, u in u_c_d.items():
-        u_c.append(u)
-            
+        u_c.append(u)        
     mongo_client.close( )
 
     results =  [ { "term_groups": c_g, "unique_terms": u_c } ]
-
-# --requestedSchema
-
     if "termGroups" in byc["response_entity_id"]:
         t_g_s = []
         for tg in c_g:
@@ -101,24 +95,12 @@ def ontologymaps():
                 t_l.append(str(t.get("label", "")))
             t_g_s.append("\t".join(t_l))
 
-        if "text" in byc["output"]:
+        if "text" in form.get("output", "___none___"):
             print_text_response("\n".join(t_g_s))
-
         results = c_g
 
-    print_json_response(r.populatedResponse(results), byc["env"])
+    print_json_response(r.populatedResponse(results))
 
-################################################################################
-################################################################################
-
-def schema_detyper(parameter):
-
-    if "type" in parameter:
-        if "array" in parameter["type"]:
-            return [ ]
-        elif "object" in parameter["type"]:
-            return { }
-        return ""
 
 ################################################################################
 ################################################################################

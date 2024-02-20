@@ -5,30 +5,31 @@ from uuid import uuid4
 
 from bycon import *
 
+services_conf_path = path.join( path.dirname( path.abspath(__file__) ), "config" )
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
 sys.path.append( services_lib_path )
 from bycon_bundler import ByconBundler
 from bycon_plot import *
 from interval_utils import generate_genome_bins
+from service_helpers import read_service_prefs
 
 ################################################################################
 ################################################################################
 ################################################################################
 
 def main():
-
     try:
         uploader()
     except Exception:
-        print_text_response(traceback.format_exc(), byc["env"], 302)
+        print_text_response(traceback.format_exc(), 302)
 
 ################################################################################
 ################################################################################
 ################################################################################
 
 def uploader():
-
     initialize_bycon_service(byc, "uploader")
+    read_service_prefs("uploader", services_conf_path, byc)
     file_id = str(uuid4())
     form = cgi.FieldStorage()
     base_url = select_this_server(byc)
@@ -58,7 +59,6 @@ def uploader():
 
     with open(response["loc_path"], 'wb') as f:
         f.write(data)
-
     if not "plotType" in form:
         print_json_response(response)
 

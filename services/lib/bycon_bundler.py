@@ -4,9 +4,11 @@ from os import environ, path
 from pymongo import MongoClient
 from copy import deepcopy
 
+
+from bycon_helpers import return_paginated_list, prdbug
+from config import BYC, DB_MONGOHOST
 from interval_utils import interval_cnv_arrays, interval_counts_from_callsets
 from variant_mapping import ByconVariant
-from bycon_helpers import return_paginated_list, prdbug
 
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ) )
 sys.path.append( services_lib_path )
@@ -31,8 +33,8 @@ class ByconBundler:
     def __init__(self, byc):
         self.byc = byc     # needed to for some called classes (ByconVariant...)
         self.errors = []
-        self.debug_mode = byc.get("debug_mode", False)
         self.filepath = None
+        self.form_data = byc.get("form_data", {})
         self.local_paths = byc.get("local_paths", {})
         self.datasets_results = None
         self.dataset_ids = byc.get("dataset_ids", [])
@@ -45,9 +47,8 @@ class ByconBundler:
         self.fieldnames = []
         self.callsetVariantsBundles = []
         self.intervalFrequenciesBundles = []
-        pagination = byc.get("pagination", {"skip": 0, "limit": 0})
-        self.limit = pagination.get("limit", 0)
-        self.skip = pagination.get("skip", 0)
+        self.limit = self.form_data.get("limit", 0)
+        self.skip = self.form_data.get("skip", 0)
 
         self.bundle = {
             "variants": [],
@@ -222,7 +223,6 @@ class ByconBundler:
     #--------------------------------------------------------------------------#
 
     def __deparse_pgxseg_samples_header(self):
-
         b_k_b = self.keyedBundle
         h_l = self.header
 
@@ -260,47 +260,59 @@ class ByconBundler:
 
     #--------------------------------------------------------------------------#
 
-    def __callsets_bundle_from_result_set(self):
+    def __callsets_bundle_from_result_set(self, bundle_type="analyses"):
+        # TODO: doesn't really work for biosamples until we have status maps etc.
         for ds_id, ds_res in self.datasets_results.items():
-            # prdbug(f'{ds_id} - {ds_res}', self.debug_mode)
+            res_k = f'{bundle_type}._id'
             if not ds_res:
                 continue
-            if not "analyses._id" in ds_res:
+            if not res_k in ds_res:
                 continue
 
-            mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
-            cs_coll = mongo_client[ds_id]["analyses"]
-            cs_r = ds_res["analyses._id"]
-            cs__ids = cs_r["target_values"]
-            r_no = len(cs__ids)
+            biosample_key = "biosample_id"
+            if bundle_type == "biosamples":
+                biosample_key = "id"
+
+            # TODO: since 1->many this wouldn't work for the biosamples type
+            analysis_key = "id"
+            if bundle_type == "biosamples":
+                analysis_key = "callset_id"
+
+            mongo_client = MongoClient(host=DB_MONGOHOST)
+            sample_coll = mongo_client[ds_id][bundle_type]
+            s_r = ds_res[res_k]
+            s__ids = s_r["target_values"]
+            r_no = len(s__ids)
             if r_no < 1:
                 continue
-            cs__ids = return_paginated_list(cs__ids, self.skip, self.limit)
+            s__ids = return_paginated_list(s__ids, self.skip, self.limit)
 
-            for cs__id in cs__ids:
-                cs = cs_coll.find_one({"_id": cs__id })
-                cs_id = cs.get("id", "NA")
+            for s__id in s__ids:
+                s = sample_coll.find_one({"_id": s__id })
+                s_id = s.get("id", "NA")
 
-                cnv_chro_stats = cs.get("cnv_chro_stats", False)
-                cnv_statusmaps = cs.get("cnv_statusmaps", False)
-                prdbug(f'{cs__id} - {cnv_chro_stats}, {cnv_statusmaps}', self.debug_mode)
+                cnv_chro_stats = s.get("cnv_chro_stats", False)
+                cnv_statusmaps = s.get("cnv_statusmaps", False)
 
                 if cnv_chro_stats is False or cnv_statusmaps is False:
                     continue
 
+                prdbug(f'dataset_id: {ds_id}')
+                prdbug(f'label in bundler: {s.get("label")}')
+
                 p_o = {
                     "dataset_id": ds_id,
-                    "callset_id": cs_id,
-                    "biosample_id": cs.get("biosample_id", "NA"),
-                    "cnv_chro_stats": cs.get("cnv_chro_stats"),
-                    "cnv_statusmaps": cs.get("cnv_statusmaps"),
-                    "probefile": callset_guess_probefile_path(cs, self.local_paths),
+                    "callset_id": s.get(analysis_key, "NA"),
+                    "biosample_id": s.get(biosample_key, "NA"),
+                    "label": s.get("label", s.get(biosample_key, "")),
+                    "cnv_chro_stats": s.get("cnv_chro_stats"),
+                    "cnv_statusmaps": s.get("cnv_statusmaps"),
+                    "probefile": callset_guess_probefile_path(s, self.local_paths),
                     "variants": []
                 }
 
                 # TODO: add optional probe read in
-
-                self.bundle["analyses"].append(p_o)
+                self.bundle[bundle_type].append(p_o)
 
         return
 
@@ -311,7 +323,7 @@ class ByconBundler:
         bb = self.bundle
         c_p_l = []
 
-        mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
+        mongo_client = MongoClient(host=DB_MONGOHOST)
         for p_o in bb.get("analyses", []):
             ds_id = p_o.get("dataset_id", "___none___")
             var_coll = mongo_client[ds_id]["variants"]
@@ -444,7 +456,7 @@ class ByconBundler:
         if "codematches" in str(self.delivery_method):
             fmap_name = "frequencymap_codematches"
 
-        mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
+        mongo_client = MongoClient(host=DB_MONGOHOST)
 
         for ds_id in self.dataset_ids:
             coll_db = mongo_client[ds_id]

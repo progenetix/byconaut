@@ -26,14 +26,12 @@ bin/ISCNsegmenter.py -i imports/progenetix-from-filemaker-ISCN-samples-cCGH.tsv 
 ################################################################################
 
 def main():
-
 	iscn_segmenter()
 
 ################################################################################
 
 def iscn_segmenter():
-
-	initialize_bycon_service(byc)
+	initialize_bycon_service(byc, "iscn_segmenter")
 	run_beacon_init_stack(byc)
 	generate_genome_bins(byc)
 
@@ -59,7 +57,7 @@ Output will be written to {}""".format(output_file) )
 	else:
 		output_file = path.splitext(output_file)[0]
 
-	if byc["test_mode"] is True:
+	if BYC["TEST_MODE"] is True:
 		output_file += "_test"
 
 	output_file += ".pgxseg"

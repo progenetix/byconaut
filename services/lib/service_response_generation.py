@@ -3,6 +3,7 @@ from os import environ
 
 from bycon_helpers import mongo_result_list, mongo_test_mode_query, return_paginated_list
 from cgi_parsing import prdbug
+from config import BYC
 from export_file_generation import *
 from query_execution import execute_bycon_queries
 from query_generation import ByconQuery
@@ -17,8 +18,6 @@ class ByconautServiceResponse:
 
     def __init__(self, byc: dict, response_schema="byconautServiceResponse"):
         self.byc = byc
-        self.debug_mode = byc.get("debug_mode", False)
-        self.test_mode = byc.get("test_mode", False)
         self.beacon_defaults = byc.get("beacon_defaults", {})
         self.services_defaults = byc.get("services_defaults", {})
         self.entity_defaults = self.beacon_defaults.get("entity_defaults", {"info":{}})
@@ -26,6 +25,8 @@ class ByconautServiceResponse:
         self.service_config = self.byc.get("service_config", {})
         self.response_schema = response_schema
         self.requested_granularity = self.form_data.get("requested_granularity", "record")
+        # TBD for authentication? 
+        self.returned_granularity = self.requested_granularity
         self.beacon_schema = self.byc["response_entity"].get("beacon_schema", "___none___")
         self.data_response = object_instance_from_schema_name(byc, response_schema, "")
         self.error_response = object_instance_from_schema_name(byc, "beaconErrorResponse", "")
@@ -46,6 +47,7 @@ class ByconautServiceResponse:
         colls = ByconCollations(self.byc).populatedCollations()
         self.data_response["response"].update({"results": colls})
         self.__service_response_update_summaries()
+        self.__serviceResponse_force_granularities()
         return self.data_response
 
 
@@ -64,6 +66,7 @@ class ByconautServiceResponse:
             return
         self.data_response["response"].update({"results": results})
         self.__service_response_update_summaries()
+        self.__serviceResponse_force_granularities()
         return self.data_response
 
 
@@ -78,11 +81,9 @@ class ByconautServiceResponse:
     # -------------------------------------------------------------------------#
 
     def __meta_add_parameters(self):
-
         r_m = self.data_response.get("meta", {})
-
-        if "test_mode" in r_m:
-            r_m.update({"test_mode":self.test_mode})
+        if BYC["TEST_MODE"] is True:
+            r_m.update({"test_mode": BYC["TEST_MODE"]})
         if "returned_schemas" in r_m:
             r_m.update({"returned_schemas":[self.beacon_schema]})
 
@@ -94,15 +95,14 @@ class ByconautServiceResponse:
         form = self.form_data
         # TODO: this is hacky; need a separate setting of the returned granularity
         # since the server may decide so...
-        if self.requested_granularity and "returned_granularity" in r_m:
-            r_m.update({"returned_granularity": form.get("requested_granularity")})
+        if "returned_granularity" in r_m:
+            r_m.update({"returned_granularity": self.returned_granularity})
 
         service_meta = self.service_config.get("meta", {})
         for rrs_k, rrs_v in service_meta.items():
             r_m.update({rrs_k: rrs_v})
 
         return
-
 
 
     # -------------------------------------------------------------------------#
@@ -113,12 +113,13 @@ class ByconautServiceResponse:
             return
 
         r_r_s = r_m["received_request_summary"]
-
         r_r_s.update({
             "requested_schemas": [self.beacon_schema]
         })
+        if BYC["TEST_MODE"] is True:
+            r_r_s.update({"test_mode": BYC["TEST_MODE"]})
 
-        for name in ["dataset_ids", "test_mode"]:
+        for name in ["dataset_ids"]:
             value = self.byc.get(name)
             if not value:
                 continue
@@ -174,19 +175,25 @@ class ByconautServiceResponse:
 
         return
 
+    # -------------------------------------------------------------------------#
+
+    def __serviceResponse_force_granularities(self):
+        if not "record" in self.returned_granularity:
+            self.data_response["response"].pop("results", None)
+        if "boolean" in self.returned_granularity:
+            self.data_response["response_summary"].pop("num_total_results", None)
+            self.data_response.pop("response", None)
+
 
 ################################################################################
 ################################################################################
 ################################################################################
 
 class ByconCollations:
-
     def __init__(self, byc: dict):
         self.byc = byc
-        self.db_config = byc.get("db_config", {})
-        self.test_mode = byc.get("test_mode", False)
-        self.test_mode_count = byc.get("test_mode_count", 5)
-        self.delivery_method = byc["form_data"].get("method")
+        self.delivery_method = byc["form_data"].get("method", "___none___")
+        self.output = byc["form_data"].get("output", "___none___")
         self.dataset_ids = byc.get("dataset_ids", [])
         self.beacon_defaults = byc.get("beacon_defaults", {})
         self.service_config = byc.get("service_config", {})
@@ -194,7 +201,6 @@ class ByconCollations:
         self.filter_definitions = byc.get("filter_definitions", {})
         self.form_data = byc.get("form_data", {})
         self.filters = byc.get("filters", [])
-        self.output = byc.get("output", "___none___")
         self.response_entity_id = byc.get("response_entity_id", "filteringTerm")
         self.path_id_value = byc.get("request_entity_path_id_value", False)
         self.filter_collation_types = set()
@@ -215,7 +221,6 @@ class ByconCollations:
     # -------------------------------------------------------------------------#
 
     def __return_collations(self):
-
         f_coll = "collations"
         d_k = set_selected_delivery_keys(self.service_config.get("method_keys"), self.form_data)
 
@@ -224,8 +229,9 @@ class ByconCollations:
         # TODO: whole query generation in separate function ...
         query = {}
 
-        if self.test_mode is True:
-            query, error = mongo_test_mode_query(self.db_config, self.dataset_ids[0], f_coll, self.test_mode_count)
+        if BYC["TEST_MODE"] is True:
+            t_m_c = self.form_data.get("test_mode_count", 5)
+            query = mongo_test_mode_query(self.dataset_ids[0], f_coll, t_m_c)
         elif len(c_id) > 0:
             query = { "id": c_id }
         else:
@@ -260,7 +266,7 @@ class ByconCollations:
 
         for ds_id in self.dataset_ids:
             fields = {"_id": 0}
-            f_s, e = mongo_result_list(self.db_config, ds_id, f_coll, query, fields)
+            f_s = mongo_result_list(ds_id, f_coll, query, fields)
             for f in f_s:
                 if "codematches" in str(self.delivery_method):
                     if int(f.get("code_matches", 0)) < 1:

@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-import cgi
-import re, json, yaml
 from os import path, environ, pardir
 import sys, datetime, argparse
 from pymongo import MongoClient
@@ -35,7 +33,7 @@ def main():
     try:
         collationplots()
     except Exception:
-        print_text_response(traceback.format_exc(), byc["env"], 302)
+        print_text_response(traceback.format_exc(), 302)
 
 ################################################################################
 
@@ -56,9 +54,8 @@ def collationplots():
         byc[ "filters" ] = [ {"id": byc["form_data"]["id"]} ]
 
     if not "filters" in byc:
-        e_m = "No value was provided for collation `id` or `filters`."
-        e_r = BeaconErrorResponse(byc).error(e_m, 422)
-        print_json_response(e_r, byc["env"])
+        BYC["ERRORS"].append("No value was provided for collation `id` or `filters`.")
+        BeaconErrorResponse(byc).response(422)
 
     pdb = ByconBundler(byc).collationsPlotbundles()
     ByconPlot(byc, pdb).svgResponse()

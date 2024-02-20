@@ -4,8 +4,10 @@ from os import path
 
 from bycon import *
 
+services_conf_path = path.join( path.dirname( path.abspath(__file__) ), "config" )
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
 sys.path.append( services_lib_path )
+from service_helpers import read_service_prefs
 from service_response_generation import *
 
 """podmd
@@ -23,22 +25,17 @@ def main():
     try:
         dbstats()
     except Exception:
-        print_text_response(traceback.format_exc(), byc["env"], 302)
+        print_text_response(traceback.format_exc(), 302)
     
 ################################################################################
 
 def dbstats():
-
-    initialize_bycon_service(byc)
+    initialize_bycon_service(byc, "dbstats")
+    read_service_prefs("dbstats", services_conf_path, byc)
     run_beacon_init_stack(byc)
     r = ByconautServiceResponse(byc)
 
-    mdb_c = byc.get("db_config", {})
-    db_host = mdb_c.get("host", "localhost")
-    info_db = mdb_c.get("housekeeping_db")
-    i_coll = mdb_c.get("beacon_info_coll")
-
-    stats = MongoClient(host=db_host)[ info_db ][ i_coll ].find( { }, { "_id": 0 } ).sort( "date", -1 ).limit( 1 )
+    stats = MongoClient(host=DB_MONGOHOST)[HOUSEKEEPING_DB][ HOUSEKEEPING_INFO_COLL ].find( { }, { "_id": 0 } ).sort( "date", -1 ).limit( 1 )
 
     results = [ ]
     for stat in stats:
@@ -50,7 +47,7 @@ def dbstats():
             dbs.update({"counts":ds_vs["counts"]})
             results.append( dbs )
 
-    print_json_response(r.populatedResponse(results), byc["env"])
+    print_json_response(r.populatedResponse(results))
 
 
 ################################################################################

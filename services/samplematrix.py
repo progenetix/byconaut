@@ -27,15 +27,16 @@ def main():
 ################################################################################
 
 def samplematrix():
-
     initialize_bycon_service(byc, "biosamples")
     run_beacon_init_stack(byc)
     generate_genome_bins(byc)
-
-    if not "pgxmatrix" in byc.get("output", "___none___"):
-        byc.update({"output":"pgxmatrix"})
+    form = byc.get("form_data", {})
+    if not "pgxmatrix" in form.get("output", "___none___"):
+        byc["form_data"].update({"output":"pgxmatrix"})
 
     rss = ByconResultSets(byc).datasetsResults()
+
+    # prdbug(rss)
 
     # Note: only the first dataset will be exported ...
     ds_id = list(rss.keys())[0]

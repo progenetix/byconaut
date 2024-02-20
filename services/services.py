@@ -4,7 +4,14 @@ from os import path, environ
 from importlib import import_module
 
 from bycon import *
+
 pkg_path = path.dirname( path.abspath(__file__) )
+
+services_conf_path = path.join( path.dirname( path.abspath(__file__) ), "config" )
+services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
+services_loc_path = path.join( path.dirname( path.abspath(__file__) ), "local" )
+sys.path.append( services_lib_path )
+from service_helpers import read_service_prefs
 
 """
 The `services` application deparses a request URI and calls the respective
@@ -21,36 +28,30 @@ def main():
     try:
         services()
     except Exception:
-        print_text_response(traceback.format_exc(), byc["env"], 302)
+        print_text_response(traceback.format_exc(), 302)
     
 ################################################################################
 
 def services():
-
     set_debug_state(debug=0)
 
     frm = inspect.stack()[1]
     service = frm.function
-
-    loc_dir = path.join( pkg_path, "local" )
-    conf_dir = path.join( pkg_path, "config" )
-
     mod = inspect.getmodule(frm[0])
 
     # updates `beacon_defaults`, `dataset_definitions` and `local_paths`
-    update_rootpars_from_local(loc_dir, byc)
-    read_service_prefs(service, conf_dir, byc)
-
-    defaults = byc["beacon_defaults"].get("defaults", {})
-    for d_k, d_v in defaults.items():
-        byc.update( { d_k: d_v } )
-
-    s_a_s = byc["beacon_defaults"].get("service_path_aliases", {})
-    r_w = byc["beacon_defaults"].get("rewrites", {})
+    # update_rootpars_from_local(services_loc_path, byc)
+    # defaults = byc["beacon_defaults"].get("defaults", {})
+    # for d_k, d_v in defaults.items():
+    #     byc.update( { d_k: d_v } )
+    read_service_prefs(service, services_conf_path, byc)
+    defs = byc.get("beacon_defaults", {})
+    s_a_s = defs.get("service_path_aliases", {})
+    r_w = defs.get("rewrites", {})
 
     byc.update({"request_path_root": "services"})
     rest_path_elements(byc)
-    args_update_form(byc)
+    # args_update_form(byc)
 
     r_p_id = byc.get("request_entity_path_id", "info")
 
@@ -82,9 +83,8 @@ def services():
 
             exit()
 
-    e_m = "No correct service path provided. Please refer to the documentation at http://docs.progenetix.org"
-    e_r = BeaconErrorResponse(byc).error(e_m, 422)
-    print_json_response(e_r, byc["env"])
+    BYC["ERRORS"].append("No correct service path provided. Please refer to the documentation at http://docs.progenetix.org")
+    BeaconErrorResponse(byc).response(422)
 
 
 ################################################################################

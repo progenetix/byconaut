@@ -8,6 +8,8 @@ sys.path.append( services_lib_path )
 
 from cytoband_utils import parse_cytoband_file, cytobands_label_from_positions
 
+from bycon import prdbug, ENV
+
 ################################################################################
 
 """
@@ -72,10 +74,10 @@ def generate_genome_bins(byc):
 ################################################################################
 
 def __generate_genomic_intervals(byc):
-
+    form = byc.get("form_data", {})
     i_d = byc["interval_definitions"]
     g_b_s = i_d["genome_bin_sizes"].get("values", {})
-    binning = byc["form_data"].get("genome_binning", i_d["genome_binning"])
+    binning = form.get("genome_binning", "1Mb")
     i_d.update({"genome_binning": binning})
 
     # cytobands ################################################################
@@ -171,8 +173,8 @@ def interval_cnv_arrays(cs_vars, byc):
     """
 
     # TODO: make this a class to split out the stats etc.
-
-    g_b = byc["interval_definitions"].get("genome_binning", "")
+    form = byc.get("form_data", {})
+    g_b = form.get("genome_binning", "")
 
     v_t_defs = byc["variant_type_definitions"]
     c_l = byc["cytolimits"]
@@ -249,7 +251,7 @@ def interval_cnv_arrays(cs_vars, byc):
         v_cs_id = v.get("callset_id", None)
 
         if v_i_id in digests:
-            if "local" in byc["env"]:
+            if "local" in ENV:
                 print(f'\n¡¡¡ {v_i_id} already counted for {v_cs_id}')
         else:
             digests.append(v_i_id)
@@ -391,13 +393,10 @@ def interval_counts_from_callsets(analyses, byc):
 def _has_overlap(interval, v):
     if interval["reference_name"] != v["reference_name"]:
         return False
-
     if v["location"]["start"] >= interval["end"]:
         return False
-
     if v["location"]["end"] <= interval["start"]:
         return False
-
     return True
 
 

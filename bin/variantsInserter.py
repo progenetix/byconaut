@@ -21,13 +21,12 @@ from datatable_utils import import_datatable_dict_line
 ################################################################################
 
 def main():
-    variantsInserter()
+    variants_inserter()
 
 ################################################################################
 
-def variantsInserter():
-
-    initialize_bycon_service(byc)
+def variants_inserter():
+    initialize_bycon_service(byc, "variants_inserter")
     run_beacon_init_stack(byc)
 
     if len(byc["dataset_ids"]) != 1:
@@ -42,12 +41,12 @@ def variantsInserter():
         print("No input file file specified (-i, --inputfile) => quitting ...")
         exit()
 
-    if not byc["test_mode"]:
+    if BYC["TEST_MODE"] is False:
         tmi = input("Do you want to run in TEST MODE (i.e. no database insertions/updates)?\n(Y|n): ")
         if not "n" in tmi.lower():
-            byc.update({"test_mode": True})
+            BYC.update({"TEST_MODE": True})
 
-    if byc["test_mode"] is True:
+    if BYC["TEST_MODE"] is True:
             print("... running in TEST MODE")
 
     vb = ByconBundler(byc)
@@ -58,7 +57,7 @@ def variantsInserter():
 
     delBiosVars, delSOvars, delCNVvars = ["n", "n", "n"]
 
-    if not byc["test_mode"]:
+    if BYC["TEST_MODE"] is False:
         delBiosVars = input("Delete variants from matched biosamples before insertion?\n¡¡¡ This will remove ALL variants for each `biosample_id` !!!\n(y|N): ")
         if not "y" in delBiosVars.lower():
             delSOvars = input('Delete only the sequence variants ("SO:...") from matched biosamples before insertion?\n(y|N): ')
@@ -102,11 +101,11 @@ def variantsInserter():
 
     bios_v_counts = {}
     
-    bar = Bar("Writing ", max = var_no, suffix='%(percent)d%%'+" of "+str(var_no) ) if not byc["test_mode"] else False
+    bar = Bar("Writing ", max = var_no, suffix='%(percent)d%%'+" of "+str(var_no) ) if not TEST_MODE else False
 
     for c, v in enumerate(variants.data, 1):
 
-        bar.next() if not byc["test_mode"] else False
+        bar.next() if not BYC["TEST_MODE"] else False
                 
         bs_id = v.get("biosample_id", False)
         if not bs_id in bios_v_counts.keys():
@@ -123,11 +122,11 @@ def variantsInserter():
         })
 
         insert_v = import_datatable_dict_line(dt_m, insert_v, variants.fieldnames, v, "genomicVariant")
-        prdbug(insert_v, byc.get("debug_mode"))
+        prdbug(insert_v)
         insert_v = ByconVariant(byc).pgxVariant(insert_v)
         insert_v.update({"updated": datetime.datetime.now().isoformat()})
 
-        if not byc["test_mode"]:
+        if BYC["TEST_MODE"] is False:
             up_v_no += 1
             vid = var_coll.insert_one(insert_v).inserted_id
             vstr = f'pgxvar-{vid}'
@@ -137,7 +136,7 @@ def variantsInserter():
         else:
             prjsonnice(insert_v)
 
-    if not byc["test_mode"]:
+    if BYC["TEST_MODE"] is False:
         bar.finish()
         print(f'==> inserted {up_v_no} variants for {len(bios_v_counts.keys())} samples')
     else:

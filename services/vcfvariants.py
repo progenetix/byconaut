@@ -24,7 +24,7 @@ def main():
     try:
         vcfvariants()
     except Exception:
-        print_text_response(traceback.format_exc(), byc["env"], 302)
+        print_text_response(traceback.format_exc(), 302)
 
 
 ################################################################################
@@ -32,9 +32,10 @@ def main():
 def vcfvariants():
     initialize_bycon_service(byc, "biosamples")
     run_beacon_init_stack(byc)
+    form = byc.get("form_data", {})
 
     if not "vcf" in byc.get("output", "___none___"):
-        byc.update({"output":"vcf"})
+        byc["form_data"].update({"output":"vcf"})
 
     rss = ByconResultSets(byc).datasetsResults()
 

@@ -1,10 +1,24 @@
 import re
+from humps import decamelize
+from os import path
+from pathlib import Path
+
+from bycon import load_yaml_empty_fallback, ENV
+
+################################################################################
+
+def read_service_prefs(service, service_pref_path, byc):
+    # snake_case paths; e.g. `intervalFrequencies` => `interval_frequencies.yaml`
+    service = decamelize(service)
+    f = Path( path.join( service_pref_path, service+".yaml" ) )
+    if f.is_file():
+        byc.update({"service_config": load_yaml_empty_fallback( f ) })
+
 
 ################################################################################
 
 def set_selected_delivery_keys(method_keys, form_data):
     # the method keys can be overriden with "deliveryKeys"
-
     d_k = []
     delivery_method = form_data.get("method", "___none___")
 
@@ -37,8 +51,8 @@ def response_add_error(byc, code=200, message=None):
 
 ################################################################################
 
-def open_text_streaming(env="server", filename="data.pgxseg"):
-    if not "local" in env:
+def open_text_streaming(filename="data.pgxseg"):
+    if not "local" in ENV:
         print('Content-Type: text/plain')
         if not "browser" in filename:
             print('Content-Disposition: attachment; filename="{}"'.format(filename))
@@ -58,7 +72,7 @@ def close_text_streaming():
 def open_json_streaming(byc, filename="data.json"):
     meta = byc["service_response"].get("meta", {})
 
-    if not "local" in byc["env"]:
+    if not "local" in ENV:
         print_json_download_header(filename)
 
     print('{"meta":', end='')

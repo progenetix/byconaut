@@ -5,11 +5,14 @@ from pymongo import MongoClient
 from isodate import date_isoformat
 import csv, datetime, requests, sys
 
-# bycon is supposed to be in the same parent directory
-dir_path = path.dirname( path.abspath(__file__) )
-pkg_root_path = path.join( dir_path, pardir )
-
 from bycon import *
+
+
+services_conf_path = path.join( path.dirname( path.abspath(__file__) ), "config" )
+services_tmp_path = path.join( path.dirname( path.abspath(__file__) ), pardir, "tmp" )
+services_lib_path = path.join( path.dirname( path.abspath(__file__) ), pardir, "services", "lib" )
+sys.path.append( services_lib_path )
+from service_helpers import read_service_prefs
 
 """
 * pubUpdater.py -t 1 -f "../rsrc/publications.txt"
@@ -26,38 +29,32 @@ def main():
 ##############################################################################
 
 def publications_inserter():
-
     initialize_bycon_service(byc, "publications_inserter")
+    read_service_prefs("publications_inserter", services_conf_path, byc)
     run_beacon_init_stack(byc)
     
     g_url = byc["service_config"]["google_spreadsheet_tsv_url"]
     skip_cols = byc["service_config"]["skipped_columns"]
-
-    input_file = byc["form_data"].get("inputfile")
-
+    form = byc.get("form_data", {})
+    input_file = form.get("inputfile")
     if input_file:
         pub_file = input_file
     else:
         print("No inputfile file specified => pulling the online table ...")
-        pub_file = path.join( pkg_root_path, "tmp", "pubtable.tsv" )
-        print("... reading from {}".format(g_url["base_url"]))
+        pub_file = path.join( services_tmp_path, "pubtable.tsv" )
+        print(f'... reading from {g_url["base_url"]}')
         r =  requests.get(g_url["base_url"], params=g_url["params"])
         if r.ok:
             with open(pub_file, 'wb') as f:
                 f.write(r.content)
-            print("Wrote file to {}".format(pub_file))
+            print(f"Wrote file to {pub_file}")
         else:
-            print("Download failed: status code {}\n{}".format(r.status_code, r.text))
+            print(f'Download failed: status code {r.status_code}\n{r.text}')
 
-    rows = []
-
-    mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
-
+    mongo_client = MongoClient(host=DB_MONGOHOST)
     pub_coll = mongo_client["progenetix"]["publications"]
     bios_coll = mongo_client["progenetix"]["biosamples"]
-
     publication_ids = pub_coll.distinct("id")
-
     progenetix_ids = bios_coll.distinct("external_references.id")
     progenetix_ids = [item for item in progenetix_ids if item is not None]
     progenetix_ids = list(filter(lambda x: x.startswith("PMID"), progenetix_ids))
@@ -67,25 +64,21 @@ def publications_inserter():
     up_count = 0
 
     with open(pub_file, newline='') as csvfile:
-
         in_pubs = list(csv.DictReader(csvfile, delimiter="\t", quotechar='"'))
 
-        print("=> {} publications will be looked up".format(len(in_pubs)))
+        print(f'=> {len(in_pubs)} publications will be looked up')
 
         l_i = 0
         for pub in in_pubs:
-
             l_i += 1
-
             pmid = str(pub.get("pubmedid", "empty")).strip()
             skip_mark = pub.get("SKIP", "").strip()
 
             if len(skip_mark) > 0:
-                print('¡¡¡ Line {} ({}): skipped due to non-empty skip field ("{}") !!!'.format(l_i, pmid, skip_mark))
+                print(f'¡¡¡ Line {l_i} ({pmid}): skipped due to non-empty skip field ("{skip_mark}") !!!')
                 continue
-
             if not re.match(r'^\d{6,9}$', pmid):
-                print('¡¡¡ Line {}: skipped due to empty or strange pubmedid entry ("{}") !!!'.format(l_i, pmid))
+                print(f'¡¡¡ Line {l_i}: skipped due to empty or strange pubmedid entry ("{pmid}") !!!')
                 continue
 
             p_k = "PMID:"+pmid
@@ -94,7 +87,7 @@ def publications_inserter():
             `-u 1` taken from the existing one."""
 
             if p_k in publication_ids:
-                if not byc["update_mode"]:
+                if not form.get("update"):
                     print(p_k, ": skipped - already in progenetix.publications")
                     continue
                 else:
@@ -132,10 +125,8 @@ def publications_inserter():
             get_ncit_tumor_types(n_p, pub)
 
             if p_k in progenetix_ids:
-
                 n_p["counts"].update({ "progenetix" : 0 })
                 n_p["counts"].update({ "arraymap" : 0 })
-
                 for s in bios_coll.find({ "external_references.id" : p_k }):
                     n_p["counts"]["progenetix"] += 1
                 for s in bios_coll.find({ "cohorts.id" : "pgxcohort-arraymap" }):
@@ -149,17 +140,17 @@ def publications_inserter():
                         pass
             n_p["counts"]["ngs"] = n_p["counts"]["wes"] + n_p["counts"]["wgs"]
 
-            if not byc["test_mode"]:
+            if BYC["TEST_MODE"] is False:
                 entry = pub_coll.update_one({"id": n_p["id"] }, {"$set": n_p }, upsert=True )
                 up_count += 1
-                print(n_p["id"]+": inserting this into progenetix.publications")
+                print(f'{n_p["id"]}: inserting this into progenetix.publications')
             else:
                 jprint(n_p)
                     
-    print("{} publications were inserted or updated".format(up_count))
+    print(f"{up_count} publications were inserted or updated")
+
 
 ##############################################################################
-
 ##############################################################################
 
 def jprint(obj):
@@ -232,47 +223,24 @@ def get_ncit_tumor_types(n_p, pub):
         return n_p
 
     s_t_s = pub["SAMPLE_TYPES"].split(';')
-
     s_t_l = []
-
     for s_t in s_t_s:
-
-        # print(s_t)
-
         c, l, n = s_t.split('::')
-
         if c.startswith("C"):
             c = "NCIT:" + c
-
         s_t_l.append({
             "id": c,
             "label": l,
             "count": int(n)
         })
-
     n_p.update({"sample_types": s_t_l})
-
     return n_p
 
 
 ##############################################################################
 
 def get_empty_publication(byc):
-    # pub_p = path.join(pkg_path, "schemas", "ProgenetixLinkML", "Publication.json#/$defs/Publication/properties")
-    pub_p = object_instance_from_schema_name(byc, "Publication", "") #pgxVariant
-    # root_def = RefDict(pub_p)
-    # exclude_keys = ["format", "examples", "_id"]
-    # e_p_s = materialize(root_def, exclude_keys=exclude_keys)
-    # # p = create_empty_instance(e_p_s)
-    # p = {}
-    _assign_publication_defaults(pub_p)
-
-    return pub_p
-
-
-##############################################################################
-
-def _assign_publication_defaults(publication):
+    publication = object_instance_from_schema_name(byc, "Publication", "")
     publication.update({
         "updated": date_isoformat(datetime.datetime.now()),
         "provenance": {
@@ -295,6 +263,7 @@ def _assign_publication_defaults(publication):
     })
 
     return publication
+
 
 ##############################################################################
 

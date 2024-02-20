@@ -27,7 +27,6 @@ def main():
 ################################################################################
 
 def samples_plotter():
-
     initialize_bycon_service(byc, "biosamples")
     run_beacon_init_stack(byc)
     generate_genome_bins(byc)
@@ -37,8 +36,9 @@ def samples_plotter():
 
     form = byc.get("form_data", {})
     output_file = form.get("outputfile")
+    dataset_ids = form.get("dataset_ids", [])
 
-    if not byc["args"].datasetIds:
+    if not len(dataset_ids) < 1:
         # in this case checking for the command line argument; avoiding defaults
         print("No dataset id(s) were specified (-d, --datasetIds) => quitting ...")
         exit()
