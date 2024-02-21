@@ -14,9 +14,7 @@ from interval_utils import interval_cnv_arrays, interval_counts_from_callsets
 ################################################################################
 
 def read_tsv_to_dictlist(filepath, max_count=0):
-
     dictlist = []
-
     with open(filepath, newline='') as csvfile:
     
         data = csv.DictReader(filter(lambda row: row.startswith('#') is False, csvfile), delimiter="\t", quotechar='"')
@@ -35,9 +33,7 @@ def read_tsv_to_dictlist(filepath, max_count=0):
 ################################################################################
 
 def read_www_tsv_to_dictlist(www, max_count=0):
-
     dictlist = []
-
     with requests.Session() as s:
         download = s.get(www)
         decoded_content = download.content.decode('utf-8')
@@ -58,7 +54,6 @@ def read_www_tsv_to_dictlist(www, max_count=0):
 ################################################################################
 
 def callset_guess_probefile_path(callset, local_paths):
-    
     if not local_paths:
         return False
     if not "server_callsets_dir_loc" in local_paths:

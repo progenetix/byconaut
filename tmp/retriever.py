@@ -46,8 +46,8 @@ def retriever():
 
     r = ByconautServiceResponse(byc)
 
-    b = byc["form_data"].get("selected_beacons", [])
-    url = byc["form_data"].get("url", "")
+    b = BYC_PARS.get("selected_beacons", [])
+    url = BYC_PARS.get("url", "")
     # print(url)
     if len(b) != 1:
         print_text_response('not a single "selectedBeacons" value')
@@ -66,7 +66,7 @@ def retriever():
     ext_defs = b_p[b]
 
     # TODO: extract dataset id from URL using the ext_defs parameter mapping
-    ds_id = byc["form_data"].get("dataset_ids", [])
+    ds_id = BYC_PARS.get("dataset_ids", [])
     if len(ds_id) != 1:
         ds_id = ext_defs["dataset_ids"]
     ds_id = ds_id[0]

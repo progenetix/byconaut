@@ -11,23 +11,18 @@ def parse_cytoband_file(byc):
     """podmd
  
     podmd"""
-
-    g_rsrc_p = ChroNames(byc).genomePath()
+    g_rsrc_p = ChroNames().genomePath()
     cb_file = path.join( g_rsrc_p, "cytoBandIdeo.txt")
     cb_re = re.compile( byc["interval_definitions"][ "cytobands" ][ "pattern" ] )
     cb_keys = [ "chro", "start", "end", "cytoband", "staining" ]
-
     cytobands = [ ]
     cytolimits = { }
     genome_size = 0
-
     i = 0
-
     c_bands = [ ]
     with open(cb_file) as cb_f:                                                                                          
         for c_band in csv.DictReader(filter(lambda row: row.startswith('#') is False, cb_f), fieldnames=cb_keys, delimiter='\t'):
             c_bands.append(c_band)
-
 
     #--------------------------------------------------------------------------#
 
@@ -66,10 +61,8 @@ def parse_cytoband_file(byc):
 ################################################################################
 
 def bands_from_cytobands(chr_bands, cytoband_defs, argdefs):
-
     cb_pat = re.compile( argdefs["cyto_bands"]["pattern"] )
     error = ""
-
     end_re = re.compile(r"^([pq]\d.*?)\.?\d$")
     arm_re = re.compile(r"^([pq]).*?$")
     p_re = re.compile(r"^p.*?$")
@@ -82,10 +75,7 @@ def bands_from_cytobands(chr_bands, cytoband_defs, argdefs):
     if "q10" in chr_bands:
         chr_bands = re.sub("q10", "qcen", chr_bands)
 
-    # print("|||-"+chr_bands+"-|||")
-
     chro, cb_start, cb_end = cb_pat.match(chr_bands).group(1,2,3)
-
     cytobands = list(filter(lambda d: d[ "chro" ] == chro, cytoband_defs.copy()))
     if len(cytobands) < 10:
         return([], "", "", "", "error")
@@ -174,7 +164,6 @@ def bands_from_cytobands(chr_bands, cytoband_defs, argdefs):
 ################################################################################
 
 def match_bands(band, cytobands):
-
     cb_re = re.compile(rf"^{band}", re.IGNORECASE)
     m_b_s = list( filter(lambda d:cb_re.match(d["cytoband"]), cytobands) )
     return m_b_s
@@ -183,21 +172,17 @@ def match_bands(band, cytobands):
 ################################################################################
 
 def arm_base_range(chro, arm, cytobands):
-
     if arm not in ["p","q", "P", "Q"]:
         return 0, 1
-
     arm_re = re.compile(rf"^{arm}", re.IGNORECASE)
     bands = list(filter(lambda d: d[ "chro" ] == chro, cytobands))
     bands = list(filter(lambda d: arm_re.match(d[ "cytoband" ]), bands))
-
     return [ int(bands[0]["start"]), int(bands[-1]["end"]) ]
 
 
 ################################################################################
 
 def cytobands_label( cytobands ):
-
     """
     Receives: (potentially filtered) list of cytoband objects
     Returns: the concatenated first and last cytoband label
@@ -244,7 +229,7 @@ def variants_from_revish(bs_id, cs_id, technique, iscn, byc):
 def deparse_ISCN_to_variants(iscn, byc):
     a_d = byc.get("argument_definitions", {})
     c_b_d = byc.get("cytobands", [])
-    chro_names = ChroNames(byc)
+    chro_names = ChroNames()
     i_d = byc["interval_definitions"]
     v_t_defs = byc.get("variant_type_definitions")
 

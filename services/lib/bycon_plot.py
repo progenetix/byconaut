@@ -4,7 +4,7 @@ from humps import decamelize
 from os import environ, path
 from PIL import Image, ImageColor, ImageDraw
 
-from bycon import config, ENV, prjsonnice, test_truthy, prdbug, GeneInfo, ChroNames
+from bycon import BYC_PARS, ENV, prjsonnice, test_truthy, prdbug, GeneInfo, ChroNames
 
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ) )
 sys.path.append( services_lib_path )
@@ -33,13 +33,12 @@ class ByconPlot:
     """
 
     def __init__(self, byc: dict, plot_data_bundle: dict):
-        self.ChroNames = ChroNames(byc)
+        self.ChroNames = ChroNames()
         self.argdefs = byc.get("argument_definitions", {})
         self.plot_defaults = byc.get("plot_defaults", {})
         self.plot_types = self.plot_defaults.get("plot_types", {})
         self.cytobands = byc.get("cytobands", [])
         self.cytolimits = byc.get("cytolimits", {})
-        self.form_data = byc.get("form_data", {})
         self.plot_data_bundle = plot_data_bundle
         self.svg = None
         self.plv = {}
@@ -104,7 +103,7 @@ class ByconPlot:
 
     def __set_plot_type(self):
         p_t_s = self.plot_types
-        p_t = self.form_data.get("plot_type", "___none___")
+        p_t = BYC_PARS.get("plot_type", "___none___")
         if p_t not in p_t_s.keys():
             p_t = "histoplot"
         self.plot_type = p_t
@@ -135,35 +134,25 @@ class ByconPlot:
     # -------------------------------------------------------------------------#
 
     def __get_plot_parameters(self):
-
         p_d_p = self.plot_defaults.get("plot_parameters", {})
         p_t_s = self.plot_types
-        form = self.form_data
 
-        pps = {}
-
-        # this is in case there was a `plotPars` argument from command line
-        plot_pars = form.get("plot_pars")
-
-        if plot_pars:
-            for ppv in re.split(r'::|&', plot_pars):
-                pp, pv = ppv.split('=')
+        bps = {}
+        plot_pars = BYC_PARS.get("plot_pars", {})
+        for ppv in re.split(r'::|&', plot_pars):
+            pp_pv = ppv.split('=')
+            if len(pp_pv) == 2:
+                pp, pv = pp_pv
                 pp = decamelize(pp)
-                if not pv:
-                    continue
-                pps.update({pp: pv})
-        form.pop("plot_pars", None)
-        dbm = f'... plotPars: {pps}'
-        prdbug(dbm)
+                bps.update({pp: pv})
 
+        # BYC_PARS.pop("plot_pars", None)
+        dbm = f'... plotPars: {bps}'
         for p_k, p_d in p_d_p.items():
-            if p_k in pps:
+            if p_k in bps:
                 p_k_t = p_d_p[p_k].get("type", "string")
-                p_d = pps.get(p_k)
-
+                p_d = bps.get(p_k)
                 dbm = f'{p_k}: {p_d} ({p_k_t}), type {type(p_d)}'
-                prdbug(dbm)
-
                 if "array" in p_k_t:
                     p_i_t = p_d_p[p_k].get("items", "string")
                     if type(p_d) is not list:
@@ -175,12 +164,10 @@ class ByconPlot:
                     else:
                         p_d = list(map(str, p_d))
 
-
                     # TODO: map potential NC_ values
                     if "plot_chros" in p_k:
                         p_d_c = [self.ChroNames.chro(x) for x in p_d]
                         p_d = p_d_c
-
 
                     if len(p_d) > 0:
                         self.plv.update({p_k: p_d})

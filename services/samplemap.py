@@ -24,10 +24,9 @@ def main():
 def samplemap():
     initialize_bycon_service(byc, "biosamples")
     run_beacon_init_stack(byc)
-    form = byc.get("form_data", {})
-    if not "map" in form.get("output", "___none___"):
-        byc["form_data"].update({"output":"map"})
-    byc["form_data"].update({"marker_type":"marker"})
+    if not "map" in BYC_PARS.get("output", "___none___"):
+        BYC_PARS.update({"output":"map"})
+    BYC_PARS.update({"marker_type":"marker"})
     RSD = ByconResultSets(byc).datasetsData()
 
     collated_results = []
@@ -36,7 +35,7 @@ def samplemap():
 
     geob = __geo_bundle_from_results(collated_results)
     if len(geob) > 10:
-        byc["form_data"].update({"marker_type":"circle"})
+        BYC_PARS.update({"marker_type":"circle"})
     print_map_from_geolocations(byc, geob)
 
 

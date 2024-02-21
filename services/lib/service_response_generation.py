@@ -3,7 +3,7 @@ from os import environ
 
 from bycon_helpers import mongo_result_list, mongo_test_mode_query, return_paginated_list
 from cgi_parsing import prdbug
-from config import BYC
+from config import BYC, BYC_PARS
 from export_file_generation import *
 from query_execution import execute_bycon_queries
 from query_generation import ByconQuery
@@ -21,10 +21,9 @@ class ByconautServiceResponse:
         self.beacon_defaults = byc.get("beacon_defaults", {})
         self.services_defaults = byc.get("services_defaults", {})
         self.entity_defaults = self.beacon_defaults.get("entity_defaults", {"info":{}})
-        self.form_data = byc.get("form_data", {})
         self.service_config = self.byc.get("service_config", {})
         self.response_schema = response_schema
-        self.requested_granularity = self.form_data.get("requested_granularity", "record")
+        self.requested_granularity = BYC_PARS.get("requested_granularity", "record")
         # TBD for authentication? 
         self.returned_granularity = self.requested_granularity
         self.beacon_schema = self.byc["response_entity"].get("beacon_schema", "___none___")
@@ -92,7 +91,6 @@ class ByconautServiceResponse:
             if p in info.keys():
                 r_m.update({p: info.get(p, "___none___")})
 
-        form = self.form_data
         # TODO: this is hacky; need a separate setting of the returned granularity
         # since the server may decide so...
         if "returned_granularity" in r_m:
@@ -139,14 +137,13 @@ class ByconautServiceResponse:
         else:
             r_r_s.pop("filters", None)
 
-        form = self.form_data
         for p in ["requested_granularity"]:
-            if p in form and p in r_r_s:
-                r_r_s.update({p: form.get(p)})
+            if p in BYC_PARS and p in r_r_s:
+                r_r_s.update({p: BYC_PARS.get(p)})
 
         for q in ["collation_types"]:
-            if q in form:
-                r_r_s.update({"request_parameters": always_merger.merge( r_r_s.get("request_parameters", {}), { "collation_types": form.get(q) })})
+            if q in BYC_PARS:
+                r_r_s.update({"request_parameters": always_merger.merge( r_r_s.get("request_parameters", {}), { "collation_types": BYC_PARS.get(q) })})
 
         info = self.entity_defaults["info"].get("content", {"api_version": "___none___"})
         for p in ["api_version"]:
@@ -192,8 +189,8 @@ class ByconautServiceResponse:
 class ByconCollations:
     def __init__(self, byc: dict):
         self.byc = byc
-        self.delivery_method = byc["form_data"].get("method", "___none___")
-        self.output = byc["form_data"].get("output", "___none___")
+        self.delivery_method = BYC_PARS.get("method", "___none___")
+        self.output = BYC_PARS.get("output", "___none___")
         self.dataset_ids = byc.get("dataset_ids", [])
         self.beacon_defaults = byc.get("beacon_defaults", {})
         self.service_config = byc.get("service_config", {})
@@ -222,7 +219,7 @@ class ByconCollations:
 
     def __return_collations(self):
         f_coll = "collations"
-        d_k = set_selected_delivery_keys(self.service_config.get("method_keys"), self.form_data)
+        d_k = set_selected_delivery_keys(self.service_config.get("method_keys"))
 
         c_id = self.form_data.get("id", "")
         # TODO: This should be derived from some entity definitions

@@ -31,7 +31,7 @@ def uploader():
     initialize_bycon_service(byc, "uploader")
     read_service_prefs("uploader", services_conf_path, byc)
     file_id = str(uuid4())
-    form = cgi.FieldStorage()
+    form_data = cgi.FieldStorage()
     base_url = select_this_server(byc)
 
     response = {
@@ -43,11 +43,11 @@ def uploader():
         "host": base_url
     }
 
-    if not "upload_file" in form:
+    if not "upload_file" in form_data:
         response.update({"error": "ERROR: No `upload_file` parameter in POST..." })
         print_json_response(response)
 
-    file_item = form["upload_file"]
+    file_item = form_data["upload_file"]
     file_name = path.basename(file_item.filename)
     file_type = file_name.split('.')[-1]
     data = file_item.file.read()
@@ -59,10 +59,10 @@ def uploader():
 
     with open(response["loc_path"], 'wb') as f:
         f.write(data)
-    if not "plotType" in form:
+    if not "plotType" in form_data:
         print_json_response(response)
 
-    plot_type = form["plotType"]
+    plot_type = form_data["plotType"]
     print_uri_rewrite_response(f'{base_url}/services/sampleplots/?datasetIds=upload&fileId={file_id}&plotType={plot_type}', "")
 
 

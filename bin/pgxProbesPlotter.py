@@ -28,8 +28,8 @@ def pgx_probes_plotter():
     run_beacon_init_stack(byc)
     generate_genome_bins(byc)
 
-    input_file = byc["form_data"].get("inputfile")
-    output_file = byc["form_data"].get("outputfile")
+    input_file = BYC_PARS.get("inputfile")
+    output_file = BYC_PARS.get("outputfile")
 
     if not input_file:
         print("No input file specified (-i, --inputfile) => read_probedata_file(filepath, byc):quitting ...")
@@ -46,7 +46,7 @@ def pgx_probes_plotter():
         "callsets_probes_bundles": [ {"id": "TBD", "probes": cs_probes }]
     }
 
-    byc["form_data"].update({"plot_type":"probesplot"})
+    BYC_PARS.update({"plot_type":"probesplot"})
     if not output_file:
         output_file = re.sub(".tsv", "_sampleplots.svg", input_file)
 

@@ -32,7 +32,7 @@ def database_archiver():
         exit()
     ds_id = byc["dataset_ids"][0]
 
-    output_dir = byc["form_data"].get("outputdir")
+    output_dir = BYC_PARS.get("outputdir")
     if not output_dir:
         print("No output directory specified (--outputdir) => quitting ...")
         exit()

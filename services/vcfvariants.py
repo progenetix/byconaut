@@ -32,10 +32,9 @@ def main():
 def vcfvariants():
     initialize_bycon_service(byc, "biosamples")
     run_beacon_init_stack(byc)
-    form = byc.get("form_data", {})
 
-    if not "vcf" in byc.get("output", "___none___"):
-        byc["form_data"].update({"output":"vcf"})
+    if not "vcf" in BYC_PARS.get("output", "___none___"):
+        BYC_PARS.update({"output":"vcf"})
 
     rss = ByconResultSets(byc).datasetsResults()
 

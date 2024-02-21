@@ -31,7 +31,6 @@ def main():
 
 def genespans():
     """
-
     """
     initialize_bycon_service(byc, "genespans")
     read_service_prefs("genespans", services_conf_path, byc)
@@ -39,15 +38,13 @@ def genespans():
     parse_cytoband_file(byc)
 
     # form id assumes start match (e.g. for autocompletes)
-
     r = ByconautServiceResponse(byc)
-    form = byc.get("form_data", {})
     gene_id = rest_path_value("genespans")
     if gene_id:
         # REST path id assumes exact match
         results = GeneInfo().returnGene(gene_id)
     else:
-        gene_id = byc[ "form_data" ].get("gene_id")
+        gene_id = BYC_PARS.get("gene_id")
         results = GeneInfo().returnGenelist(gene_id)
 
     if len(BYC["ERRORS"]) > 0:
@@ -57,14 +54,14 @@ def genespans():
         _gene_add_cytobands(gene, byc)
 
     e_k_s = byc["service_config"]["method_keys"]["genespan"]
-    if "genespan" in str(form.get("method", "___none___")):
+    if "genespan" in str(BYC_PARS.get("method", "___none___")):
         for i, g in enumerate(results):
             g_n = {}
             for k in byc["service_config"]["method_keys"]["genespan"]:
                 g_n.update({k: g.get(k, "")})
             results[i] = g_n
 
-    if "text" in form.get("output", "___none___"):
+    if "text" in BYC_PARS.get("output", "___none___"):
         open_text_streaming()
         for g in results:
             s_comps = []
@@ -80,7 +77,7 @@ def genespans():
 
 def _gene_add_cytobands(gene, byc):
 
-    chro_names = ChroNames(byc)
+    chro_names = ChroNames()
     gene.update({"cytobands": None})
 
     acc = gene.get("accession_version", "NA")

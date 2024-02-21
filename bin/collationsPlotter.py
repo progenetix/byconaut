@@ -31,13 +31,13 @@ def collations_plotter():
     run_beacon_init_stack(byc)
     generate_genome_bins(byc)
 
-    byc["form_data"].update({"plot_type": "histoplot"})
-    out_putfile = byc["form_data"].get("outputfile")
+    BYC_PARS.update({"plot_type": "histoplot"})
+    out_putfile = BYC_PARS.get("outputfile")
 
     if len(byc["dataset_ids"]) < 1:
         print("Please indicate one or more dataset ids using `-d`")
         exit()
-    if len(byc["form_data"].get("filters", [])) < 1:
+    if len(BYC_PARS.get("filters", [])) < 1:
         print("Please indicate one or more collation ids using `--filters`")
     if not out_putfile:
         print("No output file specified (-o, --outputfile) => quitting ...")

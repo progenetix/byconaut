@@ -13,9 +13,8 @@ from service_helpers import open_text_streaming, close_text_streaming
 ################################################################################
 
 def stream_pgx_meta_header(ds_id, ds_results, byc):
-    form = byc.get("form_data", {})
-    skip = form.get("skip", 0)
-    limit = form.get("limit", 0)
+    skip = BYC_PARS.get("skip", 0)
+    limit = BYC_PARS.get("limit", 0)
     ds_d = byc.get("dataset_definitions", {})
     ds_ds_d = ds_d.get(ds_id, {})
 
@@ -126,7 +125,7 @@ def export_pgxseg_download(datasets_results, ds_id, byc):
         # TODO: error message here
         return
     v__ids = ds_results["variants._id"].get("target_values", [])
-    if test_truthy( byc["form_data"].get("paginate_results", True) ):
+    if test_truthy( BYC_PARS.get("paginate_results", True) ):
         v__ids = return_paginated_list(v__ids, byc.get("skip", 0), byc.get("limit", 0))
 
     stream_pgx_meta_header(ds_id, ds_results, byc)
@@ -186,11 +185,10 @@ def pgxseg_variant_line(v_pgxseg):
 ################################################################################
 
 def export_callsets_matrix(datasets_results, ds_id, byc):
-    form = byc.get("form_data", {})
-    skip = form.get("skip", 0)
-    limit = form.get("limit", 0)
-    output = form.get("output", "___none___")
-    g_b = form.get("genome_binning", "")
+    skip = BYC_PARS.get("skip", 0)
+    limit = BYC_PARS.get("limit", 0)
+    output = BYC_PARS.get("output", "___none___")
+    g_b = BYC_PARS.get("genome_binning", "")
     i_no = len(byc["genomic_intervals"])
 
     m_format = "coverage"
@@ -223,7 +221,7 @@ def export_callsets_matrix(datasets_results, ds_id, byc):
     q_vals = cs_r["target_values"]
     r_no = len(q_vals)
     if r_no > limit:
-        if test_truthy( byc["form_data"].get("paginate_results", True) ):
+        if test_truthy( BYC_PARS.get("paginate_results", True) ):
             q_vals = return_paginated_list(q_vals, skip, limit)
         print(f'#meta=>"WARNING: Only {len(q_vals)} analyses will be included due to pagination skip {skip} and limit {limit}."')
 
@@ -270,8 +268,7 @@ def export_callsets_matrix(datasets_results, ds_id, byc):
 ################################################################################
 
 def export_pgxseg_frequencies(byc, results):
-    form = byc.get("form_data", {})
-    g_b = form.get("genome_binning", "")
+    g_b = BYC_PARS.get("genome_binning", "")
     i_no = len(byc["genomic_intervals"])
 
     open_text_streaming("interval_frequencies.pgxfreq")
@@ -297,8 +294,7 @@ def export_pgxseg_frequencies(byc, results):
 ################################################################################
 
 def export_pgxmatrix_frequencies(byc, results):
-    form = byc.get("form_data", {})
-    g_b = form.get("genome_binning", "")
+    g_b = BYC_PARS.get("genome_binning", "")
     i_no = len(byc["genomic_intervals"])
 
     open_text_streaming("interval_frequencies.pgxmatrix")
@@ -369,7 +365,7 @@ def export_vcf_download(datasets_results, ds_id, byc):
         # TODO: error message here
         return
     v__ids = ds_results["variants._id"].get("target_values", [])
-    if test_truthy( byc["form_data"].get("paginate_results", True) ):
+    if test_truthy( BYC_PARS.get("paginate_results", True) ):
         v__ids = return_paginated_list(v__ids, byc.get("skip", 0), byc.get("limit", 0))
 
     v_instances = []

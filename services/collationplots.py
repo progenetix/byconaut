@@ -42,16 +42,16 @@ def collationplots():
     run_beacon_init_stack(byc)
     generate_genome_bins(byc)
 
-    plot_type = byc["form_data"].get("plot_type", "___none___")
+    plot_type = BYC_PARS.get("plot_type", "___none___")
     if plot_type not in ["histoplot", "histoheatplot", "histosparkplot"]:
         plot_type = "histoplot"
     
-    byc["form_data"].update({"plot_type": plot_type})
+    BYC_PARS.update({"plot_type": plot_type})
     id_from_path = rest_path_value("collationplots")
     if id_from_path:
         byc[ "filters" ] = [ {"id": id_from_path } ]
-    elif "id" in byc["form_data"]:
-        byc[ "filters" ] = [ {"id": byc["form_data"]["id"]} ]
+    elif "id" in BYC_PARS:
+        byc[ "filters" ] = [ {"id": BYC_PARS["id"]} ]
 
     if not "filters" in byc:
         BYC["ERRORS"].append("No value was provided for collation `id` or `filters`.")

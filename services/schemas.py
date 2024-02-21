@@ -33,8 +33,8 @@ def schemas():
     initialize_bycon_service(byc, "schemas")
     r = ByconautServiceResponse(byc)
 
-    if "id" in byc["form_data"]:
-        schema_name = byc["form_data"].get("id", None)
+    if "id" in BYC_PARS:
+        schema_name = BYC_PARS.get("id", None)
     else:
         schema_name = byc["request_entity_path_id_value"]
 

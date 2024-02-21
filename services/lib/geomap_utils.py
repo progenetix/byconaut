@@ -1,7 +1,8 @@
 import math, re, sys
 from os import path
+from humps import decamelize
 
-from cgi_parsing import *
+from bycon import BYC_PARS, prdbug, test_truthy
 
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ) )
 sys.path.append( services_lib_path )
@@ -11,7 +12,7 @@ from file_utils import read_www_tsv_to_dictlist
 
 def read_geomarker_table_web(byc):
     geolocs = []
-    f_a = byc["form_data"].get("inputfile", "")
+    f_a = BYC_PARS.get("inputfile", "")
     if not "http" in f_a:
         return geolocs
     lf, fieldnames = read_www_tsv_to_dictlist(f_a)
@@ -73,8 +74,7 @@ def read_geomarker_table_web(byc):
 ################################################################################
 
 def print_map_from_geolocations(byc, geolocs_db_results):
-    form = byc.get("form_data", {})
-    output = form.get("output", "___none___")
+    output = BYC_PARS.get("output", "___none___")
     if not "map" in output:
         return
 
@@ -141,11 +141,14 @@ def print_map_from_geolocations(byc, geolocs_db_results):
         markersJS
     )
 
-    if test_truthy(byc["form_data"].get("help", False)):
+    if test_truthy(BYC_PARS.get("show_help", False)):
         t = """
 <h4>Map Configuration</h4>
 <p>The following parameters may be modified by providing alternative values in
-the URL, e.g. "&map_w_px=1024".</p>
+the `plotPars` parameter in the URL, e.g. "&plotPars=map_w_px=1024::init_latitude=8.4".
+
+For information about the special parameter format please see http://byconaut.progenetix.org
+</p>
 <table>
 """
         t += "<tr><th>Map Parameter</th><th>Value</th></tr>\n"
@@ -182,10 +185,20 @@ def __create_geo__marker_layer(leaf_markers):
 
 def __update_geo_plot_params_from_form(byc):
     p_p = byc["geoloc_definitions"].get("plot_params", {})
-    p_p.update({"inputfile": byc["form_data"].get("inputfile", "")})
+    p_p.update({"inputfile": BYC_PARS.get("inputfile", "")})
+
+    bps = {}
+    plot_pars = BYC_PARS.get("plot_pars", {})
+    for ppv in re.split(r'::|&', plot_pars):
+        pp_pv = ppv.split('=')
+        if len(pp_pv) == 2:
+            pp, pv = pp_pv
+            pp = decamelize(pp)
+            bps.update({pp: pv})
+
     for p_p_k, p_p_v in p_p.items():
-        if p_p_k in byc["form_data"]:
-            p_p.update({p_p_k: byc["form_data"].get(p_p_k, p_p_v)})
+        if p_p_k in bps:
+            p_p.update({p_p_k: bps.get(p_p_k, p_p_v)})
     return p_p
 
 

@@ -21,8 +21,8 @@ the path is interpreted for an biosample `id` value if there is an entry at
 ################################################################################
 
 def main():
-
     samplematrix()
+
 
 ################################################################################
 
@@ -30,17 +30,15 @@ def samplematrix():
     initialize_bycon_service(byc, "biosamples")
     run_beacon_init_stack(byc)
     generate_genome_bins(byc)
-    form = byc.get("form_data", {})
-    if not "pgxmatrix" in form.get("output", "___none___"):
-        byc["form_data"].update({"output":"pgxmatrix"})
+    if not "pgxmatrix" in BYC_PARS.get("output", "___none___"):
+        BYC_PARS.update({"output":"pgxmatrix"})
 
     rss = ByconResultSets(byc).datasetsResults()
-
-    # prdbug(rss)
 
     # Note: only the first dataset will be exported ...
     ds_id = list(rss.keys())[0]
     export_callsets_matrix(rss, ds_id, byc)
+
 
 ################################################################################
 ################################################################################

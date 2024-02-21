@@ -7,7 +7,6 @@ import csv, datetime, requests, sys
 
 from bycon import *
 
-
 services_conf_path = path.join( path.dirname( path.abspath(__file__) ), "config" )
 services_tmp_path = path.join( path.dirname( path.abspath(__file__) ), pardir, "tmp" )
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ), pardir, "services", "lib" )
@@ -35,8 +34,7 @@ def publications_inserter():
     
     g_url = byc["service_config"]["google_spreadsheet_tsv_url"]
     skip_cols = byc["service_config"]["skipped_columns"]
-    form = byc.get("form_data", {})
-    input_file = form.get("inputfile")
+    input_file = BYC_PARS.get("inputfile")
     if input_file:
         pub_file = input_file
     else:
@@ -87,7 +85,7 @@ def publications_inserter():
             `-u 1` taken from the existing one."""
 
             if p_k in publication_ids:
-                if not form.get("update"):
+                if not BYC_PARS.get("update"):
                     print(p_k, ": skipped - already in progenetix.publications")
                     continue
                 else:

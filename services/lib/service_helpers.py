@@ -3,7 +3,7 @@ from humps import decamelize
 from os import path
 from pathlib import Path
 
-from bycon import load_yaml_empty_fallback, ENV
+from bycon import load_yaml_empty_fallback, BYC_PARS, ENV
 
 ################################################################################
 
@@ -17,36 +17,20 @@ def read_service_prefs(service, service_pref_path, byc):
 
 ################################################################################
 
-def set_selected_delivery_keys(method_keys, form_data):
+def set_selected_delivery_keys(method_keys):
     # the method keys can be overriden with "deliveryKeys"
     d_k = []
-    delivery_method = form_data.get("method", "___none___")
-
-    if "delivery_keys" in form_data:
-        d_k = re.split(",", form_data.get("delivery_keys", []))
+    delivery_method = BYC_PARS.get("method", "___none___")
+    if "delivery_keys" in BYC_PARS:
+        d_k = re.split(",", BYC_PARS.get("delivery_keys", []))
         if len(d_k) > 0:
             return d_k
-
     if not delivery_method:
         return d_k
     if not method_keys:
         return d_k
-
     d_k = method_keys.get(str(delivery_method), [])
-
     return d_k
-
-
-################################################################################
-
-def response_add_error(byc, code=200, message=None):
-    if not message:
-        return
-    if len(str(message)) < 1:
-        return
-
-    e = {"error_code": code, "error_message": message}
-    byc["error_response"].update({"error": e})
 
 
 ################################################################################

@@ -50,15 +50,14 @@ def interval_frequencies():
     id_from_path = rest_path_value("intervalFrequencies")
     if id_from_path:
         byc[ "filters" ] = [ {"id": id_from_path } ]
-    elif "id" in byc["form_data"]:
-        byc[ "filters" ] = [ {"id": byc["form_data"]["id"]} ]
+    elif "id" in BYC_PARS:
+        byc[ "filters" ] = [ {"id": BYC_PARS["id"]} ]
 
     if not "filters" in byc:
         BYC["ERRORS"].append("No value was provided for collation `id` or `filters`.")
         BeaconErrorResponse(byc).response(422)
 
-    form = byc.get("form_data", {})
-    file_type = form.get("output", "___none___")
+    file_type = BYC_PARS.get("output", "___none___")
     if file_type not in ["pgxfreq", "pgxmatrix", "pgxseg"]:
         file_type = "pgxfreq"
     output = file_type

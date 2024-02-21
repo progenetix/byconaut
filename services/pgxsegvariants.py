@@ -32,8 +32,8 @@ def pgxsegvariants():
     initialize_bycon_service(byc, "biosamples")
     run_beacon_init_stack(byc)
 
-    if not "pgxseg" in byc["form_data"].get("output", "___none___"):
-        byc["form_data"].update({"output":"pgxseg"})
+    if not "pgxseg" in BYC_PARS.get("output", "___none___"):
+        BYC_PARS.update({"output":"pgxseg"})
 
     rss = ByconResultSets(byc).datasetsResults()
 

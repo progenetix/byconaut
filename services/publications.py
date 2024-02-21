@@ -35,11 +35,9 @@ def publications():
     run_beacon_init_stack(byc)
 
     r = ByconautServiceResponse(byc)
-    form = byc.get("form_data", {})
-
     # data retrieval & response population
-    query = _create_filters_query( byc )
-    geo_q, geo_pars = geo_query(byc["geoloc_definitions"], form)
+    query = _create_filters_query(byc)
+    geo_q, geo_pars = geo_query(byc["geoloc_definitions"])
 
     if geo_q:
         # for g_k, g_v in geo_pars.items():
@@ -56,7 +54,7 @@ def publications():
     mongo_client = MongoClient(host=DB_MONGOHOST)
     pub_coll = mongo_client[ "progenetix" ][ "publications" ]
     p_re = re.compile( byc["filter_definitions"]["pubmed"]["pattern"] )
-    d_k = set_selected_delivery_keys(byc["service_config"].get("method_keys"), form)
+    d_k = set_selected_delivery_keys(byc["service_config"].get("method_keys"))
     p_l = [ ]
     
     for pub in pub_coll.find( query, { "_id": 0 } ):
@@ -99,8 +97,7 @@ def publications():
 ################################################################################
 
 def __check_publications_map_response(byc, results):
-    form = byc.get("form_data", {})
-    output = form.get("output", "___none___")
+    output = BYC_PARS.get("output", "___none___")
     if not "map" in output:
         return
 
@@ -129,15 +126,14 @@ def __check_publications_map_response(byc, results):
 ################################################################################
 
 def _create_filters_query(byc):
-    form = byc.get("form_data", {})
     filters = byc.get("filters", [])
-    filter_precision = form.get("filter_precision", "exact")
+    filter_precision = BYC_PARS.get("filter_precision", "exact")
     f_d_s = byc.get("filter_definitions", {})
     query = { }
     error = ""
 
     if BYC["TEST_MODE"] is True:
-        test_mode_count = int(form.get('test_mode_count', 5))
+        test_mode_count = int(BYC_PARS.get('test_mode_count', 5))
         mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
         data_coll = mongo_client[ "progenetix" ][ "publications" ]
 

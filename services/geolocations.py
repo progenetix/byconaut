@@ -38,13 +38,11 @@ def geolocations():
     read_service_prefs("geolocations", services_conf_path, byc)
     byc["geoloc_definitions"].update({"geo_root": "geo_location"})
 
-    r = ByconautServiceResponse(byc)
-    form = byc.get("form_data", {})
-    
-    if "inputfile" in form:
+    r = ByconautServiceResponse(byc)    
+    if "inputfile" in BYC_PARS:
         results = read_geomarker_table_web(byc)
     else:
-        query, geo_pars = geo_query(byc["geoloc_definitions"], form)
+        query, geo_pars = geo_query(byc["geoloc_definitions"])
         if not query:
             BYC["ERRORS"].append("No query generated - missing or malformed parameters")
         else:
@@ -56,12 +54,12 @@ def geolocations():
     print_map_from_geolocations(byc, results)
 
     if len(results) == 1:
-        if "geo_distance" in byc["form_data"]:
+        if "geo_distance" in BYC_PARS:
             l_l = results[0]["geo_location"]["geometry"]["coordinates"]
             geo_pars = {
                 "geo_longitude": l_l[0],
                 "geo_latitude": l_l[1],
-                "geo_distance": int(byc["form_data"]["geo_distance"])
+                "geo_distance": int(BYC_PARS["geo_distance"])
             }
             query = return_geo_longlat_query(geo_root, geo_pars)
             results = mongo_result_list(SERVICES_DB, GEOLOCS_COLL, query, { '_id': False } )
@@ -69,7 +67,7 @@ def geolocations():
         e_r = BeaconErrorResponse(byc).error(422)
         print_json_response(e_r)
 
-    if "text" in form.get("output", "___none___"):
+    if "text" in BYC_PARS.get("output", "___none___"):
         open_text_streaming()
         for g in results:
             s_comps = []

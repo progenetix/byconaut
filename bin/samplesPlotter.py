@@ -33,10 +33,8 @@ def samples_plotter():
     args_update_form(byc)
 
     # parameter test
-
-    form = byc.get("form_data", {})
-    output_file = form.get("outputfile")
-    dataset_ids = form.get("dataset_ids", [])
+    output_file = BYC_PARS.get("outputfile")
+    dataset_ids = BYC_PARS.get("dataset_ids", [])
 
     if not len(dataset_ids) < 1:
         # in this case checking for the command line argument; avoiding defaults
@@ -52,7 +50,7 @@ def samples_plotter():
     q_pars = ("filters", "biosample_ids", "analysis_ids", "individual_ids")
     par_test = []
     for q in q_pars:
-        par_test += form.get(q, [])
+        par_test += BYC_PARS.get(q, [])
     if len(par_test) < 1 :
         print("No `--filters` or `--biosampleIds` etc. were specified => quitting ...")
         exit()

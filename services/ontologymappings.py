@@ -33,13 +33,10 @@ def ontologymaps():
     read_service_prefs("ontologymappings", services_conf_path, byc)
     run_beacon_init_stack(byc)
 
-    form = byc.get("form_data", {})
-
     r = ByconautServiceResponse(byc)
-
     p_filter = rest_path_value("ontologymappings")
     if p_filter:
-        byc[ "filters" ].append({"id": p_filter})
+        byc["filters"].append({"id": p_filter})
 
     q_list = [ ]
     q_dups = [ ]
@@ -54,7 +51,7 @@ def ontologymaps():
                 if re.compile( f_d["pattern"] ).match( f_val ):
                     if f_val not in q_dups:
                         q_dups.append(f_val)
-                        if "start" in form.get("filter_precision", "exact"):
+                        if "start" in BYC_PARS.get("filter_precision", "exact"):
                             q_list.append( { byc["query_field"]: { "$regex": "^"+f_val } } )
                         elif f["id"] == pre:
                             q_list.append( { byc["query_field"]: { "$regex": "^"+f_val } } )
@@ -95,7 +92,7 @@ def ontologymaps():
                 t_l.append(str(t.get("label", "")))
             t_g_s.append("\t".join(t_l))
 
-        if "text" in form.get("output", "___none___"):
+        if "text" in BYC_PARS.get("output", "___none___"):
             print_text_response("\n".join(t_g_s))
         results = c_g
 

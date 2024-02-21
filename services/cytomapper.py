@@ -59,8 +59,7 @@ def __return_cytobands_results(byc):
 
     a_d = byc.get("argument_definitions", {})
     c_b_d = byc.get("cytobands", [])
-    chro_names = ChroNames(byc)
-    form = byc.get("form_data", {})
+    chro_names = ChroNames()
     varguments = byc.get("varguments", {})
 
     cytoBands = [ ]
@@ -77,7 +76,7 @@ def __return_cytobands_results(byc):
     chroBases = "{}:{}-{}".format(chro, start, end)
     sequence_id = chro_names.refseq(chro)
 
-    if "text" in form.get("output", "___none___"):
+    if "text" in BYC_PARS.get("output", "___none___"):
         open_text_streaming()
         print("{}\t{}".format(cb_label, chroBases))
         exit()

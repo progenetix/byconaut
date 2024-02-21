@@ -35,9 +35,9 @@ def iscn_segmenter():
 	run_beacon_init_stack(byc)
 	generate_genome_bins(byc)
 
-	group_parameter = byc["form_data"].get("groupBy", "histological_diagnosis_id")
-	input_file = byc["form_data"].get("inputfile")
-	output_file = byc["form_data"].get("outputfile")
+	group_parameter = BYC_PARS.get("groupBy", "histological_diagnosis_id")
+	input_file = BYC_PARS.get("inputfile")
+	output_file = BYC_PARS.get("outputfile")
 	dt_m = byc.get("datatable_mappings", {})
 
 	technique = "cCGH"
@@ -62,7 +62,7 @@ Output will be written to {}""".format(output_file) )
 
 	output_file += ".pgxseg"
 
-	iscn_samples, fieldnames = read_tsv_to_dictlist(input_file, int(byc["form_data"].get("limit", 0)))
+	iscn_samples, fieldnames = read_tsv_to_dictlist(input_file, int(BYC_PARS.get("limit", 0)))
 
 	if not iscn_field in fieldnames:
 		print('The samplefile header does not contain the "{}" column => quitting'.format(iscn_field))

@@ -4,9 +4,8 @@ from os import environ, path
 from pymongo import MongoClient
 from copy import deepcopy
 
-
 from bycon_helpers import return_paginated_list, prdbug
-from config import BYC, DB_MONGOHOST
+from config import BYC, BYC_PARS, DB_MONGOHOST
 from interval_utils import interval_cnv_arrays, interval_counts_from_callsets
 from variant_mapping import ByconVariant
 
@@ -34,21 +33,20 @@ class ByconBundler:
         self.byc = byc     # needed to for some called classes (ByconVariant...)
         self.errors = []
         self.filepath = None
-        self.form_data = byc.get("form_data", {})
         self.local_paths = byc.get("local_paths", {})
         self.datasets_results = None
         self.dataset_ids = byc.get("dataset_ids", [])
         self.datatable_mappings = byc.get("datatable_mappings", {})
         self.filters = byc.get("filters", [])
-        self.min_number = byc["form_data"].get("min_number", 0)
-        self.delivery_method = byc["form_data"].get("method")
+        self.min_number = BYC_PARS.get("min_number", 0)
+        self.delivery_method = BYC_PARS.get("method")
         self.header = []
         self.data = []
         self.fieldnames = []
         self.callsetVariantsBundles = []
         self.intervalFrequenciesBundles = []
-        self.limit = self.form_data.get("limit", 0)
-        self.skip = self.form_data.get("skip", 0)
+        self.limit = BYC_PARS.get("limit", 0)
+        self.skip = BYC_PARS.get("skip", 0)
 
         self.bundle = {
             "variants": [],

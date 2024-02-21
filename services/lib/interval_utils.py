@@ -8,7 +8,7 @@ sys.path.append( services_lib_path )
 
 from cytoband_utils import parse_cytoband_file, cytobands_label_from_positions
 
-from bycon import prdbug, ENV
+from bycon import prdbug, BYC_PARS, ENV
 
 ################################################################################
 
@@ -74,10 +74,9 @@ def generate_genome_bins(byc):
 ################################################################################
 
 def __generate_genomic_intervals(byc):
-    form = byc.get("form_data", {})
     i_d = byc["interval_definitions"]
     g_b_s = i_d["genome_bin_sizes"].get("values", {})
-    binning = form.get("genome_binning", "1Mb")
+    binning = BYC_PARS.get("genome_binning", "1Mb")
     i_d.update({"genome_binning": binning})
 
     # cytobands ################################################################
@@ -173,9 +172,7 @@ def interval_cnv_arrays(cs_vars, byc):
     """
 
     # TODO: make this a class to split out the stats etc.
-    form = byc.get("form_data", {})
-    g_b = form.get("genome_binning", "")
-
+    g_b = BYC_PARS.get("genome_binning", "")
     v_t_defs = byc["variant_type_definitions"]
     c_l = byc["cytolimits"]
     intervals = byc["genomic_intervals"]

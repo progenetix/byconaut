@@ -44,7 +44,6 @@ def callsets_refresher():
     set_collation_types(byc)
     print(f'=> Using data values from {ds_id} for {byc.get("genomic_interval_count", 0)} intervals...')
 
-    form = byc.get("form_data", {})
     data_client = MongoClient(host=DB_MONGOHOST)
     data_db = data_client[ ds_id ]
     cs_coll = data_db[ "analyses" ]
@@ -116,7 +115,7 @@ def callsets_refresher():
 
     print(f"{counter} analyses were processed")
     print(f"{no_cnv_type} analyses were not from CNV calling")
-    print(f'{updated} analyses were updated for\n    `cnv_statusmaps`\n    `cnv_stats`\n    `cnv_chro_stats`\nusing {byc["genomic_interval_count"]} bins ({form.get("genome_binning", "")})')
+    print(f'{updated} analyses were updated for\n    `cnv_statusmaps`\n    `cnv_stats`\n    `cnv_chro_stats`\nusing {byc["genomic_interval_count"]} bins ({BYC_PARS.get("genome_binning", "")})')
 
 ################################################################################
 ################################################################################

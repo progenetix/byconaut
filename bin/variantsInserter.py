@@ -34,7 +34,7 @@ def variants_inserter():
         exit()
 
     ds_id = byc["dataset_ids"][0]
-    input_file = byc["form_data"].get("inputfile")
+    input_file = BYC_PARS.get("inputfile")
     dt_m = byc.get("datatable_mappings", {})
 
     if not input_file:

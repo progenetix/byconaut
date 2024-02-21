@@ -42,7 +42,6 @@ def frequencymaps_creator():
     set_collation_types(byc)
     print(f'=> Using data values from {ds_id} for {byc.get("genomic_interval_count", 0)} intervals...')
 
-    form = byc.get("form_data", {})
     data_client = MongoClient(host=DB_MONGOHOST)
     data_db = data_client[ ds_id ]
     coll_coll = data_db[ "collations" ]
@@ -105,7 +104,7 @@ def frequencymaps_creator():
             "counts": {"biosamples": bios_no, "analyses": cs_no },
             "frequencymap": {
                 "interval_count": byc["genomic_interval_count"],
-                "binning": form.get("genome_binning", ""),
+                "binning": BYC_PARS.get("genome_binning", ""),
                 "biosample_count": bios_no
             }
         }
@@ -134,7 +133,7 @@ def frequencymaps_creator():
                 if cs_no_cm > 0:
                     cm_obj = { "frequencymap_codematches": {
                             "interval_count": len(byc["genomic_intervals"]),
-                            "binning": form.get("genome_binning", ""),
+                            "binning": BYC_PARS.get("genome_binning", ""),
                             "biosample_count": bios_no_cm
                         }
                     }
