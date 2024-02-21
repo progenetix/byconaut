@@ -43,14 +43,12 @@ def sampleplots():
     run_beacon_init_stack(byc)
     generate_genome_bins(byc)
 
-    plot_type = byc["form_data"].get("plot_type", "___none___")
-    file_id = byc["form_data"].get("file_id", "___no-input-file___")
+    form = byc.get("form_data", {})
+    plot_type = form.get("plot_type", "histoplot")
+    file_id = form.get("file_id", "___no-input-file___")
+    inputfile = Path( path.join( *byc["local_paths"][ "server_tmp_dir_loc" ], file_id ) )
 
     pb = ByconBundler(byc)
-
-    inputfile = Path( path.join( *byc["local_paths"][ "server_tmp_dir_loc" ], file_id ) )
-    prdbug(inputfile.is_file())
-    prdbug(inputfile)
     if inputfile.is_file():
         pdb = pb.pgxseg_to_plotbundle(inputfile)
     else:

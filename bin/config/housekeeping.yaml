@@ -29,9 +29,7 @@ indexed_special_collections:
       db_key: id
 
 indexed_special_dbs:
-
   cellz:
-
     biosamples:
       location:
         db_key: provenance.geo_location.geometry
@@ -40,10 +38,32 @@ indexed_special_dbs:
       location:
         db_key: provenance.geo_location.geometry
         type: 2dsphere
-
+    variants:
+      variantbracketquery:
+        db_key:
+          variant_state.id: 1
+          location.sequence_id: 1
+          location.start: 1
+          location.end: 1
+          info.var_length: 1
+        type: compound
+      variantallelequery:
+        db_key:
+          location.sequence_id: 1
+          location.start: 1
+          sequence: 1
+          reference_sequence: 1
+        type: compound
+      variantrangequery:
+        db_key:
+          location.sequence_id: 1
+          location.start: 1
+          location.end: 1
+          variant_state.id: 1
+          sequence: 1
+        type: compound
 
   progenetix:
-
     biosamples:
       location:
         db_key: provenance.geo_location.geometry
@@ -52,6 +72,30 @@ indexed_special_dbs:
       location:
         db_key: provenance.geo_location.geometry
         type: 2dsphere
+    variants:
+      variantbracketquery:
+        db_key:
+          variant_state.id: 1
+          location.sequence_id: 1
+          location.start: 1
+          location.end: 1
+          info.var_length: 1
+        type: compound
+      variantallelequery:
+        db_key:
+          location.sequence_id: 1
+          location.start: 1
+          sequence: 1
+          reference_sequence: 1
+        type: compound
+      variantrangequery:
+        db_key:
+          location.sequence_id: 1
+          location.start: 1
+          location.end: 1
+          variant_state.id: 1
+          sequence: 1
+        type: compound
 
     publications:
       id:

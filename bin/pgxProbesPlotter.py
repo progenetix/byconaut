@@ -18,8 +18,8 @@ from interval_utils import generate_genome_bins
 ################################################################################
 
 def main():
-
     pgx_probes_plotter()
+
 
 ################################################################################
 
@@ -34,7 +34,6 @@ def pgx_probes_plotter():
     if not input_file:
         print("No input file specified (-i, --inputfile) => read_probedata_file(filepath, byc):quitting ...")
         exit()
-
     if not "probe" in input_file:
         print('Only probe files are accepted (should have "...probes..." in name).')
         exit()
@@ -43,7 +42,6 @@ def pgx_probes_plotter():
 
     # TODO: method for multiple?
     cs_probes = pb.read_probedata_file(input_file)
-    
     plot_data_bundle = {
         "callsets_probes_bundles": [ {"id": "TBD", "probes": cs_probes }]
     }
