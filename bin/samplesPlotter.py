@@ -30,7 +30,7 @@ def samples_plotter():
     initialize_bycon_service(byc, "biosamples")
     run_beacon_init_stack(byc)
     generate_genome_bins(byc)
-    args_update_form(byc)
+    # args_update_form(byc)
 
     # parameter test
     output_file = BYC_PARS.get("outputfile")

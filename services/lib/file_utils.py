@@ -16,14 +16,11 @@ from interval_utils import interval_cnv_arrays, interval_counts_from_callsets
 def read_tsv_to_dictlist(filepath, max_count=0):
     dictlist = []
     with open(filepath, newline='') as csvfile:
-    
         data = csv.DictReader(filter(lambda row: row.startswith('#') is False, csvfile), delimiter="\t", quotechar='"')
         fieldnames = list(data.fieldnames)
-
         for l in data:
             dictlist.append(dict(l))
             # prjsonnice(dict(l))
-
     if 0 < max_count < len(dictlist):
         dictlist = random_samples(dictlist, k=max_count)
 

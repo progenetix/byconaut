@@ -70,7 +70,7 @@ plot_parameters:
 
   plot_title:
     description: title above the plot
-    default: ""
+    # default: ""
 
   plot_group_by:
     description: group samples in histograms by a filter type (NCIT, PMID...)
@@ -80,26 +80,27 @@ plot_parameters:
 
   plot_filter_empty_samples:
     description: >-
-      by setting to `true` samples w/o data can be removed e.g. from sample
+      By setting to `true` samples w/o data can be removed e.g. from sample
       plots
     type: boolean
     default: false
 
   force_empty_plot:
     description: >-
-      by setting to `true` a plot strip will be forced even if there are no CNV
+      By setting to `true` a plot strip will be forced even if there are no CNV
       samples
     type: boolean
     default: false
 
   plot_cluster_results:
-    description: by setting to false clustering can be suppressed
+    description: By setting to `false` clustering can be suppressed
     type: boolean
     default: true
 
   plot_samples_cluster_type:
     description: >-
-      selection of which measurees are used to generate the clustering matrix
+      Selection of which measurees are used to generate the clustering matrix
+      
       * `intcoverage` uses the ~2x3k (gain, loss) 1MB intervals
       * `chrostats` only uses the CNV coverage per chromosomal arm (separately
         for gains and losses)
@@ -144,7 +145,7 @@ plot_parameters:
     description: >-
       * width of the plot image, in px
       * the plot area width is determined through
-        - plot_width - 2*plot_margins - plot_labelcol_width - plot_axislab_y_width - plot_dendrogram_width
+          - `plot_width - 2*plot_margins - plot_labelcol_width - plot_axislab_y_width - plot_dendrogram_width`
     type: integer
     default: 1024
 
@@ -309,7 +310,7 @@ plot_parameters:
       * comma-concatenation for multiple values
       * label is optional
     type: array
-    default: []
+    # default: []
 
   plot_regionlabel_color:
     default: "#ddceff"
@@ -319,14 +320,14 @@ plot_parameters:
       * label a gene's position by its symbol (CDKN2A, MYC, ERBB2...)
       * comma-concatenation for multiple values
     type: array
-    default: []
+    # default: []
 
   plot_cytoregion_labels:
     description: >-
       * label a cytoband's position (8q24, 1p12p11, 17q...)
       * comma-concatenation for multiple values
     type: array
-    default: []
+    # default: []
 
   plot_cytoregion_color:
     default: "#ffe3ee"

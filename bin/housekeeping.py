@@ -14,7 +14,8 @@ lib_path = path.join(dir_path , "lib")
 sys.path.append( lib_path )
 from mongodb_utils import mongodb_update_indexes
 
-services_conf_path = path.join( path.dirname( path.abspath(__file__) ), "config" )
+generated_docs_path = path.join( dir_path, pardir, "docs", "generated")
+services_conf_path = path.join( dir_path, "config" )
 services_lib_path = path.join( dir_path, pardir, "services", "lib" )
 sys.path.append( services_lib_path )
 from collation_utils import *
@@ -41,6 +42,50 @@ def housekeeping():
     if len(byc["dataset_ids"]) != 1:
         print("No single existing dataset was provided with -d ...")
         exit()
+
+    if path.exists(generated_docs_path):
+
+        pp_f = path.join(generated_docs_path, "plot_parameters.md")
+        pp = byc["plot_defaults"].get("plot_parameters", {})
+        ls = [f'# Plot Parameters and Information']
+        ls.append(f'## Plot Parameters')
+        for pk, pi in pp.items():
+            ls.append(f'### {pk}\n')
+            for pik, piv in pi.items():
+                if "default" in pik and len(str(piv)) > 0:
+                    if type(piv) is list:
+                        js = ','
+                        ls.append(f'**{pik}:** `{js.join([str(x) for x in piv])}`')
+                    else:
+                        ls.append(f'**{pik}:** `{piv}`')
+                elif "description" in pik:
+                    ls.append(f'**{pik}:**\n')
+                    piv = piv.replace("*", "    \n*")
+                    ls.append(f'{piv}')
+                else:
+                    ls.append(f'**{pik}:** {piv}')
+                ls.append(f'\n')
+            ls.append(f'\n')
+
+        pp_f = open(pp_f, "w")
+        pp_f.write("\n".join(ls).replace("\n\n", "\n"))
+        pp_f.close()
+
+
+    
+        exit()
+
+
+
+
+
+
+
+
+
+
+
+
 
     ds_id = byc["dataset_ids"][0]
 
@@ -166,7 +211,6 @@ def housekeeping():
 
     # age_days
     if "y" in todos.get("individual_age_days", "n").lower():
-
         query = {"index_disease.onset.age": {"$regex": "^P\d"}}
         no = ind_coll.count_documents(query)
         bar = Bar(f"=> `age_days` ...", max = no, suffix='%(percent)d%%'+" of "+str(no) )

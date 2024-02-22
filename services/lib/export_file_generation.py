@@ -145,13 +145,11 @@ def export_pgxseg_download(datasets_results, ds_id, byc):
 ################################################################################
 
 def print_variant_pgxseg(v_pgxseg):
-
     print( pgxseg_variant_line(v_pgxseg) )
 
 ################################################################################
 
 def print_pgxseg_header_line():
-
     print( pgxseg_header_line() )
 
 ################################################################################
@@ -321,16 +319,14 @@ def export_pgxmatrix_frequencies(byc, results):
             f_line.append( str(intv["loss_frequency"]) )
 
         print("\t".join(f_line))
-
     close_text_streaming()
+
 
 ################################################################################
 
 def export_vcf_download(datasets_results, ds_id, byc):
-
     """
     """
-
     # TODO: VCF schema in some config file...
     open_text_streaming(f"{ds_id}_variants.vcf")
     print(
@@ -406,6 +402,6 @@ def export_vcf_download(datasets_results, ds_id, byc):
 
         r_l = map(str, list(vcf_v.values()))
         print("\t".join(r_l))
-
+        
     close_text_streaming()
 
