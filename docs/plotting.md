@@ -114,7 +114,7 @@ Plot parameters can be given both in `snake_case` and in the corresponding
 `camelCase` format (`plot_area_width` or `plotAreaWidth`). Please see the box
 above for the concatenation syntax!
 
-A detailed list of plot parameters is provided [on this page](/generated/plot_parameters/).
+A detailed list of plot parameters is provided [on this page](/generated/plot_defaults/).
 
 <!-- 
 ### Parameter definitions

@@ -13,6 +13,7 @@ dir_path = path.dirname( path.abspath(__file__) )
 lib_path = path.join(dir_path , "lib")
 sys.path.append( lib_path )
 from mongodb_utils import mongodb_update_indexes
+from doc_generator import doc_generator
 
 generated_docs_path = path.join( dir_path, pardir, "docs", "generated")
 services_conf_path = path.join( dir_path, "config" )
@@ -39,53 +40,12 @@ def housekeeping():
     initialize_bycon_service(byc, "housekeeping")
     read_service_prefs("housekeeping", services_conf_path, byc)
     run_beacon_init_stack(byc)
+
+    doc_generator(byc, generated_docs_path)
+
     if len(byc["dataset_ids"]) != 1:
         print("No single existing dataset was provided with -d ...")
         exit()
-
-    if path.exists(generated_docs_path):
-
-        pp_f = path.join(generated_docs_path, "plot_parameters.md")
-        pp = byc["plot_defaults"].get("plot_parameters", {})
-        ls = [f'# Plot Parameters and Information']
-        ls.append(f'## Plot Parameters')
-        for pk, pi in pp.items():
-            ls.append(f'### {pk}\n')
-            for pik, piv in pi.items():
-                if "default" in pik and len(str(piv)) > 0:
-                    if type(piv) is list:
-                        js = ','
-                        ls.append(f'**{pik}:** `{js.join([str(x) for x in piv])}`')
-                    else:
-                        ls.append(f'**{pik}:** `{piv}`')
-                elif "description" in pik:
-                    ls.append(f'**{pik}:**\n')
-                    piv = piv.replace("*", "    \n*")
-                    ls.append(f'{piv}')
-                else:
-                    ls.append(f'**{pik}:** {piv}')
-                ls.append(f'\n')
-            ls.append(f'\n')
-
-        pp_f = open(pp_f, "w")
-        pp_f.write("\n".join(ls).replace("\n\n", "\n"))
-        pp_f.close()
-
-
-    
-        exit()
-
-
-
-
-
-
-
-
-
-
-
-
 
     ds_id = byc["dataset_ids"][0]
 
