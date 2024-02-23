@@ -35,6 +35,7 @@ limit number of documents; a value of 0 sets to unlimited
 **description:**
 The requested granularity of the beacon    
 **cmdFlags:** `--requestedGranularity`    
+**default:** `record`    
 
 ### `request_entity_path_id` 
 **type:** string    
@@ -300,7 +301,11 @@ setting the number of documents reurned in test mode
 **type:** string    
 **cmdFlags:** `--output`    
 **description:**
-special output format; command line processing uses some predefined text as standard, but options are e.g. json or pgxseg    
+For defining a special output format, mostly for `byconaut` services use. Examples:
+    
+* `cnvstats`, for `analyses`, to present some CNV statistics     
+* `pgxseg`, using the `.pgxseg` variant file format     
+* `text`, for some services to deliver a text table instead of JSON    
 
 ### `include_handovers` 
 **type:** boolean    

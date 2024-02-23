@@ -138,7 +138,7 @@ class ByconPlot:
         p_t_s = self.plot_types
 
         bps = {}
-        plot_pars = BYC_PARS.get("plot_pars", {})
+        plot_pars = BYC_PARS.get("plot_pars", "")
         for ppv in re.split(r'::|&', plot_pars):
             pp_pv = ppv.split('=')
             if len(pp_pv) == 2:

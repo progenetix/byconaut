@@ -145,7 +145,7 @@ plot_parameters:
     description: >-
       * width of the plot image, in px
       * the plot area width is determined through
-        - plot_width - 2*plot_margins - plot_labelcol_width - plot_axislab_y_width - plot_dendrogram_width
+          - `plot_width - 2*plot_margins - plot_labelcol_width - plot_axislab_y_width - plot_dendrogram_width`
     type: integer
     default: 1024
 

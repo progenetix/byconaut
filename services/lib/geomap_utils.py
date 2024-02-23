@@ -188,7 +188,7 @@ def __update_geo_plot_params_from_form(byc):
     p_p.update({"inputfile": BYC_PARS.get("inputfile", "")})
 
     bps = {}
-    plot_pars = BYC_PARS.get("plot_pars", {})
+    plot_pars = BYC_PARS.get("plot_pars", "")
     for ppv in re.split(r'::|&', plot_pars):
         pp_pv = ppv.split('=')
         if len(pp_pv) == 2:

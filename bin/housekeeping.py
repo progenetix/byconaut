@@ -15,7 +15,6 @@ sys.path.append( lib_path )
 from mongodb_utils import mongodb_update_indexes
 from doc_generator import doc_generator
 
-generated_docs_path = path.join( dir_path, pardir, "docs", "generated")
 services_conf_path = path.join( dir_path, "config" )
 services_lib_path = path.join( dir_path, pardir, "services", "lib" )
 sys.path.append( services_lib_path )
@@ -41,7 +40,11 @@ def housekeeping():
     read_service_prefs("housekeeping", services_conf_path, byc)
     run_beacon_init_stack(byc)
 
+    # TODO: rewrap, use config etc.
+    generated_docs_path = path.join( dir_path, pardir, "docs", "generated")
+    bycon_generated_docs_path = path.join( dir_path, pardir, pardir, "bycon", "docs", "generated")
     doc_generator(byc, generated_docs_path)
+    doc_generator(byc, bycon_generated_docs_path)
 
     if len(byc["dataset_ids"]) != 1:
         print("No single existing dataset was provided with -d ...")
