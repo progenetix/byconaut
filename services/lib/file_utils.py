@@ -6,12 +6,45 @@ from pymongo import MongoClient
 from copy import deepcopy
 from random import sample as random_samples
 
-from bycon import ByconVariant, prjsonnice, return_paginated_list
+from bycon import (
+    ByconVariant,
+    BYC,
+    BYC_PARS,
+    ENV,
+    prdbug,
+    prjsonnice,
+    return_paginated_list
+)
 
-from datatable_utils import import_datatable_dict_line
 from interval_utils import interval_cnv_arrays, interval_counts_from_callsets
 
 ################################################################################
+
+class ExportFile:
+
+    def __init__(self, file_type=None):
+        self.file_path = BYC_PARS.get("outputfile")
+        self.file_type = file_type
+
+    # -------------------------------------------------------------------------#
+    # ----------------------------- public ------------------------------------#
+    # -------------------------------------------------------------------------#
+
+    def checkOutputFile(self):
+        if not self.file_path:
+            if "local" in ENV:
+                BYC["ERRORS"].append("No output file specified (-o, --outputfile) => quitting ...")
+            return False
+        if self.file_type:
+            if not self.file_path.endswith(self.file_type):
+                if "local" in ENV:
+                    BYC["ERRORS"].append(f"The output file should be an `{self.file_type}` => quitting ...")
+                return False
+        return self.file_path
+
+
+################################################################################
+
 
 def read_tsv_to_dictlist(filepath, max_count=0):
     dictlist = []

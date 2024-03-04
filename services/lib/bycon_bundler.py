@@ -18,7 +18,6 @@ from file_utils import *
 ################################################################################
 
 class ByconBundler:
-
     """
     # The `ByconBundler` class
 
@@ -36,8 +35,8 @@ class ByconBundler:
         self.local_paths = byc.get("local_paths", {})
         self.datasets_results = None
         self.dataset_ids = byc.get("dataset_ids", [])
-        self.datatable_mappings = byc.get("datatable_mappings", {})
         self.filters = byc.get("filters", [])
+        self.collation_types = BYC_PARS.get("collation_types", [])
         self.min_number = BYC_PARS.get("min_number", 0)
         self.delivery_method = BYC_PARS.get("method")
         self.header = []
@@ -79,7 +78,6 @@ class ByconBundler:
     #--------------------------------------------------------------------------#
 
     def read_pgx_file(self, filepath):
-
         self.filepath = filepath
 
         h_lines = []
@@ -101,7 +99,6 @@ class ByconBundler:
     #--------------------------------------------------------------------------#
 
     def read_probedata_file(self, filepath):
-
         self.filepath = filepath
         self.probedata = []
 
@@ -139,11 +136,9 @@ class ByconBundler:
 
     def pgxseg_to_keyed_bundle(self, filepath):
         self.read_pgx_file(filepath)
-
         if not "biosample_id" in self.fieldnames:
             self.errors.append("¡¡¡ The `biosample_id` parameter is required for variant assignment !!!")
             return
-
         self.__deparse_pgxseg_samples_header()
         self.__keyed_bundle_add_variants_from_lines()
 
@@ -153,33 +148,27 @@ class ByconBundler:
     #--------------------------------------------------------------------------#
 
     def pgxseg_to_plotbundle(self, filepath):
-
         self.pgxseg_to_keyed_bundle(filepath)
         self.__flatten_keyed_bundle()
-
         return {
             "interval_frequencies_bundles": self.callsets_frequencies_bundles(),
             "callsets_variants_bundles": self.callsets_variants_bundles()
         }
 
+
     #--------------------------------------------------------------------------#
 
     def callsets_variants_bundles(self):
-
         # TODO: This is similar to a keyed bundle component ...
-
         bb = self.bundle
-
         c_p_l = []
         for p_o in bb.get("analyses", []):
             cs_id = p_o.get("id")
             p_o.update({
                 "variants": list(filter(lambda v: v.get("callset_id", "___none___") == cs_id, bb["variants"]))
             })
-            c_p_l.append(p_o)
-            
+            c_p_l.append(p_o)          
         self.callsetVariantsBundles = c_p_l
-
         return self.callsetVariantsBundles
 
 
@@ -240,7 +229,7 @@ class ByconBundler:
                 continue
 
             bios = {"id": bs_id} 
-            bios = import_datatable_dict_line(self.datatable_mappings, bios, fieldnames, bios_d, "biosample")
+            bios = import_datatable_dict_line(bios, fieldnames, bios_d, "biosample")
             cs_id = bios.get("callset_id", re.sub("pgxbs", "pgxcs", bs_id) )
             ind_id = bios.get("individual_id", re.sub("pgxbs", "pgxind", bs_id) )
             ind = {"id": ind_id} 
@@ -295,9 +284,6 @@ class ByconBundler:
                 if cnv_chro_stats is False or cnv_statusmaps is False:
                     continue
 
-                prdbug(f'dataset_id: {ds_id}')
-                prdbug(f'label in bundler: {s.get("label")}')
-
                 p_o = {
                     "dataset_id": ds_id,
                     "callset_id": s.get(analysis_key, "NA"),
@@ -328,9 +314,6 @@ class ByconBundler:
             cs_id = p_o.get("callset_id", "___none___")
             v_q = {"callset_id": cs_id}
             p_o.update({"variants": list(var_coll.find(v_q))})
-            # for v in var_coll.find(v_q):
-            #     p_o["variants"].append(ByconVariant(self.byc).byconVariant(v))
-
             c_p_l.append(p_o)
 
         self.callsetVariantsBundles = c_p_l
@@ -380,7 +363,7 @@ class ByconBundler:
                 "callset_id": cs_id,
             }
 
-            update_v = import_datatable_dict_line(self.datatable_mappings, update_v, fieldnames, v, "genomicVariant")
+            update_v = import_datatable_dict_line(update_v, fieldnames, v, "genomicVariant")
             update_v = ByconVariant(self.byc).pgxVariant(update_v)
 
             update_v.update({
@@ -403,6 +386,7 @@ class ByconBundler:
             "variants_by_callset_id": vars_ided
         })
 
+
     #--------------------------------------------------------------------------#
 
     def __flatten_keyed_bundle(self):
@@ -419,6 +403,7 @@ class ByconBundler:
             "variants": [elem for sublist in ( v_cs_k.values() ) for elem in sublist]
         })
 
+
     #--------------------------------------------------------------------------#
 
     def __callsetBundleCreateIsets(self, label=""):
@@ -426,10 +411,8 @@ class ByconBundler:
         for ds_id in self.dataset_ids:
             dscs = list(filter(lambda cs: cs.get("dataset_id", "NA") == ds_id, self.bundle["analyses"]))
             intervals, cnv_cs_count = interval_counts_from_callsets(self.bundle["analyses"], self.byc)
-
             if cnv_cs_count < self.min_number:
                 continue
-
             iset = {
                 "dataset_id": ds_id,
                 "group_id": ds_id,
@@ -446,44 +429,50 @@ class ByconBundler:
 
     def __isetBundlesFromCollationParameters(self):
         if len(self.dataset_ids) < 1:
+            BYC["ERRORS"].append("¡¡¡ No `datasetdIds` parameter !!!")
             return
-        if len(self.filters) < 1:
+        if len(self.filters) < 1 and len(self.collation_types) < 1:
+            BYC["ERRORS"].append("¡¡¡ No `filters` or `collationTypes` parameter !!!")
             return
-
         fmap_name = "frequencymap"
         if "codematches" in str(self.delivery_method):
             fmap_name = "frequencymap_codematches"
 
-        mongo_client = MongoClient(host=DB_MONGOHOST)
+        id_q = {}
+        if len(self.filters) > 0:
+            fids = [x.get("id", "___none___") for x in self.filters]
+            id_q = {"id": {"$in": fids}}
+        elif len(self.collation_types) > 0:
+            id_q = {"collation_type": {"$in": self.collation_types}}
 
+        prdbug(f'... __isetBundlesFromCollationParameters query {id_q}')
+
+        mongo_client = MongoClient(host=DB_MONGOHOST)
         for ds_id in self.dataset_ids:
             coll_db = mongo_client[ds_id]
-            for f in self.filters:
-                f_val = f["id"]
+            coll_ids = coll_db[ "collations" ].distinct("id", id_q)
+            prdbug(f'prefetched coll ids: {coll_ids}')
+            for f_val in coll_ids:
                 f_q = { "id": f_val }
-                collation_f = coll_db[ "frequencymaps" ].find_one( { "id": f_val } )
-                collation_c = coll_db[ "collations" ].find_one( { "id": f_val } )
-
+                collation_f = coll_db[ "frequencymaps" ].find_one( f_q )
+                collation_c = coll_db[ "collations" ].find_one( f_q )
                 if not collation_f:
                     continue
                 if not collation_c:
                     continue
                 if not fmap_name in collation_f:
                     continue
-
                 fmap_count = collation_f[ fmap_name ].get("analysis_count", 0)
                 if fmap_count < self.min_number:
                     continue
-
                 r_o = {
                     "dataset_id": ds_id,
                     "group_id": f_val,
                     "label": re.sub(r';', ',', collation_c["label"]),
                     "sample_count": fmap_count,
-                    "interval_frequencies": collation_f[ fmap_name ]["intervals"] }
-                    
+                    "interval_frequencies": collation_f[ fmap_name ]["intervals"] }                    
                 self.intervalFrequenciesBundles.append(r_o)
-
         mongo_client.close( )
+
 
 ################################################################################

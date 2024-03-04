@@ -238,7 +238,7 @@ def get_ncit_tumor_types(n_p, pub):
 ##############################################################################
 
 def get_empty_publication(byc):
-    publication = object_instance_from_schema_name(byc, "Publication", "")
+    publication = object_instance_from_schema_name("Publication", "")
     publication.update({
         "updated": date_isoformat(datetime.datetime.now()),
         "provenance": {

@@ -2,12 +2,12 @@ import re
 from os import environ
 from pymongo import MongoClient, GEOSPHERE
 
-from bycon import DB_MONGOHOST
+from bycon import BYC, DB_MONGOHOST
 
 ################################################################################
 
 def mongodb_update_indexes(ds_id, byc):
-    dt_m = byc["datatable_mappings"]
+    dt_m = BYC["datatable_mappings"]
     b_rt_s = byc["service_config"]["indexed_response_types"]
     mongo_client = MongoClient(host=DB_MONGOHOST)
     data_db = mongo_client[ds_id]

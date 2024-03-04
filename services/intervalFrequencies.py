@@ -47,22 +47,18 @@ def interval_frequencies():
     run_beacon_init_stack(byc)
     generate_genome_bins(byc)
 
-    id_from_path = rest_path_value("intervalFrequencies")
-    if id_from_path:
-        byc[ "filters" ] = [ {"id": id_from_path } ]
+    if (id_from_path := rest_path_value("collationplots")):
+        byc["filters"] = [ {"id": id_from_path } ]
     elif "id" in BYC_PARS:
-        byc[ "filters" ] = [ {"id": BYC_PARS["id"]} ]
-
-    if not "filters" in byc:
-        BYC["ERRORS"].append("No value was provided for collation `id` or `filters`.")
+        byc["filters"] = [ {"id": BYC_PARS["id"]} ]
+    pdb = ByconBundler(byc).collationsPlotbundles()
+    if len(BYC["ERRORS"]) >1:
         BeaconErrorResponse(byc).response(422)
 
     file_type = BYC_PARS.get("output", "___none___")
     if file_type not in ["pgxfreq", "pgxmatrix", "pgxseg"]:
         file_type = "pgxfreq"
     output = file_type
-    pdb = ByconBundler(byc).collationsPlotbundles()
-
     if "pgxseg" in output or "pgxfreq" in output:
         export_pgxseg_frequencies(byc, pdb["interval_frequencies_bundles"])
     elif "matrix" in output:

@@ -1,3 +1,5 @@
+# Definitions here in fact are treated like `beacon_defaults` and merged into
+# the global `beacon_defaults` dictionary
 defaults: {}
 
 ################################################################################
@@ -35,6 +37,7 @@ service_path_aliases:
   schemas: schemas
   uploader: uploader
   uploadplotter: uploadplotter
+  variantsbedfile: variantsbedfile
   vcf: vcfvariants
   vcfvariants: vcfvariants
 

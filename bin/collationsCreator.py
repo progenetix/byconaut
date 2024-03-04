@@ -69,7 +69,6 @@ def collations_creator():
         data_coll = data_db[ collection ]
 
         onto_ids = _get_ids_for_prefix( data_coll, coll_defs )
-        is_series = coll_defs.get("is_series", False)
         onto_keys = list( set( onto_ids ) & hier.keys() )
 
         # get the set of all parents for sample codes
@@ -77,10 +76,6 @@ def collations_creator():
         for o_id in onto_ids:
             if o_id in hier.keys():
                 onto_keys.update( hier[ o_id ][ "parent_terms" ] )
-
-        if is_series is True:
-            child_ids = _get_child_ids_for_prefix(data_coll, coll_defs)
-            onto_keys.update(child_ids)
 
         sel_hiers = [ ]
         no = len(hier.keys())
@@ -90,13 +85,13 @@ def collations_creator():
         for count, code in enumerate(hier.keys(), start=1):
             if not BYC["TEST_MODE"]:
                 bar.next()
-            children = list( set( hier[ code ][ "child_terms" ] ) & onto_keys )
-            hier[ code ].update(  { "child_terms": children } )
+            children = list(set(hier[ code ]["child_terms"]) & onto_keys)
+            hier[ code ].update( {"child_terms": children})
             if len( children ) < 1:
                 if BYC["TEST_MODE"]:
                     print(code+" w/o children")
                 continue
-            code_no = data_coll.count_documents( { db_key: code } )
+            code_no = data_coll.count_documents({db_key: code})
             if code_no < 1:
                 code_no = 0
             if len( children ) < 2:
@@ -106,7 +101,7 @@ def collations_creator():
             if child_no > 0:
                 # sub_id = re.sub(pre, coll_type, code)
                 sub_id = code
-                update_obj = hier[ code ].copy()
+                update_obj = hier[code].copy()
                 update_obj.update({
                     "id": sub_id,
                     "ft_type": coll_defs.get("ft_type", "ontologyTerm"),
@@ -115,6 +110,7 @@ def collations_creator():
                     "reference": "https://progenetix.org/services/ids/"+code,
                     "namespace_prefix": coll_defs.get("namespace_prefix", ""),
                     "scope": coll_defs.get("scope", ""),
+                    "entity": coll_defs.get("entity", ""),
                     "code_matches": code_no,
                     "code": code,
                     "count": child_no,
@@ -131,8 +127,7 @@ def collations_creator():
                 if not BYC["TEST_MODE"]:
                     sel_hiers.append( update_obj )
                 else:
-                    print("{}:\t{} ({} deep) samples - {} / {} {}".format(sub_id, code_no, child_no, count, no, pre))
-
+                    print(f'{sub_id}:\t{code_no} ({child_no} deep) samples - {count} / {no} {pre}')
         # UPDATE   
         if not BYC["TEST_MODE"]:
             bar.finish()
@@ -141,12 +136,12 @@ def collations_creator():
                 coll_coll.delete_many( { "collation_type": coll_type } )
                 coll_coll.insert_many( sel_hiers )
 
-        print("===> Found {} of {} {} codes & added them to {}.collations <===".format(matched, no, coll_type, ds_id))
-       
+        print(f'===> Found {matched} of {no} {coll_type} codes & added them to {ds_id}.collations <===')
+
+     
 ################################################################################
 
 def get_prefix_hierarchy( ds_id, coll_type, pre_h_f, byc):
-
     coll_defs = byc["filter_definitions"][coll_type]
     hier = hierarchy_from_file(ds_id, coll_type, pre_h_f, byc)
     no = len(hier.keys())
@@ -174,21 +169,18 @@ def get_prefix_hierarchy( ds_id, coll_type, pre_h_f, byc):
                 "collation_type": coll_type,
                 "namespace_prefix": coll_defs.get("namespace_prefix", ""),
                 "scope": coll_defs.get("scope", ""),
+                "entity": coll_defs.get("entity", ""),
                 "db_key": coll_defs.get("db_key", ""),
                 "hierarchy_paths": [ { "order": no, "depth": 1, "path": [ "NCIT:C3262", "NCIT:C000000" ] } ]
             }
         } )
 
     for o in onto_ids:
-        
         if o in hier.keys():
             continue
-
         added_no += 1
         no += 1
-
         l = _get_label_for_code(data_coll, coll_defs, o)
-
         if coll_type == "NCIT":
             hier.update( {
                     o: { "id": o, "label": l, "hierarchy_paths":
@@ -200,15 +192,13 @@ def get_prefix_hierarchy( ds_id, coll_type, pre_h_f, byc):
             o_p = { "order": int(no), "depth": 0, "path": [ o ] }
             hier.update( { o: { "id": o, "label": l, "hierarchy_paths": [ o_p ] } } )
         print("Added:\t{}\t{}".format(o, l))
-
     if added_no > 0:
         print("===> Added {} {} codes from {}.{} <===".format(added_no, coll_type, ds_id, coll_defs["scope"] ) )
 
-    ############################################################################
+    #--------------------------------------------------------------------------#
 
     no = len(hier)
     bar = Bar("    parsing parents ", max = no, suffix='%(percent)d%%'+" of "+str(no) )
-
     for c, h in hier.items():
         bar.next()
         all_parents = { }
@@ -219,29 +209,16 @@ def get_prefix_hierarchy( ds_id, coll_type, pre_h_f, byc):
 
     bar.finish()
 
-    ############################################################################
+    #--------------------------------------------------------------------------#
 
     bar = Bar("    parsing children ", max = no, suffix='%(percent)d%%'+" of "+str(no) )
-
     for c, h in hier.items():
         bar.next()
         all_children = set()
         for c_2, h_2 in hier.items():
             if c in h_2["parent_terms"]:
                 all_children.add( c_2 )
-        hier[ c ].update( { "child_terms": list( all_children ) } )
-
-    if "series_pattern" in coll_defs:
-        ch_re = re.compile( coll_defs["series_pattern"] )
-        for c, h in hier.items():
-            all_children = set( )
-            for p in h["child_terms"]:
-                gsms = data_coll.distinct( db_key, { db_key: p } )
-                gsms = list(filter(lambda d: ch_re.match(d), gsms))
-                all_children.update(gsms)
-                all_children.add(p)
-            h.update({ "child_terms": list(all_children) })
-    
+        hier[c].update({"child_terms": list(all_children)})
     bar.finish()
 
     return hier
@@ -249,11 +226,10 @@ def get_prefix_hierarchy( ds_id, coll_type, pre_h_f, byc):
 ################################################################################
 
 def _make_dummy_publication_hierarchy(byc):
-
     coll_type = "pubmed"
     coll_defs = byc["filter_definitions"][coll_type]
     data_db = "progenetix"
-    data_coll = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))[ data_db ][ "publications" ]
+    data_coll = MongoClient(host=DB_MONGOHOST)[data_db]["publications"]
     query = { "id": { "$regex": r'^PMID\:\d+?$' } }
     no = data_coll.count_documents( query )
     bar = Bar("Publications...", max = no, suffix='%(percent)d%%'+" of "+str(no) )
@@ -272,6 +248,7 @@ def _make_dummy_publication_hierarchy(byc):
                 "collation_type": coll_type,
                 "namespace_prefix": coll_defs.get("namespace_prefix", ""),
                 "scope": coll_defs.get("scope", ""),
+                "entity": coll_defs.get("entity", ""),
                 "db_key": coll_defs.get("db_key", ""),
                 "updated": datetime.datetime.now().isoformat(),
                 "hierarchy_paths": [ { "order": int(order), "depth": 0, "path": [ code ] } ],
@@ -279,47 +256,30 @@ def _make_dummy_publication_hierarchy(byc):
                 "child_terms": [ code ]
             }
         } )
- 
     bar.finish()
-
     return hier
 
 ################################################################################
 
 def _get_dummy_hierarchy(ds_id, coll_type, coll_defs, byc):
-
     data_client = MongoClient(host=DB_MONGOHOST)
     data_db = data_client[ ds_id ]
     data_coll = data_db[ coll_defs["scope"] ]
     data_pat = coll_defs["pattern"]
     db_key = coll_defs["db_key"]
 
-    is_series = coll_defs.get("is_series", False)
-
-    if is_series is True: 
-        s_pat = coll_defs["series_pattern"]
-        s_re = re.compile( s_pat )
-
-    pre_ids = _get_ids_for_prefix( data_coll, coll_defs )
-
+    pre_ids = _get_ids_for_prefix(data_coll, coll_defs)
     hier = { }
     no = len(pre_ids)
     bar = Bar(coll_type, max = no, suffix='%(percent)d%%'+" of "+str(no) )
 
     for order, c in enumerate(sorted(pre_ids), start=1):
-
         bar.next()
         hier.update( { c: _get_hierarchy_item( data_coll, coll_defs, coll_type, c, order, 0, [ c ] ) } )
-
-        if is_series is True:
-
-            ser_ids = data_coll.distinct( db_key, { db_key: c } )
-            ser_ids = list(filter(lambda d: s_re.match(d), ser_ids))
-            hier[c].update( { "child_terms": list( set(ser_ids) | set(hier[c]["child_terms"]) ) } )
    
     bar.finish()
-
     return hier
+
 
 ################################################################################
 
@@ -332,6 +292,7 @@ def _get_hierarchy_item(data_coll, coll_defs, coll_type, code, order, depth, pat
         "collation_type": coll_type,
         "namespace_prefix": coll_defs.get("namespace_prefix", ""),
         "scope": coll_defs.get("scope", ""),
+        "entity": coll_defs.get("entity", ""),
         "db_key": coll_defs.get("db_key", ""),
         "updated": datetime.datetime.now().isoformat(),
         "hierarchy_paths": [ { "order": int(order), "depth": int(depth), "path": list(path) } ],

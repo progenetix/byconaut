@@ -45,7 +45,7 @@ def services():
     # for d_k, d_v in defaults.items():
     #     byc.update( { d_k: d_v } )
     read_service_prefs(service, services_conf_path, byc)
-    defs = byc.get("beacon_defaults", {})
+    defs = BYC["beacon_defaults"]
     s_a_s = defs.get("service_path_aliases", {})
     r_w = defs.get("rewrites", {})
 

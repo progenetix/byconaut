@@ -3,7 +3,7 @@ import csv, re, requests
 from random import sample as randomSamples
 
 # bycon
-from bycon import assign_nested_value, get_nested_value, prdbug, prjsonnice, BYC_PARS, ENV
+from bycon import assign_nested_value, get_nested_value, prdbug, prjsonnice, BYC, BYC_PARS, ENV
 
 ################################################################################
 
@@ -11,9 +11,7 @@ def export_datatable_download(results, byc):
     # TODO: separate table generation from HTTP response
     output = BYC_PARS.get("output", "___none___")
     prdbug(f'... in export_datatable_download => {output}')
-    dt_m = byc.get("datatable_mappings")
-    if not dt_m:
-        return
+    dt_m = BYC["datatable_mappings"]
     r_t = byc.get("response_entity_id", "___none___")
     if not r_t in dt_m["definitions"]:
         return
@@ -62,8 +60,8 @@ def export_datatable_download(results, byc):
 
 ################################################################################
 
-def import_datatable_dict_line(datatable_mappings, parent, fieldnames, lineobj, primary_scope="biosample"):
-    dt_m = datatable_mappings
+def import_datatable_dict_line(parent, fieldnames, lineobj, primary_scope="biosample"):
+    dt_m = BYC["datatable_mappings"]
     if not primary_scope in dt_m["definitions"]:
         return
     io_params = dt_m["definitions"][ primary_scope ]["parameters"]

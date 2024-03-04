@@ -38,7 +38,6 @@ def iscn_segmenter():
 	group_parameter = BYC_PARS.get("groupBy", "histological_diagnosis_id")
 	input_file = BYC_PARS.get("inputfile")
 	output_file = BYC_PARS.get("outputfile")
-	dt_m = byc.get("datatable_mappings", {})
 
 	technique = "cCGH"
 	iscn_field = "iscn_ccgh"
@@ -85,7 +84,7 @@ Output will be written to {}""".format(output_file) )
 			"callset_id": s.get("callset_id", "exp-"+n),
 			"individual_id": s.get("individual_id", "ind-"+n),
 		}
-		update_bs = import_datatable_dict_line(dt_m, update_bs, fieldnames, s, "biosample")
+		update_bs = import_datatable_dict_line(update_bs, fieldnames, s, "biosample")
 		h_line = pgxseg_biosample_meta_line(byc, update_bs, group_parameter)
 		pgxseg.write( "{}\n".format(h_line) )
 

@@ -239,37 +239,26 @@ def deparse_ISCN_to_variants(iscn, byc):
     errors = []
 
     for cnv_t, cnv_defs in v_t_defs.items():
-
         revish = cnv_defs.get("revish_label")
         if not revish:
             continue
 
         iscn_re = re.compile(rf"^.*?{revish}\(([\w.,]+)\).*?$", re.IGNORECASE)
-
         if iscn_re.match(iscn):
-
             m = iscn_re.match(iscn).group(1)
-
-            for i_v in re.split(",", m):
-                
+            for i_v in re.split(",", m):               
                 if not cb_pat.match(i_v):
                     continue
-
                 cytoBands, chro, start, end, error = bands_from_cytobands(i_v, c_b_d, a_d)
                 if len(error) > 0:
                     errors.append(error)
                     continue
-
                 v_l = end - start
                 t = cnv_defs.get("DUPDEL", "CNV")
-
                 cytostring = "{}({})".format(cnv_t, i_v).lower()
-
                 if "amp" in revish and v_l > i_d.get("cnv_amp_max_size", 3000000):
                     revish = "hldup"
-
-                v_s = {}
-               
+                v_s = {}              
                 v = ({
                     "variant_state": cnv_defs.get("variant_state"),
                     "location": {

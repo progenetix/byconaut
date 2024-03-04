@@ -1,7 +1,7 @@
-import pymongo
 from os import path, environ
+from pymongo import MongoClient
 
-from bycon_helpers import get_nested_value, return_paginated_list
+from bycon_helpers import get_nested_value, return_paginated_list, select_this_server
 from cgi_parsing import *
 from config import *
 from variant_mapping import ByconVariant
@@ -18,7 +18,7 @@ def stream_pgx_meta_header(ds_id, ds_results, byc):
     ds_d = byc.get("dataset_definitions", {})
     ds_ds_d = ds_d.get(ds_id, {})
 
-    mongo_client = pymongo.MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
+    mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
     bs_coll = mongo_client[ ds_id ][ "biosamples" ]
 
     open_text_streaming()
@@ -44,7 +44,7 @@ def stream_pgx_meta_header(ds_id, ds_results, byc):
 ################################################################################
 
 def pgxseg_biosample_meta_line(byc, biosample, group_id_key="histological_diagnosis_id"):
-    dt_m = byc["datatable_mappings"]
+    dt_m = BYC["datatable_mappings"]
     io_params = dt_m["definitions"][ "biosample" ]["parameters"]
 
     g_id_k = group_id_key
@@ -118,11 +118,11 @@ def print_filters_meta_line(byc):
 ################################################################################
 
 def export_pgxseg_download(datasets_results, ds_id, byc):
-    data_client = pymongo.MongoClient(host=DB_MONGOHOST)
+    data_client = MongoClient(host=DB_MONGOHOST)
     v_coll = data_client[ ds_id ][ "variants" ]
     ds_results = datasets_results.get(ds_id, {})
     if not "variants._id" in ds_results:
-        # TODO: error message here
+        BYC["ERRORS"].append("No variants found in the dataset results.")
         return
     v__ids = ds_results["variants._id"].get("target_values", [])
     if test_truthy( BYC_PARS.get("paginate_results", True) ):
@@ -139,13 +139,112 @@ def export_pgxseg_download(datasets_results, ds_id, byc):
     v_instances = list(sorted(v_instances, key=lambda x: (f'{x["reference_name"].replace("X", "XX").replace("Y", "YY").zfill(2)}', x['start'])))
     for v in v_instances:
         print_variant_pgxseg(v)
-
     close_text_streaming()
+
+
+################################################################################
+
+def write_variants_bedfile(datasets_results, ds_id, byc):
+    """podmd
+    ##### Accepts
+
+    * a Bycon `byc` object
+    * a Bycon `h_o` handover object with its `target_values` representing `_id` 
+    objects of a `variants` collection
+        
+    The function creates a basic BED file and returns its local path. A standard 
+    use would be to create a link to this file and submit it as `hgt.customText` 
+    parameter to the UCSC browser.
+
+    ##### TODO
+
+    * The creation of the different variant types is still rudimentary and has to be 
+    expanded in lockstep with improving Beacon documentation and examples. The 
+    definition of the types and their match patterns should also be moved to a 
+    +separate configuration entry and subroutine.
+    * evaluate to use "bedDetails" format
+
+    podmd"""
+    local_paths = byc.get("local_paths")
+    if not local_paths:
+        return False
+    tmp_path = path.join( *local_paths[ "server_tmp_dir_loc" ])
+    if not path.isdir(tmp_path):
+        BYC["ERRORS"].append(f"Temporary directory `{tmp_path}` not found.")
+        return False
+    h_o_server = select_this_server(byc)
+    ext_url = f'http://genome.ucsc.edu/cgi-bin/hgTracks?org=human&db=hg38'
+    bed_url = f''
+
+    vs = { "DUP": [ ], "DEL": [ ], "LOH": [ ], "SNV": [ ]}
+    colors = {
+        "plot_DUP_color": (255, 198, 51),
+        "plot_AMP_color": (255,102,0),
+        "plot_DEL_color": (51, 160, 255),
+        "plot_HOMODEL_color": (0, 51, 204),
+        "plot_LOH_color": (102, 170, 153),
+        "plot_SNV_color": (255, 51, 204)
+    }
+
+    data_client = MongoClient(host=DB_MONGOHOST)
+    v_coll = data_client[ ds_id ][ "variants" ]
+    ds_results = datasets_results.get(ds_id, {})
+    if not "variants._id" in ds_results:
+        BYC["ERRORS"].append("No variants found in the dataset results.")
+        return [ext_url, bed_url]
+    v__ids = ds_results["variants._id"].get("target_values", [])
+    v_count = ds_results["variants._id"].get("target_count", 0)
+    accessid = ds_results["variants._id"].get("id", "___none___")
+    if test_truthy( BYC_PARS.get("paginate_results", True) ):
+        v__ids = return_paginated_list(v__ids, BYC_PARS.get("skip", 0), BYC_PARS.get("limit", 0))
+
+    bed_file_name = f'{accessid}.bed'
+    bed_file = path.join( tmp_path, bed_file_name )
+
+    for v__id in v__ids:
+        v = v_coll.find_one( { "_id": v__id }, { "_id": 0 } )
+        pv = ByconVariant(byc).byconVariant(v)
+        if (pvt := pv.get("variant_type", "___none___")) not in vs.keys():
+            continue
+        vs[pvt].append(pv)
+
+    b_f = open( bed_file, 'w' )
+    pos = set()
+    ucsc_chr = ""
+    for vt in vs.keys():
+        if len(vs[vt]) > 0:
+            try:
+                vs[vt] = sorted(vs[vt], key=lambda k: k['variant_length'], reverse=True)
+            except:
+                pass
+            col_key = f"plot_{vt}_color"
+            col_rgb = colors.get(col_key, (127, 127, 127))
+            # col_rgb = [127, 127, 127]
+            b_f.write(f'track name={vt} visibility=squish description=\"overall {v_count} variants matching the query; {len(vs[vt])} in this track\" color={col_rgb[0]},{col_rgb[1]},{col_rgb[2]}\n')
+            b_f.write("#chrom\tchromStart\tchromEnd\tbiosampleId\n")
+            for v in vs[vt]:
+                ucsc_chr = "chr"+v["reference_name"]
+                ucsc_min = int( v["start"] + 1 )
+                ucsc_max = int( v["end"] )
+                l = f'{ucsc_chr}\t{ucsc_min}\t{ucsc_max}\t{v.get("biosample_id", "___none___")}\n'
+                pos.add(ucsc_min)
+                pos.add(ucsc_max)
+                b_f.write( l )
+ 
+    b_f.close()
+    ucsc_range = sorted(pos)
+    ucsc_pos = "{}:{}-{}".format(ucsc_chr, ucsc_range[0], ucsc_range[-1])
+    ext_url = f'{ext_url}&position={ucsc_pos}&hgt.customText='
+    bed_url = f'{h_o_server}{local_paths.get("server_tmp_dir_web", "/tmp")}/{bed_file_name}'
+
+    return [ext_url, bed_url]
+
 
 ################################################################################
 
 def print_variant_pgxseg(v_pgxseg):
     print( pgxseg_variant_line(v_pgxseg) )
+
 
 ################################################################################
 
@@ -196,7 +295,7 @@ def export_callsets_matrix(datasets_results, ds_id, byc):
     cs_r = datasets_results[ds_id].get("analyses._id")
     if not cs_r:
         return
-    mongo_client = pymongo.MongoClient(host=DB_MONGOHOST)
+    mongo_client = MongoClient(host=DB_MONGOHOST)
     bs_coll = mongo_client[ ds_id ][ "biosamples" ]
     cs_coll = mongo_client[ ds_id ][ "analyses" ]
 
@@ -354,7 +453,7 @@ def export_vcf_download(datasets_results, ds_id, byc):
         "INFO": ""
     }
 
-    data_client = pymongo.MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
+    data_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
     v_coll = data_client[ ds_id ][ "variants" ]
     ds_results = datasets_results.get(ds_id, {})
     if not "variants._id" in ds_results:

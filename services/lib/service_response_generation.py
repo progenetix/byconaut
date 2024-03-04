@@ -18,17 +18,15 @@ class ByconautServiceResponse:
 
     def __init__(self, byc: dict, response_schema="byconautServiceResponse"):
         self.byc = byc
-        self.beacon_defaults = byc.get("beacon_defaults", {})
-        self.services_defaults = byc.get("services_defaults", {})
-        self.entity_defaults = self.beacon_defaults.get("entity_defaults", {"info":{}})
+        self.entity_defaults = BYC["beacon_defaults"].get("entity_defaults", {"info":{}})
         self.service_config = self.byc.get("service_config", {})
         self.response_schema = response_schema
         self.requested_granularity = BYC_PARS.get("requested_granularity", "record")
         # TBD for authentication? 
-        self.returned_granularity = self.requested_granularity
+        self.returned_granularity = byc.get("returned_granularity", "boolean")
         self.beacon_schema = self.byc["response_entity"].get("beacon_schema", "___none___")
-        self.data_response = object_instance_from_schema_name(byc, response_schema, "")
-        self.error_response = object_instance_from_schema_name(byc, "beaconErrorResponse", "")
+        self.data_response = object_instance_from_schema_name(response_schema, "")
+        self.error_response = object_instance_from_schema_name("beaconErrorResponse", "")
         self.__meta_add_received_request_summary_parameters()
         self.__meta_add_parameters()
 
@@ -192,11 +190,9 @@ class ByconCollations:
         self.delivery_method = BYC_PARS.get("method", "___none___")
         self.output = BYC_PARS.get("output", "___none___")
         self.dataset_ids = byc.get("dataset_ids", [])
-        self.beacon_defaults = byc.get("beacon_defaults", {})
         self.service_config = byc.get("service_config", {})
-        self.entity_defaults = self.beacon_defaults.get("entity_defaults", {"info":{}})
+        self.entity_defaults = BYC["beacon_defaults"].get("entity_defaults", {"info":{}})
         self.filter_definitions = byc.get("filter_definitions", {})
-        self.form_data = byc.get("form_data", {})
         self.filters = byc.get("filters", [])
         self.response_entity_id = byc.get("response_entity_id", "filteringTerm")
         self.path_id_value = byc.get("request_entity_path_id_value", False)
@@ -221,18 +217,17 @@ class ByconCollations:
         f_coll = "collations"
         d_k = set_selected_delivery_keys(self.service_config.get("method_keys"))
 
-        c_id = self.form_data.get("id", "")
+        c_id = BYC_PARS.get("id", "")
         # TODO: This should be derived from some entity definitions
         # TODO: whole query generation in separate function ...
         query = {}
 
         if BYC["TEST_MODE"] is True:
-            t_m_c = self.form_data.get("test_mode_count", 5)
+            t_m_c = BYC_PARS.get("test_mode_count", 5)
             query = mongo_test_mode_query(self.dataset_ids[0], f_coll, t_m_c)
         elif len(c_id) > 0:
             query = { "id": c_id }
         else:
-
             q_list = []
             ft_fs = []
             for f in self.filters:
@@ -242,11 +237,9 @@ class ByconCollations:
                 f_re = re.compile(r'^' + '|'.join(ft_fs))
             else:
                 f_re = None
-
             if f_re is not None:
                 q_list.append({"id": { "$regex": f_re}})
-
-            q_types = self.form_data.get("collation_types", [])
+            q_types = BYC_PARS.get("collation_types", [])
             if len(q_types) > 0:
                 q_list.append({"collation_type": {"$in": q_types }})
 
@@ -254,13 +247,14 @@ class ByconCollations:
                 query = q_list[0]
             elif len(q_list) > 1:
                 query = {"$and": q_list}
+
+        prdbug(f'Collation query: {query}')
         
         # TODO
         # if not query:
         #     warning = 'No limit (filters, collationTypes, id) on collation listing -> abortin...'
 
         s_s = { }
-
         for ds_id in self.dataset_ids:
             fields = {"_id": 0}
             f_s = mongo_result_list(ds_id, f_coll, query, fields)
@@ -268,14 +262,11 @@ class ByconCollations:
                 if "codematches" in str(self.delivery_method):
                     if int(f.get("code_matches", 0)) < 1:
                         continue
-
                 i_d = f.get("id", "NA")
                 if i_d not in s_s:
                     s_s[ i_d ] = { }
-
                 if len(d_k) < 1:
-                    d_k = list(f.keys())
-                    
+                    d_k = list(f.keys())                    
                 for k in d_k:
                     if k in self.service_config.get("integer_keys", []):
                         s_s[ i_d ].update({k: s_s[ i_d ].get(k, 0) + f.get(k, 0)})

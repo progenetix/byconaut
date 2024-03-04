@@ -1,1 +1,1 @@
-analysis_id	biosample_id	individual_id	legacy_ids	variant_class	experiment_id	series_id	platform_id	platform_label	data_provenance
+analysis_id	biosample_id	individual_id	analysis_legacy_id	legacy_ids	analysis_operation_id	analysis_operation_label	experiment_id	series_id	platform_id	platform_label	data_provenance	calling_pipeline

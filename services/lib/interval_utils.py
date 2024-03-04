@@ -64,6 +64,15 @@ end:
 ################################################################################
 ################################################################################
 
+class GenomeBins:
+    def __init__(self, byc):
+        self.genomic_intervals = []
+
+    #--------------------------------------------------------------------------#
+    #----------------------------- public -------------------------------------#
+    #--------------------------------------------------------------------------#
+
+
 def generate_genome_bins(byc):
     parse_cytoband_file(byc)
     __generate_cytoband_intervals(byc)
@@ -220,48 +229,33 @@ def interval_cnv_arrays(cs_vars, byc):
     # the values_map collects all values for the given interval to retrieve
     # the min and max values of each interval
     values_map = [[] for i in range(int_no)]
-
     digests = []
-
     if type(cs_vars).__name__ == "Cursor":
         cs_vars.rewind()
-
     for v in cs_vars:
-        if "variant_state" not in v:
-            continue
-
-        v_t_c = v["variant_state"].get("id", "__NA__")
+        v_t_c = v.get("variant_state", {}).get("id", "__NA__")
         if v_t_c not in v_t_defs.keys():
             continue
-
         dup_del = v_t_defs[v_t_c].get("DUPDEL")
         # skipping non-CNV vars
         if dup_del is None:
             continue
-
         cov_lab = cov_labs[dup_del]
-
-        if "reference_name" not in v:
-            v.update({"reference_name": v["location"]["chromosome"]})
-
         v_i_id = v.get("variant_internal_id", None)
         v_cs_id = v.get("callset_id", None)
-
         if v_i_id in digests:
             if "local" in ENV:
                 print(f'\n¡¡¡ {v_i_id} already counted for {v_cs_id}')
+            continue
         else:
             digests.append(v_i_id)
 
         for i, intv in enumerate(intervals):
-
             if _has_overlap(intv, v):
-
                 ov_end = min(intv["end"], v["location"]["end"])
                 ov_start = max(intv["start"], v["location"]["start"])
                 ov = ov_end - ov_start
                 maps[cov_lab][i] += ov
-
                 try:
                     # print(type(v["info"]["cnv_value"]))
                     if type(v["info"]["cnv_value"]) == int or type(v["info"]["cnv_value"]) == float:
@@ -277,7 +271,7 @@ def interval_cnv_arrays(cs_vars, byc):
             if maps[cov_lab][i] > 0:
                 cov = maps[cov_lab][i]
                 lab = f'{cov_lab}coverage'
-                chro = str(intv["reference_name"])
+                chro = str(v["location"].get("chromosome"))
                 c_a = chro + intv["arm"]
                 cnv_stats[lab] += cov
                 chro_stats[chro][lab] += cov
@@ -335,7 +329,6 @@ def interval_counts_from_callsets(analyses, byc):
     analyses with CNV statusmaps and return a list of standard genomic interval
     objects with added per-interval quantitative data.
     """
-
     min_f = byc["interval_definitions"]["interval_min_fraction"].get("value", 0.001)
     int_fs = deepcopy(byc["genomic_intervals"])
     int_no = len(int_fs)
@@ -346,32 +339,25 @@ def interval_counts_from_callsets(analyses, byc):
 
     cs_no = len(list(analyses))
     f_factor = 0
-
     if cs_no > 0:
         f_factor = 100 / cs_no
-
     pars = {
         "gain": {"cov_l": "dup", "val_l": "max"},
         "loss": {"cov_l": "del", "val_l": "min"}
     }
 
     for t in pars.keys():
-
         covs = np.zeros((cs_no, int_no))
         vals = np.zeros((cs_no, int_no))
-
         if type(analyses).__name__ == "Cursor":
             analyses.rewind()
-
         for i, cs in enumerate(analyses):
             covs[i] = cs["cnv_statusmaps"][pars[t]["cov_l"]]
             vals[i] = cs["cnv_statusmaps"][pars[t]["val_l"]]
-
         counts = np.count_nonzero(covs >= min_f, axis=0)
         frequencies = np.around(counts * f_factor, 3)
         medians = np.around(np.ma.median(np.ma.masked_where(covs < min_f, vals), axis=0).filled(0), 3)
         means = np.around(np.ma.mean(np.ma.masked_where(covs < min_f, vals), axis=0).filled(0), 3)
-
         for i, interval in enumerate(int_fs):
             int_fs[i].update({
                 t + "_frequency": frequencies[i],
