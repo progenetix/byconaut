@@ -42,7 +42,7 @@ def main():
 def retriever():
     initialize_bycon_service(byc, "retriever")
     read_service_prefs("aggregator", services_conf_path, byc)
-    run_beacon_init_stack(byc)
+#    run_beacon_init_stack(byc)
 
     r = ByconautServiceResponse(byc)
 

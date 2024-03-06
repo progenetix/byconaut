@@ -40,7 +40,7 @@ def main():
 
 def sampleplots():
     initialize_bycon_service(byc, "biosamples")
-    run_beacon_init_stack(byc)
+#    run_beacon_init_stack(byc)
     generate_genome_bins(byc)
 
     plot_type = BYC_PARS.get("plot_type", "histoplot")

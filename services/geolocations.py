@@ -36,6 +36,7 @@ def main():
 def geolocations():
     initialize_bycon_service(byc, "geolocations")
     read_service_prefs("geolocations", services_conf_path, byc)
+#    run_beacon_init_stack(byc)
     byc["geoloc_definitions"].update({"geo_root": "geo_location"})
 
     r = ByconautServiceResponse(byc)    

@@ -32,7 +32,7 @@ def main():
 def dbstats():
     initialize_bycon_service(byc, "dbstats")
     read_service_prefs("dbstats", services_conf_path, byc)
-    run_beacon_init_stack(byc)
+#    run_beacon_init_stack(byc)
     r = ByconautServiceResponse(byc)
 
     stats = MongoClient(host=DB_MONGOHOST)[HOUSEKEEPING_DB][ HOUSEKEEPING_INFO_COLL ].find( { }, { "_id": 0 } ).sort( "date", -1 ).limit( 1 )

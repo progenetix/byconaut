@@ -38,7 +38,7 @@ def main():
 def housekeeping():
     initialize_bycon_service(byc, "housekeeping")
     read_service_prefs("housekeeping", services_conf_path, byc)
-    run_beacon_init_stack(byc)
+#    run_beacon_init_stack(byc)
 
     # TODO: rewrap, use config etc.
     generated_docs_path = path.join( dir_path, pardir, "docs", "generated")

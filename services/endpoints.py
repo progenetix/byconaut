@@ -26,7 +26,7 @@ def main():
 
 def endpoints():
     initialize_bycon_service(byc, "endpoints")
-    run_beacon_init_stack(byc)
+#    run_beacon_init_stack(byc)
     # TODO: This needs some error fallback, test for existing entities etc.
     schema_name = rest_path_value("endpoints")
     prdbug(f'Schema name: {schema_name}')

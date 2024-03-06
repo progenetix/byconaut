@@ -48,7 +48,7 @@ def main():
 
 def collationplots():
     initialize_bycon_service(byc, "collationplots")
-    run_beacon_init_stack(byc)
+#    run_beacon_init_stack(byc)
     generate_genome_bins(byc)
 
     if (id_from_path := rest_path_value("collationplots")):

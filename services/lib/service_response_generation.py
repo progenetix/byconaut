@@ -3,7 +3,7 @@ from os import environ
 
 from bycon_helpers import mongo_result_list, mongo_test_mode_query, return_paginated_list
 from cgi_parsing import prdbug
-from config import BYC, BYC_PARS
+from config import AUTHORIZATIONS, BYC, BYC_PARS
 from export_file_generation import *
 from query_execution import execute_bycon_queries
 from query_generation import ByconQuery

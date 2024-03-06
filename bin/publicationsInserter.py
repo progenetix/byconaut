@@ -30,7 +30,7 @@ def main():
 def publications_inserter():
     initialize_bycon_service(byc, "publications_inserter")
     read_service_prefs("publications_inserter", services_conf_path, byc)
-    run_beacon_init_stack(byc)
+#    run_beacon_init_stack(byc)
     
     g_url = byc["service_config"]["google_spreadsheet_tsv_url"]
     skip_cols = byc["service_config"]["skipped_columns"]

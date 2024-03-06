@@ -27,7 +27,7 @@ def main():
 
 def variants_inserter():
     initialize_bycon_service(byc, "variants_inserter")
-    run_beacon_init_stack(byc)
+#    run_beacon_init_stack(byc)
 
     if len(byc["dataset_ids"]) != 1:
         print("No single existing dataset was provided with -d ...")

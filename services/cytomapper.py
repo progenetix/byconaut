@@ -33,7 +33,7 @@ def main():
 def cytomapper():
     
     initialize_bycon_service(byc, sys._getframe().f_code.co_name)
-    run_beacon_init_stack(byc)
+#    run_beacon_init_stack(byc)
     parse_cytoband_file(byc)
 
     results = __return_cytobands_results(byc)

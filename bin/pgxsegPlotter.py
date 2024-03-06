@@ -27,7 +27,7 @@ def main():
 
 def pgxseg_plotter():
     initialize_bycon_service(byc, "pgxseg_plotter")
-    run_beacon_init_stack(byc)
+#    run_beacon_init_stack(byc)
     generate_genome_bins(byc)
 
     input_file = BYC_PARS.get("inputfile")

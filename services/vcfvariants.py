@@ -31,7 +31,7 @@ def main():
 
 def vcfvariants():
     initialize_bycon_service(byc, "biosamples")
-    run_beacon_init_stack(byc)
+#    run_beacon_init_stack(byc)
 
     if not "vcf" in BYC_PARS.get("output", "___none___"):
         BYC_PARS.update({"output":"vcf"})

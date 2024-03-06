@@ -96,9 +96,9 @@ def pgxseg_biosample_meta_line(byc, biosample, group_id_key="histological_diagno
 def __pgxmatrix_interval_header(info_columns, byc):
     int_line = info_columns.copy()
     for iv in byc["genomic_intervals"]:
-        int_line.append(f'{iv["reference_name"]}:{iv["start"]}-{iv["end"]}:DUP')
+        int_line.append(f'{iv["location"]["chromosome"]}:{iv["location"]["start"]}-{iv["location"]["end"]}:DUP')
     for iv in byc["genomic_intervals"]:
-        int_line.append(f'{iv["reference_name"]}:{iv["start"]}-{iv["end"]}:DEL')
+        int_line.append(f'{iv["location"]["chromosome"]}:{iv["location"]["start"]}-{iv["location"]["end"]}:DEL')
     return int_line
 
 
@@ -136,7 +136,7 @@ def export_pgxseg_download(datasets_results, ds_id, byc):
         v_s = v_coll.find_one( { "_id": v_id }, { "_id": 0 } )
         v_instances.append(ByconVariant(byc).byconVariant(v_s))
 
-    v_instances = list(sorted(v_instances, key=lambda x: (f'{x["reference_name"].replace("X", "XX").replace("Y", "YY").zfill(2)}', x['start'])))
+    v_instances = list(sorted(v_instances, key=lambda x: (f'{x["location"]["chromosome"].replace("X", "XX").replace("Y", "YY").zfill(2)}', x["location"]['start'])))
     for v in v_instances:
         print_variant_pgxseg(v)
     close_text_streaming()
@@ -223,9 +223,9 @@ def write_variants_bedfile(datasets_results, ds_id, byc):
             b_f.write(f'track name={vt} visibility=squish description=\"overall {v_count} variants matching the query; {len(vs[vt])} in this track\" color={col_rgb[0]},{col_rgb[1]},{col_rgb[2]}\n')
             b_f.write("#chrom\tchromStart\tchromEnd\tbiosampleId\n")
             for v in vs[vt]:
-                ucsc_chr = "chr"+v["reference_name"]
-                ucsc_min = int( v["start"] + 1 )
-                ucsc_max = int( v["end"] )
+                ucsc_chr = "chr"+v["location"]["chromosopme"]
+                ucsc_min = int( v["location"]["start"] + 1 )
+                ucsc_max = int( v["location"]["end"] )
                 l = f'{ucsc_chr}\t{ucsc_min}\t{ucsc_max}\t{v.get("biosample_id", "___none___")}\n'
                 pos.add(ucsc_min)
                 pos.add(ucsc_max)
@@ -254,7 +254,7 @@ def print_pgxseg_header_line():
 ################################################################################
 
 def pgxseg_header_line():
-    return "\t".join( ["biosample_id", "reference_name", "start", "end", "log2", "variant_type", "reference_bases", "alternate_bases"])
+    return "\t".join( ["biosample_id", "reference_name", "start", "end", "log2", "variant_type", "reference_bases", "alternate_bases", "variant_state_id", "variant_state_label"])
 
 ################################################################################
 
@@ -262,19 +262,18 @@ def pgxseg_variant_line(v_pgxseg):
     for p in ("sequence", "reference_sequence"):
         if not v_pgxseg[p]:
             v_pgxseg.update({p: "."})
-    log_v = "."
-    if "info" in v_pgxseg:
-        if v_pgxseg["info"]:
-            log_v = v_pgxseg["info"].get("cnv_value", ".")
+    log_v = v_pgxseg.get("info", {}).get("cnv_value", ".")
     v_l = (
         v_pgxseg.get("biosample_id"),
-        v_pgxseg["reference_name"],
-        v_pgxseg["start"],
-        v_pgxseg["end"],
-        log_v,
+        v_pgxseg["location"]["chromosome"],
+        v_pgxseg["location"]["start"],
+        v_pgxseg["location"]["end"],
+        "NA" if not log_v else log_v,
         v_pgxseg.get("variant_type", "."),
         v_pgxseg.get("reference_sequence"),
-        v_pgxseg.get("sequence")
+        v_pgxseg.get("sequence"),
+        v_pgxseg["variant_state"].get("id"),
+        v_pgxseg["variant_state"].get("label")
     )
 
     return "\t".join([str(x) for x in v_l])
@@ -468,7 +467,8 @@ def export_vcf_download(datasets_results, ds_id, byc):
         v = v_coll.find_one( { "_id": v_id }, { "_id": 0 } )
         v_instances.append(ByconVariant(byc).byconVariant(v))
 
-    v_instances = list(sorted(v_instances, key=lambda x: (f'{x["reference_name"].replace("X", "XX").replace("Y", "YY").zfill(2)}', x['start'])))
+
+    v_instances = list(sorted(v_instances, key=lambda x: (f'{x["location"]["chromosome"].replace("X", "XX").replace("Y", "YY").zfill(2)}', x["location"]['start'])))
 
     variant_ids = []
     for v in v_instances:
@@ -491,10 +491,8 @@ def export_vcf_download(datasets_results, ds_id, byc):
     for d in variant_ids:
         d_vs = [var for var in v_instances if var.get('variant_internal_id', "__none__") == d]
         vcf_v = bv.vcfVariant(d_vs[0])
-        
         for bsid in biosample_ids:
             vcf_v.update({bsid: "."})
-
         for d_v in d_vs:
             b_i = d_v.get("biosample_id", "__none__")
             vcf_v.update({b_i: "0/1"})
