@@ -29,7 +29,6 @@ def main():
 
 def variantsbedfile():
     initialize_bycon_service(byc, "g_variants")
-#    run_beacon_init_stack(byc)
     rss = ByconResultSets(byc).datasetsResults()
     ds_id = list(rss.keys())[0]
     ucsclink, bedfilelink = write_variants_bedfile(rss, ds_id, byc)

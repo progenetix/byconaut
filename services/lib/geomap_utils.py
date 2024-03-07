@@ -18,9 +18,7 @@ def read_geomarker_table_web(byc):
     lf, fieldnames = read_www_tsv_to_dictlist(f_a)
 
     markers = {}
-
     for line in lf:
-        
         group_lon = line.get("group_lon", "")       # could use 0 here for Null Island...
         group_lat = line.get("group_lat", "")       # could use 0 here for Null Island...
         group_label = line.get("group_label", "")
@@ -242,6 +240,7 @@ def __map_marker_from_geo_location(byc, geoloc, p_p, m_max_count):
 
     if ".png" in marker_icon or ".jpg" in marker_icon:
         marker = "marker"
+    
     if "circle" in marker:
         map_marker = """
 L.{}([{}, {}], {{

@@ -10,7 +10,6 @@ from bycon import (
     initialize_bycon_service,
     print_text_response,
     rest_path_value,
-    run_beacon_init_stack,
     BYC,
     BYC_PARS
 )
@@ -48,7 +47,6 @@ def main():
 
 def collationplots():
     initialize_bycon_service(byc, "collationplots")
-#    run_beacon_init_stack(byc)
     generate_genome_bins(byc)
 
     if (id_from_path := rest_path_value("collationplots")):

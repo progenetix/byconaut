@@ -32,7 +32,6 @@ def main():
 def publications():
     initialize_bycon_service(byc, "publications")
     read_service_prefs("publications", services_conf_path, byc)
-#    run_beacon_init_stack(byc)
 
     r = ByconautServiceResponse(byc)
     # data retrieval & response population

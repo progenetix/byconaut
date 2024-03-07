@@ -31,7 +31,6 @@ def main():
 def ontologymaps():
     initialize_bycon_service(byc, "ontologymappings")
     read_service_prefs("ontologymappings", services_conf_path, byc)
-#    run_beacon_init_stack(byc)
 
     r = ByconautServiceResponse(byc)
     p_filter = rest_path_value("ontologymappings")

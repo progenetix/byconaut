@@ -19,7 +19,7 @@ def stream_pgx_meta_header(ds_id, ds_results, byc):
     ds_ds_d = ds_d.get(ds_id, {})
 
     mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
-    bs_coll = mongo_client[ ds_id ][ "biosamples" ]
+    bs_coll = mongo_client[ds_id]["biosamples"]
 
     open_text_streaming()
 
@@ -96,9 +96,9 @@ def pgxseg_biosample_meta_line(byc, biosample, group_id_key="histological_diagno
 def __pgxmatrix_interval_header(info_columns, byc):
     int_line = info_columns.copy()
     for iv in byc["genomic_intervals"]:
-        int_line.append(f'{iv["location"]["chromosome"]}:{iv["location"]["start"]}-{iv["location"]["end"]}:DUP')
+        int_line.append(f'{iv["reference_name"]}:{iv["start"]}-{iv["end"]}:DUP')
     for iv in byc["genomic_intervals"]:
-        int_line.append(f'{iv["location"]["chromosome"]}:{iv["location"]["start"]}-{iv["location"]["end"]}:DEL')
+        int_line.append(f'{iv["reference_name"]}:{iv["start"]}-{iv["end"]}:DEL')
     return int_line
 
 

@@ -44,7 +44,6 @@ def intervalFrequencies():
 def interval_frequencies():
     initialize_bycon_service(byc, "interval_frequencies")
     read_service_prefs("interval_frequencies", services_conf_path, byc)
-#    run_beacon_init_stack(byc)
     generate_genome_bins(byc)
 
     if (id_from_path := rest_path_value("collationplots")):

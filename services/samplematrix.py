@@ -28,7 +28,6 @@ def main():
 
 def samplematrix():
     initialize_bycon_service(byc, "biosamples")
-#    run_beacon_init_stack(byc)
     generate_genome_bins(byc)
     if not "pgxmatrix" in BYC_PARS.get("output", "___none___"):
         BYC_PARS.update({"output":"pgxmatrix"})

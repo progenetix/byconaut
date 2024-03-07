@@ -27,7 +27,6 @@ def main():
 def collations():
     initialize_bycon_service(byc, "collations")
     read_service_prefs("collations", services_conf_path, byc)
-#    run_beacon_init_stack(byc)
     r = ByconautServiceResponse(byc)
     print_json_response(r.collationsResponse())
 

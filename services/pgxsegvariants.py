@@ -30,7 +30,6 @@ def main():
 
 def pgxsegvariants():
     initialize_bycon_service(byc, "biosamples")
-#    run_beacon_init_stack(byc)
 
     if not "pgxseg" in BYC_PARS.get("output", "___none___"):
         BYC_PARS.update({"output":"pgxseg"})

@@ -31,7 +31,6 @@ def main():
 
 def collations_creator():
     initialize_bycon_service(byc, "collations_creator")
-#    run_beacon_init_stack(byc)
     
     if len(byc["dataset_ids"]) > 1:
         print("Please give only one dataset using -d")

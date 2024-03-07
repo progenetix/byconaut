@@ -32,7 +32,6 @@ def main():
 
 def frequencymaps_creator():
     initialize_bycon_service(byc, "frequencymaps_creator")
-#    run_beacon_init_stack(byc)
     generate_genome_bins(byc)
 
     if len(byc["dataset_ids"]) > 1:

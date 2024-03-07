@@ -34,7 +34,6 @@ def genespans():
     """
     initialize_bycon_service(byc, "genespans")
     read_service_prefs("genespans", services_conf_path, byc)
-#    run_beacon_init_stack(byc)
     parse_cytoband_file(byc)
 
     # form id assumes start match (e.g. for autocompletes)

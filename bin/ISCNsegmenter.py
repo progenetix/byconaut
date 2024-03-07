@@ -32,7 +32,6 @@ def main():
 
 def iscn_segmenter():
 	initialize_bycon_service(byc, "iscn_segmenter")
-	run_beacon_init_stack(byc)
 	generate_genome_bins(byc)
 
 	group_parameter = BYC_PARS.get("groupBy", "histological_diagnosis_id")
