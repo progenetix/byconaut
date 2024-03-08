@@ -7,9 +7,7 @@ from bycon import *
 
 pkg_path = path.dirname( path.abspath(__file__) )
 
-services_conf_path = path.join( path.dirname( path.abspath(__file__) ), "config" )
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
-services_loc_path = path.join( path.dirname( path.abspath(__file__) ), "local" )
 sys.path.append( services_lib_path )
 from service_helpers import read_service_prefs
 
@@ -35,35 +33,20 @@ def main():
 def services():
     set_debug_state(debug=0)
 
-    frm = inspect.stack()[1]
-    service = frm.function
-    mod = inspect.getmodule(frm[0])
-
-    # updates `beacon_defaults`, `dataset_definitions` and `local_paths`
-    # update_rootpars_from_local(services_loc_path, byc)
-    # defaults = byc["beacon_defaults"].get("defaults", {})
-    # for d_k, d_v in defaults.items():
-    #     byc.update( { d_k: d_v } )
-    read_service_prefs(service, services_conf_path, byc)
-    defs = BYC["beacon_defaults"]
-    s_a_s = defs.get("service_path_aliases", {})
-    r_w = defs.get("rewrites", {})
+    p_e_m = BYC.get("path_entry_type_mappings", {})
+    e_p_m = BYC.get("entry_type_path_mappings", {})
 
     byc.update({"request_path_root": "services"})
     rest_path_elements(byc)
-    # args_update_form(byc)
+    e_p_id = BYC_PARS.get("request_entity_path_id", "___none___")
+    if e_p_id in p_e_m:
+        byc.update({"request_entity_path_id": e_p_id})
+    r_p_id = byc.get("request_entity_path_id", "ids")
+    prdbug(f'services.py - request_entity_path_id: {r_p_id}')
 
-    r_p_id = byc.get("request_entity_path_id", "info")
+    e = p_e_m.get(r_p_id)   # entry type
+    f = e_p_m.get(e)        # canonical entry type path
 
-    # check for rewrites
-    if r_p_id in r_w:
-        uri = environ.get('REQUEST_URI')
-        pat = re.compile( rf"^.+\/{r_p_id}\/?(.*?)$" )
-        if pat.match(uri):
-            stuff = pat.match(uri).group(1)
-            print_uri_rewrite_response(r_w[r_p_id], stuff)
-
-    f = s_a_s.get(r_p_id)
     if not f:
         pass
     elif f:

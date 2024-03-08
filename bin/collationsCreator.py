@@ -31,7 +31,7 @@ def main():
 
 def collations_creator():
     initialize_bycon_service(byc, "collations_creator")
-    
+
     if len(byc["dataset_ids"]) > 1:
         print("Please give only one dataset using -d")
         exit()

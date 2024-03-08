@@ -34,6 +34,14 @@ def frequencymaps_creator():
     initialize_bycon_service(byc, "frequencymaps_creator")
     generate_genome_bins(byc)
 
+    # avoiding pagination default ...
+    limit = BYC_PARS.get("limit")
+
+    if limit > 0 and limit < 10000: 
+        proceed = input(f'Do you want to really want to process max. `--limit {limit}` samples per subset?\n(Y|n): ')
+        if "n" in proceed.lower():
+            exit()
+
     if len(byc["dataset_ids"]) > 1:
         print("Please give only one dataset using -d")
         exit()

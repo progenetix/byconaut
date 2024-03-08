@@ -18,8 +18,7 @@ def export_datatable_download(results, byc):
     io_params = dt_m["definitions"][ r_t ]["parameters"]
     if not "local" in ENV:
         print('Content-Type: text/tsv')
-        if BYC_PARS.get("download_mode", False) is True:
-            print('Content-Disposition: attachment; filename='+byc["response_entity_id"]+'.tsv')
+        print('Content-Disposition: attachment; filename='+byc["response_entity_id"]+'.tsv')
         print('status: 200')
         print()
     if "idtable" in output:

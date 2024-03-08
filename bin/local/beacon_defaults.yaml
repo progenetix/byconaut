@@ -9,24 +9,12 @@ defaults:
 # mappings and aliases #########################################################
 ################################################################################
 
-# map path id flavours to canonical entry_type_path_id #########################
-# the aliases here are for non-standard speling or additional entry types
-
-service_path_aliases:
-  filteringTerms: filtering_terms       # just for speling variations
-  entryTypes: entry_types               # just for speling variations
-  variants: genomicVariations           # just for speling variations
-  genomicVariations: genomicVariations  # just for speling variations
-  phenopackets: phenopackets            # Beacon+ specific example
-
 
 ################################################################################
 # here you can map additional path values to the corresponding (additional)
 # entry type
 ################################################################################
 
-path_entry_type_mappings:
-  phenopackets: phenopacket             # Beacon+ specific example
 
 ################################################################################
 # her you can add additional path ids to the data query aggregation pipeline
@@ -34,8 +22,6 @@ path_entry_type_mappings:
 # individuals ...
 ################################################################################
 
-data_pipeline_path_ids:
-  - phenopackets                        # Beacon+ specific example
 
 ################################################################################
 # Beacon entry type defaults - please adjust esp. info and schema paths...
@@ -45,7 +31,6 @@ data_pipeline_path_ids:
 
 entity_defaults:
   info:
-    is_entry_type: False
     collection: Null
     response_schema: beaconInfoResponse
     beacon_schema:
@@ -99,7 +84,6 @@ entity_defaults:
   ##############################################################################
 
   phenopacket:
-    is_entry_type: True
     request_entity_path_id: phenopackets
     response_entity_id: phenopacket
     collection: individuals

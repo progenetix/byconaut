@@ -44,10 +44,10 @@ def cytomapper():
         BYC["ERRORS"].append("No matching cytobands!")
         BeaconErrorResponse(byc).response(422)
 
-    if "cyto_bands" in byc["varguments"]:
-        response["meta"]["received_request_summary"].update({ "cytoBands": byc["varguments"]["cyto_bands"] })
-    elif "chro_bases" in byc["varguments"]:
-        response["meta"]["received_request_summary"].update({ "chroBases": byc["varguments"]["chro_bases"] })
+    if "cyto_bands" in BYC_PARS:
+        response["meta"]["received_request_summary"].update({ "cytoBands": BYC_PARS["cyto_bands"] })
+    elif "chro_bases" in BYC_PARS:
+        response["meta"]["received_request_summary"].update({ "chroBases": BYC_PARS["chro_bases"] })
 
     print_json_response(response)
 
@@ -59,13 +59,12 @@ def __return_cytobands_results(byc):
     a_d = byc.get("argument_definitions", {})
     c_b_d = byc.get("cytobands", [])
     chro_names = ChroNames()
-    varguments = byc.get("varguments", {})
 
     cytoBands = [ ]
-    if "cyto_bands" in varguments:
-        cytoBands, chro, start, end, error = bands_from_cytobands(varguments["cyto_bands"], c_b_d, a_d)
-    elif "chro_bases" in varguments:
-        cytoBands, chro, start, end = bands_from_chrobases(varguments["chro_bases"], byc)
+    if "cyto_bands" in BYC_PARS:
+        cytoBands, chro, start, end, error = bands_from_cytobands(BYC_PARS["cyto_bands"], c_b_d, a_d)
+    elif "chro_bases" in BYC_PARS:
+        cytoBands, chro, start, end = bands_from_chrobases(BYC_PARS["chro_bases"], byc)
 
     if len( cytoBands ) < 1:
         return ()

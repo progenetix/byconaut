@@ -3,81 +3,70 @@
 defaults: {}
 
 ################################################################################
-# mappings and aliases #########################################################
-################################################################################
-
-service_path_aliases:
-
-  aggregator: aggregator
-  endpoints: endpoints
-  collations: collations
-  collationplots: collationplots
-  collationPlots: collationplots
-  cytomapper: cytomapper
-  dbstats: dbstats
-  deliveries: deliveries
-  genespans: genespans
-  genes: genespans
-  geolocs: geolocations
-  geolocations: geolocations
-  ids: ids
-  interval_frequencies: intervalFrequencies
-  intervalFrequencies: intervalFrequencies
-  ontologymaps: ontologymappings
-  ontologyMaps: ontologymappings
-  ontologymappings: ontologymappings
-  pgxseg: pgxsegvariants
-  pgxsegvariants: pgxsegvariants
-  publications: publications
-  samplemap: samplemap
-  samplematrix: samplematrix
-  sampletable: sampletable
-  samplesPlotter: sampleplots
-  sampleplots: sampleplots
-  schemas: schemas
-  uploader: uploader
-  uploadplotter: uploadplotter
-  variantsbedfile: variantsbedfile
-  vcf: vcfvariants
-  vcfvariants: vcfvariants
-
-rewrites: {}
-
-#response_type_aliases:
-path_entry_type_mappings:
-
-  ontologymappings: ontologymap
-  ontologymaps: ontologymap
-  ontologyMaps: ontologymap
-  collations: collation
-  genespans: gene
-  intervalFrequencies: intervalFrequencies
-  cytomapper: CytobandMapping
-  geolocations: geoLocation
-  samplemap: biosample
-
-
-################################################################################
 # services entity defaults => snake_casing #####################################
 ################################################################################
 
 entity_defaults:
 
-  aggregator:
-    is_entry_type: True
-    request_path_root: services
-    request_entity_path_id: genomicVariations
-    collection: variants
-    response_schema: beaconBooleanResponse
-    beacon_schema:
-      entity_type: genomicVariant
-      schema: https://progenetix.org/services/schemas/genomicVariant/
+  ##############################################################################
+
+  collationplots:
+    request_entity_path_id: collationplots
+    request_entity_path_aliases:
+      - collationPlots
+
+  endpoints:
+    request_entity_path_id: endpoints
+
+  dbstats:
+    request_entity_path_id: dbstats
+
+  ids:
+    request_entity_path_id: ids
+
+  ontologymappings:
+    request_entity_path_id: ontologymappings
+    request_entity_path_aliases:
+      - ontologymaps
+      - ontologyMaps
+
+  pgxsegvariants:
+    request_entity_path_id: pgxsegvariants
+    request_entity_path_aliases:
+      - pgxseg
+
+  samplemap:
+    request_entity_path_id: samplemap
+
+  samplematrix:
+    request_entity_path_id: samplematrix
+
+  sampletable:
+    request_entity_path_id: sampletable
+
+  sampleplots:
+    request_entity_path_id: sampleplots
+    request_entity_path_aliases:
+      - samplesPlotter
+
+  schemas:
+    request_entity_path_id: schemas
+
+  uploader:
+    request_entity_path_id: uploader
+
+  variantsbedfile:
+    request_entity_path_id: variantsbedfile
+
+  vcfvariants:
+    request_entity_path_id: vcfvariants
+    request_entity_path_aliases:
+      - vcf
+
 
   ##############################################################################
 
   collation:
-    is_entry_type: True
-    request_path_root: services
     request_entity_path_id: collations
     collection: collations
     response_schema: byconautServiceResponse
@@ -88,9 +77,7 @@ entity_defaults:
   ##############################################################################
 
   CytobandMapping:
-    is_entry_type: True
-    request_path_root: services
-    request_entity_path_id: False
+    request_entity_path_id: cytomapper
     response_entity_id: CytobandMapping
     collection: Null
     response_schema: beaconResultsetsResponse
@@ -100,23 +87,10 @@ entity_defaults:
  
   ##############################################################################
 
-  geoLocation:
-    is_entry_type: True
-    request_path_root: services
-    request_entity_path_id: geolocations
-    response_entity_id: geoLocation
-    collection: geolocs
-    response_schema: beaconCollectionsResponse
-    beacon_schema:
-      entity_type: GeoLocation
-      schema: https://progenetix.org/services/schemas/GeoLocation/
-
-  ##############################################################################
-
   gene:
-    is_entry_type: True
-    request_path_root: services
     request_entity_path_id: genespans
+    request_entity_path_aliases:
+      - genes
     response_entity_id: gene
     collection: genes
     response_schema: beaconCollectionsResponse
@@ -126,10 +100,24 @@ entity_defaults:
 
   ##############################################################################
 
+  geoLocation:
+    request_entity_path_id: geolocations
+    request_entity_path_aliases:
+      - geolocs
+    response_entity_id: geoLocation
+    collection: geolocs
+    response_schema: beaconCollectionsResponse
+    beacon_schema:
+      entity_type: GeoLocation
+      schema: https://progenetix.org/services/schemas/GeoLocation/
+
+
+  ##############################################################################
+
   intervalFrequencies:
-    is_entry_type: True
-    request_path_root: services
     request_entity_path_id: intervalFrequencies
+    request_entity_path_aliases:
+      - interval_frequencies
     response_entity_id: intervalFrequencies
     collection: collations
     response_schema: beaconCollectionsResponse
@@ -140,8 +128,6 @@ entity_defaults:
   ##############################################################################
 
   publication:
-    is_entry_type: True
-    request_path_root: services
     request_entity_path_id: publications
     response_entity_id: publication
     collection: publications

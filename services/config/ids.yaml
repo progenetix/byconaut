@@ -23,6 +23,10 @@ format_patterns:
     link: '/subset/?id='
     prepend_if_missing: "pgx:"
 
+  - pattern: '^(?:pgx:)?TCGA\-\w{2,4}?$'
+    link: '/subset/?id='
+    prepend_if_missing: "pgx:"
+
   - pattern: '^(?:pgx:)?(cohort-\w+)$'
     examples:
       - "pgx:cohort-TCGAcancers"

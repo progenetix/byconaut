@@ -18,7 +18,6 @@ class ByconautServiceResponse:
 
     def __init__(self, byc: dict, response_schema="byconautServiceResponse"):
         self.byc = byc
-        self.entity_defaults = BYC["beacon_defaults"].get("entity_defaults", {"info":{}})
         self.service_config = self.byc.get("service_config", {})
         self.response_schema = response_schema
         self.requested_granularity = BYC_PARS.get("requested_granularity", "record")
@@ -84,7 +83,7 @@ class ByconautServiceResponse:
         if "returned_schemas" in r_m:
             r_m.update({"returned_schemas":[self.beacon_schema]})
 
-        info = self.entity_defaults["info"].get("content", {"api_version": "___none___"})
+        info = BYC["entity_defaults"]["info"].get("content", {"api_version": "___none___"})
         for p in ["api_version", "beacon_id"]:
             if p in info.keys():
                 r_m.update({p: info.get(p, "___none___")})
@@ -143,7 +142,7 @@ class ByconautServiceResponse:
             if q in BYC_PARS:
                 r_r_s.update({"request_parameters": always_merger.merge( r_r_s.get("request_parameters", {}), { "collation_types": BYC_PARS.get(q) })})
 
-        info = self.entity_defaults["info"].get("content", {"api_version": "___none___"})
+        info = BYC["entity_defaults"]["info"].get("content", {"api_version": "___none___"})
         for p in ["api_version"]:
             if p in info.keys():
                 r_r_s.update({p: info.get(p, "___none___")})
@@ -191,7 +190,6 @@ class ByconCollations:
         self.output = BYC_PARS.get("output", "___none___")
         self.dataset_ids = byc.get("dataset_ids", [])
         self.service_config = byc.get("service_config", {})
-        self.entity_defaults = BYC["beacon_defaults"].get("entity_defaults", {"info":{}})
         self.filter_definitions = byc.get("filter_definitions", {})
         self.filters = byc.get("filters", [])
         self.response_entity_id = byc.get("response_entity_id", "filteringTerm")
