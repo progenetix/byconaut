@@ -35,7 +35,7 @@ def samples_plotter():
     output_file = BYC_PARS.get("outputfile")
     dataset_ids = BYC_PARS.get("dataset_ids", [])
 
-    if not len(dataset_ids) < 1:
+    if len(dataset_ids) < 1:
         # in this case checking for the command line argument; avoiding defaults
         print("No dataset id(s) were specified (-d, --datasetIds) => quitting ...")
         exit()

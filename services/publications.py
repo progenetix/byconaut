@@ -133,7 +133,7 @@ def _create_filters_query(byc):
 
     if BYC["TEST_MODE"] is True:
         test_mode_count = int(BYC_PARS.get('test_mode_count', 5))
-        mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
+        mongo_client = MongoClient(host=DB_MONGOHOST)
         data_coll = mongo_client[ "progenetix" ][ "publications" ]
 
         rs = list(data_coll.aggregate([{"$sample": {"size": test_mode_count}}]))

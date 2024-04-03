@@ -33,7 +33,6 @@ def main():
 def cytomapper():
     
     initialize_bycon_service(byc, sys._getframe().f_code.co_name)
-    parse_cytoband_file(byc)
 
     results = __return_cytobands_results(byc)
 
@@ -60,62 +59,73 @@ def __return_cytobands_results(byc):
     c_b_d = byc.get("cytobands", [])
     chro_names = ChroNames()
 
-    cytoBands = [ ]
+    results = []
     if "cyto_bands" in BYC_PARS:
-        cytoBands, chro, start, end, error = bands_from_cytobands(BYC_PARS["cyto_bands"], c_b_d, a_d)
+        parlist = BYC_PARS["cyto_bands"]
     elif "chro_bases" in BYC_PARS:
-        cytoBands, chro, start, end = bands_from_chrobases(BYC_PARS["chro_bases"], byc)
-
-    if len( cytoBands ) < 1:
-        return ()
-
-    cb_label = cytobands_label( cytoBands )
-    size = int(  end - start )
-    chroBases = "{}:{}-{}".format(chro, start, end)
-    sequence_id = chro_names.refseq(chro)
+        parlist = BYC_PARS["chro_bases"]
 
     if "text" in BYC_PARS.get("output", "___none___"):
         open_text_streaming()
-        print("{}\t{}".format(cb_label, chroBases))
-        exit()
 
-    # TODO: response objects from schema
-    results = [
-        {
-            "info": {
-                "cytoBands": cb_label,
-                "bandList": [x['chroband'] for x in cytoBands ],
-                "chroBases": chroBases,
-                "referenceName": chro,
-                "size": size,
-            },        
-            "chromosome_location": {
-                "type": "ChromosomeLocation",
-                "species_id": "taxonomy:9606",
-                "chr": chro,
-                "interval": {
-                    "start": cytoBands[0]["cytoband"],
-                    "end": cytoBands[-1]["cytoband"],
-                    "type": "CytobandInterval"
-                }
-            },
-            "genomic_location": {
-                "type": "SequenceLocation",
-                "sequence_id": sequence_id,
-                "interval": {
-                    "start": {
-                        "type": "Number",
-                        "value": start
-                    },
-                    "end": {
-                        "type": "Number",
-                        "value": end
-                    },
-                    "type": "SequenceInterval"
+    for p in parlist:
+        cytoBands = [ ]
+        if "cyto_bands" in BYC_PARS:
+            cytoBands, chro, start, end, error = bands_from_cytobands(p, c_b_d, a_d)
+        elif "chro_bases" in BYC_PARS:
+            cytoBands, chro, start, end = bands_from_chrobases(p, byc)
+
+        if len( cytoBands ) < 1:
+            continue
+
+        cb_label = cytobands_label( cytoBands )
+        size = int(  end - start )
+        chroBases = "{}:{}-{}".format(chro, start, end)
+        sequence_id = chro_names.refseq(chro)
+
+        if "text" in BYC_PARS.get("output", "___none___"):
+            print(f'{chro}{cb_label}\t{chroBases}')
+
+        # TODO: response objects from schema
+        results.append(
+            {
+                "info": {
+                    "cytoBands": cb_label,
+                    "bandList": [x['chroband'] for x in cytoBands ],
+                    "chroBases": chroBases,
+                    "referenceName": chro,
+                    "size": size,
+                },        
+                "chromosome_location": {
+                    "type": "ChromosomeLocation",
+                    "species_id": "taxonomy:9606",
+                    "chr": chro,
+                    "interval": {
+                        "start": cytoBands[0]["cytoband"],
+                        "end": cytoBands[-1]["cytoband"],
+                        "type": "CytobandInterval"
+                    }
+                },
+                "genomic_location": {
+                    "type": "SequenceLocation",
+                    "sequence_id": sequence_id,
+                    "interval": {
+                        "start": {
+                            "type": "Number",
+                            "value": start
+                        },
+                        "end": {
+                            "type": "Number",
+                            "value": end
+                        },
+                        "type": "SequenceInterval"
+                    }
                 }
             }
-        }
-    ]
+        )
+
+    if "text" in BYC_PARS.get("output", "___none___"):
+        exit()
 
     return results
 

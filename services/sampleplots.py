@@ -9,6 +9,7 @@ services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
 sys.path.append( services_lib_path )
 from bycon_bundler import ByconBundler
 from bycon_plot import *
+from file_utils import ExportFile
 from interval_utils import generate_genome_bins
 
 """
@@ -57,7 +58,12 @@ def sampleplots():
         if "samples" in plot_type:
             pdb.update( ByconBundler(byc).resultsets_callset_bundles(RSS) )
 
-    ByconPlot(byc, pdb).svgResponse()
+    svg_f = ExportFile("svg").checkOutputFile()
+    BP = ByconPlot(byc, pdb)
+    if svg_f:
+        BP.svg2file(svg_f)
+    else:
+        BP.svgResponse()
 
 ################################################################################
 ################################################################################

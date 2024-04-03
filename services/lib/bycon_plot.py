@@ -4,7 +4,7 @@ from humps import decamelize
 from os import environ, path
 from PIL import Image, ImageColor, ImageDraw
 
-from bycon import BYC_PARS, ENV, prjsonnice, test_truthy, prdbug, GeneInfo, ChroNames
+from bycon import BYC, BYC_PARS, ENV, bands_from_cytobands, prjsonnice, test_truthy, prdbug, GeneInfo, ChroNames
 
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ) )
 sys.path.append( services_lib_path )
@@ -155,6 +155,7 @@ class ByconPlot:
                 dbm = f'{p_k}: {p_d} ({p_k_t}), type {type(p_d)}'
                 if "array" in p_k_t:
                     p_i_t = p_d_p[p_k].get("items", "string")
+                    prdbug(f'... plot parameter {p_k}: {p_d}')
                     if type(p_d) is not list:
                         p_d = re.split(',', p_d)
                     if "int" in p_i_t:

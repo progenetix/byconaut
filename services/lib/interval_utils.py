@@ -6,9 +6,7 @@ from os import path, pardir
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ) )
 sys.path.append( services_lib_path )
 
-from cytoband_utils import parse_cytoband_file, cytobands_label_from_positions
-
-from bycon import prdbug, BYC_PARS, ENV
+from bycon import cytobands_label_from_positions, parse_cytoband_file, prdbug, BYC_PARS, ENV
 
 ################################################################################
 
@@ -64,17 +62,16 @@ end:
 ################################################################################
 ################################################################################
 
-class GenomeBins:
-    def __init__(self, byc):
-        self.genomic_intervals = []
+# class GenomeBins:
+#     def __init__(self, byc):
+#         self.genomic_intervals = []
 
-    #--------------------------------------------------------------------------#
-    #----------------------------- public -------------------------------------#
-    #--------------------------------------------------------------------------#
+#     #--------------------------------------------------------------------------#
+#     #----------------------------- public -------------------------------------#
+#     #--------------------------------------------------------------------------#
 
 
 def generate_genome_bins(byc):
-    parse_cytoband_file(byc)
     __generate_cytoband_intervals(byc)
     __generate_genomic_intervals(byc)
     byc.update({"genomic_interval_count": len(byc["genomic_intervals"])})

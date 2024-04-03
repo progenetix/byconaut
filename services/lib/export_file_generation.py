@@ -18,7 +18,7 @@ def stream_pgx_meta_header(ds_id, ds_results, byc):
     ds_d = byc.get("dataset_definitions", {})
     ds_ds_d = ds_d.get(ds_id, {})
 
-    mongo_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
+    mongo_client = MongoClient(host=DB_MONGOHOST)
     bs_coll = mongo_client[ds_id]["biosamples"]
 
     open_text_streaming()
@@ -223,7 +223,7 @@ def write_variants_bedfile(datasets_results, ds_id, byc):
             b_f.write(f'track name={vt} visibility=squish description=\"overall {v_count} variants matching the query; {len(vs[vt])} in this track\" color={col_rgb[0]},{col_rgb[1]},{col_rgb[2]}\n')
             b_f.write("#chrom\tchromStart\tchromEnd\tbiosampleId\n")
             for v in vs[vt]:
-                ucsc_chr = "chr"+v["location"]["chromosopme"]
+                ucsc_chr = "chr"+v["location"]["chromosome"]
                 ucsc_min = int( v["location"]["start"] + 1 )
                 ucsc_max = int( v["location"]["end"] )
                 l = f'{ucsc_chr}\t{ucsc_min}\t{ucsc_max}\t{v.get("biosample_id", "___none___")}\n'
@@ -452,7 +452,7 @@ def export_vcf_download(datasets_results, ds_id, byc):
         "INFO": ""
     }
 
-    data_client = MongoClient(host=environ.get("BYCON_MONGO_HOST", "localhost"))
+    data_client = MongoClient(host=DB_MONGOHOST)
     v_coll = data_client[ ds_id ][ "variants" ]
     ds_results = datasets_results.get(ds_id, {})
     if not "variants._id" in ds_results:
