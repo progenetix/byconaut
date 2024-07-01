@@ -363,10 +363,12 @@ def interval_counts_from_callsets(analyses):
         # MongoDB specific
         if type(analyses).__name__ == "Cursor":
             analyses.rewind()
+        cov_l = pars[t].get("cov_l")
+        hl_l = pars[t].get("hl_l", cov_l)
         for i, cs in enumerate(analyses):
-            covs[i] = cs["cnv_statusmaps"][pars[t]["cov_l"]]
+            covs[i] = cs["cnv_statusmaps"].get(cov_l, [])
             # vals[i] = cs["cnv_statusmaps"][pars[t]["val_l"]]
-            hls[i] = cs["cnv_statusmaps"][pars[t]["hl_l"]]
+            hls[i] = cs["cnv_statusmaps"].get(hl_l, [])
         # counting all occurrences of an interval for the current type > interval_min_fraction
         counts = np.count_nonzero(covs >= min_f, axis=0)
         frequencies = np.around(counts * f_factor, 3)
