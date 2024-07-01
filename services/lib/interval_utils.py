@@ -367,9 +367,9 @@ def interval_counts_from_callsets(analyses):
         hl_l = pars[t].get("hl_l", cov_l)
         for i, cs in enumerate(analyses):
             # the fallback is also a zeroed array ...
-            covs[i] = cs["cnv_statusmaps"].get(cov_l, covs.copy())
+            covs[i] = cs["cnv_statusmaps"].get(cov_l, [0] * int_no)
             # vals[i] = cs["cnv_statusmaps"][pars[t]["val_l"]]
-            hls[i] = cs["cnv_statusmaps"].get(hl_l, covs.copy())
+            hls[i] = cs["cnv_statusmaps"].get(hl_l, [0] * int_no)
         # counting all occurrences of an interval for the current type > interval_min_fraction
         counts = np.count_nonzero(covs >= min_f, axis=0)
         frequencies = np.around(counts * f_factor, 3)
