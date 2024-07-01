@@ -34,10 +34,11 @@ def main():
 
 def ids():
     set_debug_state(debug=0)
-    read_service_prefs( "ids", services_conf_path, byc )
+    read_service_prefs( "ids", services_conf_path)
     id_in = rest_path_value("ids")
     output = rest_path_value(id_in)
-    f_p_s = byc["service_config"].get("format_patterns", {})
+    s_c = BYC.get("service_config", {})
+    f_p_s = s_c.get("format_patterns", {})
 
     if id_in:
         for f_p in f_p_s:

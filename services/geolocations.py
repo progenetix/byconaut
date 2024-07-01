@@ -34,24 +34,26 @@ def main():
 ################################################################################
 
 def geolocations():
-    initialize_bycon_service(byc, "geolocations")
-    read_service_prefs("geolocations", services_conf_path, byc)
-    byc["geoloc_definitions"].update({"geo_root": "geo_location"})
+    initialize_bycon_service()
 
-    r = ByconautServiceResponse(byc)    
+    BYC["geoloc_definitions"].update({"geo_root": "geo_location"})
+    BYC_PARS.update({"plot_type": "geomapplot"})
+
+    r = ByconautServiceResponse()
+    # TODO: make the input parsing a class
     if "inputfile" in BYC_PARS:
-        results = read_geomarker_table_web(byc)
+        results = read_geomarker_table_web()
     else:
-        query, geo_pars = geo_query(byc["geoloc_definitions"])
+        query, geo_pars = geo_query()
         if not query:
             BYC["ERRORS"].append("No query generated - missing or malformed parameters")
         else:
             results = mongo_result_list(SERVICES_DB, GEOLOCS_COLL, query, { '_id': False } )
-            prdbug(results)
     if len(BYC["ERRORS"]) > 0:
-        BeaconErrorResponse(byc).response(422)
+        BeaconErrorResponse().response(422)
 
-    print_map_from_geolocations(byc, results)
+    if "map" in BYC_PARS.get("output", "___none___"):
+        ByconMap(results).printMapHTML()
 
     if len(results) == 1:
         if "geo_distance" in BYC_PARS:
@@ -64,7 +66,7 @@ def geolocations():
             query = return_geo_longlat_query(geo_root, geo_pars)
             results = mongo_result_list(SERVICES_DB, GEOLOCS_COLL, query, { '_id': False } )
     if len(BYC["ERRORS"]) > 0:
-        e_r = BeaconErrorResponse(byc).error(422)
+        e_r = BeaconErrorResponse().error(422)
         print_json_response(e_r)
 
     if "text" in BYC_PARS.get("output", "___none___"):

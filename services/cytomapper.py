@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import sys
+import sys, traceback
 from os import path
 
 from bycon import *
@@ -32,16 +32,16 @@ def main():
 
 def cytomapper():
     
-    initialize_bycon_service(byc, sys._getframe().f_code.co_name)
+    initialize_bycon_service()
 
-    results = __return_cytobands_results(byc)
+    results = __return_cytobands_results()
 
-    r = ByconautServiceResponse(byc)
+    r = ByconautServiceResponse()
     response = r.populatedResponse(results)
 
     if len( results ) < 1:
         BYC["ERRORS"].append("No matching cytobands!")
-        BeaconErrorResponse(byc).response(422)
+        BeaconErrorResponse().response(422)
 
     if "cyto_bands" in BYC_PARS:
         response["meta"]["received_request_summary"].update({ "cytoBands": BYC_PARS["cyto_bands"] })
@@ -53,10 +53,8 @@ def cytomapper():
 
 ################################################################################
 
-def __return_cytobands_results(byc):
+def __return_cytobands_results():
 
-    a_d = byc.get("argument_definitions", {})
-    c_b_d = byc.get("cytobands", [])
     chro_names = ChroNames()
 
     results = []
@@ -71,9 +69,9 @@ def __return_cytobands_results(byc):
     for p in parlist:
         cytoBands = [ ]
         if "cyto_bands" in BYC_PARS:
-            cytoBands, chro, start, end, error = bands_from_cytobands(p, c_b_d, a_d)
+            cytoBands, chro, start, end, error = bands_from_cytobands(p)
         elif "chro_bases" in BYC_PARS:
-            cytoBands, chro, start, end = bands_from_chrobases(p, byc)
+            cytoBands, chro, start, end = bands_from_chrobases(p)
 
         if len( cytoBands ) < 1:
             continue

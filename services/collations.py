@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import re, sys
+import re, sys, traceback
 from os import path, environ, pardir
 from pymongo import MongoClient
 
@@ -25,9 +25,9 @@ def main():
 ################################################################################
 
 def collations():
-    initialize_bycon_service(byc, "collations")
-    read_service_prefs("collations", services_conf_path, byc)
-    r = ByconautServiceResponse(byc)
+    initialize_bycon_service()
+    read_service_prefs("collations", services_conf_path)
+    r = ByconautServiceResponse()
     print_json_response(r.collationsResponse())
 
 

@@ -6,9 +6,10 @@ from bycon import BYC, DB_MONGOHOST
 
 ################################################################################
 
-def mongodb_update_indexes(ds_id, byc):
+def mongodb_update_indexes(ds_id):
     dt_m = BYC["datatable_mappings"]
-    b_rt_s = byc["service_config"]["indexed_response_types"]
+    s_c = BYC.get("service_config", {})
+    b_rt_s = s_c["indexed_response_types"]
     mongo_client = MongoClient(host=DB_MONGOHOST)
     data_db = mongo_client[ds_id]
     coll_names = data_db.list_collection_names()
@@ -38,12 +39,12 @@ def mongodb_update_indexes(ds_id, byc):
 
     #<------------------------ special collections --------------------------->#
 
-    special_colls = byc["service_config"].get("indexed_special_collections", {})
+    special_colls = s_c.get("indexed_special_collections", {})
     __index_by_colldef(ds_id, special_colls)
 
     #<------------------------- special databases ---------------------------->#
 
-    for s_db, coll_defs in byc["service_config"].get("indexed_special_dbs", {}).items():
+    for s_db, coll_defs in s_c.get("indexed_special_dbs", {}).items():
         __index_by_colldef(s_db, coll_defs)
 
 ################################################################################

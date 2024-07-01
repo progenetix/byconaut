@@ -30,17 +30,18 @@ def main():
 ################################################################################
 
 def publications():
-    initialize_bycon_service(byc, "publications")
-    read_service_prefs("publications", services_conf_path, byc)
+    initialize_bycon_service()
+    read_service_prefs("publications", services_conf_path)
 
-    r = ByconautServiceResponse(byc)
+    f_d_s = BYC.get("filter_definitions", {})
+    s_c = BYC.get("service_config", {})
+
+    r = ByconautServiceResponse()
     # data retrieval & response population
-    query = _create_filters_query(byc)
-    geo_q, geo_pars = geo_query(byc["geoloc_definitions"])
+    query = _create_filters_query()
+    geo_q, geo_pars = geo_query()
 
     if geo_q:
-        # for g_k, g_v in geo_pars.items():
-        #     received_request_summary_add_custom_parameter(byc, g_k, g_v)
         if len(query.keys()) < 1:
             query = geo_q
         else:
@@ -48,12 +49,12 @@ def publications():
 
     if len(query.keys()) < 1:
         BYC["ERRORS"].append("No query could be constructed from the parameters provided.")
-        BeaconErrorResponse(byc).response(422)
+        BeaconErrorResponse().response(422)
 
     mongo_client = MongoClient(host=DB_MONGOHOST)
     pub_coll = mongo_client[ "progenetix" ][ "publications" ]
-    p_re = re.compile( byc["filter_definitions"]["pubmed"]["pattern"] )
-    d_k = set_selected_delivery_keys(byc["service_config"].get("method_keys"))
+    p_re = re.compile( f_d_s["pubmed"]["pattern"] )
+    d_k = set_selected_delivery_keys(s_c.get("method_keys"))
     p_l = [ ]
     
     for pub in pub_coll.find( query, { "_id": 0 } ):
@@ -88,14 +89,14 @@ def publications():
 
     mongo_client.close( )
     results = sorted(p_l, key=itemgetter('sortid'), reverse = True)
-    __check_publications_map_response(byc, results)
+    __check_publications_map_response(results)
     print_json_response(r.populatedResponse(results))
 
 
 ################################################################################
 ################################################################################
 
-def __check_publications_map_response(byc, results):
+def __check_publications_map_response(results):
     output = BYC_PARS.get("output", "___none___")
     if not "map" in output:
         return
@@ -120,14 +121,14 @@ def __check_publications_map_response(byc, results):
         u_locs[l_k]["geo_location"]["properties"]["items"].append(link)
     geolocs =  u_locs.values()
 
-    print_map_from_geolocations(byc, geolocs)
+    print_map_from_geolocations(geolocs)
 
 ################################################################################
 
-def _create_filters_query(byc):
-    filters = byc.get("filters", [])
+def _create_filters_query():
+    filters = BYC.get("BYC_FILTERS", [])
     filter_precision = BYC_PARS.get("filter_precision", "exact")
-    f_d_s = byc.get("filter_definitions", {})
+    f_d_s = BYC.get("filter_definitions", {})
     query = { }
     error = ""
 
@@ -160,9 +161,10 @@ def _create_filters_query(byc):
             continue
 
         dbk = f_d_s[ prk ]["db_key"]
+        prdbug(f)
         if count_pat.match( f_val ):
             pre, op, no = count_pat.match(f_val).group(1,2,3)
-            dbk = f_d_s[ pre ][ "db_key" ]
+            # dbk = f_d_s[ pre ][ "db_key" ]
             if op == ">":
                 op = '$gt'
             elif op == "<":
@@ -179,8 +181,11 @@ def _create_filters_query(byc):
             for the selection of PMID labeled publications.
             podmd"""
             q_list.append( { "id": re.compile(r'^'+f_val ) } )
+        elif "pgxuse" in f_val:
+            if ":y" in f_val.lower():
+                q_list.append( { dbk: {"$regex":"y"} } )
         else:
-            q_list.append( { "id": f_val } )
+            q_list.append( { dbk: f_val } )
 
     if len(q_list) > 1:
         query = { '$and': q_list }
@@ -188,6 +193,8 @@ def _create_filters_query(byc):
         query = {}
     else:
         query = q_list[0]
+
+    prdbug(f'filters query: {query}')
 
     return query
 

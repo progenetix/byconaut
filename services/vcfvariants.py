@@ -30,16 +30,18 @@ def main():
 ################################################################################
 
 def vcfvariants():
-    initialize_bycon_service(byc, "biosamples")
+    # initialize_bycon_service()
+    # TODO: Fix this, to be correctly read from services_entity_defaults
+    BYC.update({"response_entity_id": "genomicVariant"})
 
     if not "vcf" in BYC_PARS.get("output", "___none___"):
         BYC_PARS.update({"output":"vcf"})
 
-    rss = ByconResultSets(byc).datasetsResults()
+    rss = ByconResultSets().datasetsResults()
 
     # Note: only the first dataset will be exported ...
     ds_id = list(rss.keys())[0]
-    export_vcf_download(rss, ds_id, byc)
+    export_vcf_download(rss, ds_id)
 
 
 ################################################################################

@@ -27,7 +27,7 @@ def main():
 ################################################################################
 
 def templates_creator():
-    initialize_bycon_service(byc, "templates_creator")
+    initialize_bycon_service()
     dt_m = BYC["datatable_mappings"].get("definitions", {})
     rsrc_p = path.join(pkg_path, "rsrc", "templates")
 

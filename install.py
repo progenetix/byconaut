@@ -68,6 +68,7 @@ def install_services(no_sudo):
     s_s_d = path.join(dir_path, "services", "")
     s_i_d = path.join(b_i_d_p, "services", "")
     s_c_d = path.join(dir_path, "local", "")
+    l_i_d = path.join(b_i_d_p, "local", "")
 
     for s_p in [b_i_d_p, w_t_d_p]:
         if not path.isdir(s_p):
@@ -80,11 +81,12 @@ def install_services(no_sudo):
     system(f'{sudo_cmd} rsync -avh {path.join(b_s_d_p, "local", "")} {s_c_d}')
 
     # adding the local configs to the directories with the exacutables
-    for bin_dir in ["bin", "services"]:
-        system(f'{sudo_cmd} rsync -avh {s_c_d} {path.join(dir_path, bin_dir, "local", "")}')
+    # for bin_dir in ["bin", "housekeepers", "importers", "services"]:
+    #     system(f'{sudo_cmd} rsync -avh {s_c_d} {path.join(dir_path, bin_dir, "local", "")}')
 
     # copying the services dir to the server cgi directory
     system(f'{sudo_cmd} rsync -avh {s_s_d} {s_i_d}')
+    system(f'{sudo_cmd} rsync -avh {s_c_d} {l_i_d}')
     system(f'{sudo_cmd} chown -R {s_u}:{s_g} {s_i_d}')
     system(f'{sudo_cmd} chmod 775 {s_i_d}*.py')
 

@@ -42,26 +42,26 @@ def intervalFrequencies():
 ################################################################################
 
 def interval_frequencies():
-    initialize_bycon_service(byc, "interval_frequencies")
-    read_service_prefs("interval_frequencies", services_conf_path, byc)
-    generate_genome_bins(byc)
+    initialize_bycon_service()
+    read_service_prefs("interval_frequencies", services_conf_path)
+    generate_genome_bins()
 
     if (id_from_path := rest_path_value("collationplots")):
-        byc["filters"] = [ {"id": id_from_path } ]
+        BYC.update({"BYC_FILTERS": [ {"id": id_from_path } ] })
     elif "id" in BYC_PARS:
-        byc["filters"] = [ {"id": BYC_PARS["id"]} ]
-    pdb = ByconBundler(byc).collationsPlotbundles()
+        BYC.update({"BYC_FILTERS": [ {"id": BYC_PARS["id"]} ] })
+    pdb = ByconBundler().collationsPlotbundles()
     if len(BYC["ERRORS"]) >1:
-        BeaconErrorResponse(byc).response(422)
+        BeaconErrorResponse().response(422)
 
     file_type = BYC_PARS.get("output", "___none___")
     if file_type not in ["pgxfreq", "pgxmatrix", "pgxseg"]:
         file_type = "pgxfreq"
     output = file_type
     if "pgxseg" in output or "pgxfreq" in output:
-        export_pgxseg_frequencies(byc, pdb["interval_frequencies_bundles"])
+        export_pgxseg_frequencies(pdb["interval_frequencies_bundles"])
     elif "matrix" in output:
-        export_pgxmatrix_frequencies(byc, pdb["interval_frequencies_bundles"])
+        export_pgxmatrix_frequencies(pdb["interval_frequencies_bundles"])
 
 
 ################################################################################

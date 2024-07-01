@@ -3,16 +3,20 @@ from humps import decamelize
 from os import path
 from pathlib import Path
 
-from bycon import load_yaml_empty_fallback, BYC_PARS, ENV
+from bycon import load_yaml_empty_fallback, BYC, BYC_PARS, ENV
 
 ################################################################################
 
-def read_service_prefs(service, service_pref_path, byc):
+def read_service_prefs(service, service_pref_path):
     # snake_case paths; e.g. `intervalFrequencies` => `interval_frequencies.yaml`
     service = decamelize(service)
     f = Path( path.join( service_pref_path, service+".yaml" ) )
     if f.is_file():
-        byc.update({"service_config": load_yaml_empty_fallback( f ) })
+        BYC.update({"service_config": load_yaml_empty_fallback( f ) })
+
+    if (sdefs := BYC["service_config"].get("defaults")):
+        for k, v in sdefs.items():
+            BYC.update({k: v})
 
 
 ################################################################################
@@ -53,8 +57,8 @@ def close_text_streaming():
 
 ################################################################################
 
-def open_json_streaming(byc, filename="data.json"):
-    meta = byc["service_response"].get("meta", {})
+def open_json_streaming(filename="data.json"):
+    meta = BYC["service_response"].get("meta", {})
 
     if not "local" in ENV:
         print_json_download_header(filename)
@@ -62,7 +66,7 @@ def open_json_streaming(byc, filename="data.json"):
     print('{"meta":', end='')
     print(json.dumps(camelize(meta), indent=None, sort_keys=True, default=str), end=",")
     print('"response":{', end='')
-    for r_k, r_v in byc["service_response"].items():
+    for r_k, r_v in BYC["service_response"].items():
         if "results" in r_k:
             continue
         if "meta" in r_k:

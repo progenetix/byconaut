@@ -13,7 +13,7 @@ defaults:
           default: 1
       pattern: '^pgxuse\:(.+?)$'
       remove_prefix: true  
-    PMID:
+    pubmed:
       name: "NCBI PubMed"
       url: "https://www.ncbi.nlm.nih.gov/pubmed/"
       db_key: 'id'

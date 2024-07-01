@@ -32,31 +32,29 @@ def main():
 ################################################################################
 
 def callsets_refresher():
-    initialize_bycon_service(byc, "callsets_refresher")
-    generate_genome_bins(byc)
+    initialize_bycon_service()
+    generate_genome_bins()
 
-    if len(byc["dataset_ids"]) > 1:
+    if len(BYC["BYC_DATASET_IDS"]) > 1:
         print("Please give only one dataset using -d")
         exit()
 
-    ds_id = byc["dataset_ids"][0]
-    set_collation_types(byc)
-    print(f'=> Using data values from {ds_id} for {byc.get("genomic_interval_count", 0)} intervals...')
+    ds_id = BYC["BYC_DATASET_IDS"][0]
+    set_collation_types()
+    print(f'=> Using data values from {ds_id} for {BYC.get("genomic_interval_count", 0)} intervals...')
 
     data_client = MongoClient(host=DB_MONGOHOST)
     data_db = data_client[ ds_id ]
     cs_coll = data_db[ "analyses" ]
     v_coll = data_db[ "variants" ]
 
-    record_queries = ByconQuery(byc).recordsQuery()
+    record_queries = ByconQuery().recordsQuery()
 
-    res = execute_bycon_queries( ds_id, record_queries, byc )
-    ds_results = res.get(ds_id, {})
-    has_analyses = ds_results.get("analyses._id")
+    prdbug(record_queries)
 
-    no_cnv_type = 0
+    ds_results = execute_bycon_queries(ds_id, record_queries)
 
-    if not has_analyses:
+    if not ds_results.get("analyses._id"):
         cs_ids = []
         for cs in cs_coll.find( {} ):
             cs_ids.append(cs["_id"])
@@ -66,7 +64,7 @@ def callsets_refresher():
         cs_ids = ds_results["analyses._id"]["target_values"]
         cs_no = len(cs_ids)
 
-    print(f'Re-generating statusmaps with {byc["genomic_interval_count"]} intervals for {cs_no} analyses...')
+    print(f'Re-generating statusmaps with {BYC["genomic_interval_count"]} intervals for {cs_no} analyses...')
     bar = Bar("{} analyses".format(ds_id), max = cs_no, suffix='%(percent)d%%'+" of "+str(cs_no) )
     counter = 0
     updated = 0
@@ -75,6 +73,7 @@ def callsets_refresher():
     if "n" in proceed.lower():
         exit()
 
+    no_cnv_type = 0
     for _id in cs_ids:
 
         cs = cs_coll.find_one( { "_id": _id } )
@@ -92,8 +91,8 @@ def callsets_refresher():
         cs_update_obj["info"].pop("statusmaps", None)
         cs_update_obj["info"].pop("cnvstatistics", None)
 
-        cs_vars = v_coll.find({ "callset_id": csid })
-        maps, cs_cnv_stats, cs_chro_stats = interval_cnv_arrays(cs_vars, byc)
+        cs_vars = v_coll.find({ "analysis_id": csid })
+        maps, cs_cnv_stats, cs_chro_stats = interval_cnv_arrays(cs_vars)
 
         cs_update_obj.update({"cnv_statusmaps": maps})
         cs_update_obj.update({"cnv_stats": cs_cnv_stats})
@@ -114,7 +113,7 @@ def callsets_refresher():
 
     print(f"{counter} analyses were processed")
     print(f"{no_cnv_type} analyses were not from CNV calling")
-    print(f'{updated} analyses were updated for\n    `cnv_statusmaps`\n    `cnv_stats`\n    `cnv_chro_stats`\nusing {byc["genomic_interval_count"]} bins ({BYC_PARS.get("genome_binning", "")})')
+    print(f'{updated} analyses were updated for\n    `cnv_statusmaps`\n    `cnv_stats`\n    `cnv_chro_stats`\nusing {BYC["genomic_interval_count"]} bins ({BYC_PARS.get("genome_binning", "")})')
 
 ################################################################################
 ################################################################################

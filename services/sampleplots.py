@@ -40,30 +40,38 @@ def main():
 ################################################################################
 
 def sampleplots():
-    initialize_bycon_service(byc, "biosamples")
-    generate_genome_bins(byc)
+    BYC.update({
+        "request_entity_path_id": "biosamples",
+        "request_entity_id": "biosample"
+    })
+    initialize_bycon_service()
+    # BYC.update({"response_entity_id": "biosample"})
+    generate_genome_bins()
 
-    plot_type = BYC_PARS.get("plot_type", "histoplot")
+    if not (plot_type := BYC_PARS.get("plot_type")):
+        plot_type = "histoplot"
+
     file_id = BYC_PARS.get("file_id", "___no-input-file___")
-    inputfile = Path( path.join( *byc["local_paths"][ "server_tmp_dir_loc" ], file_id ) )
+    inputfile = Path( path.join( *BYC["local_paths"][ "server_tmp_dir_loc" ], file_id ) )
 
-    pb = ByconBundler(byc)
+    pb = ByconBundler()
     if inputfile.is_file():
         pdb = pb.pgxseg_to_plotbundle(inputfile)
     else:
-        RSS = ByconResultSets(byc).datasetsResults()
+        RSS = ByconResultSets().datasetsResults()
         pdb = pb.resultsets_frequencies_bundles(RSS)
 
         # getting the variants for the samples is time consuming so only optional
         if "samples" in plot_type:
-            pdb.update( ByconBundler(byc).resultsets_callset_bundles(RSS) )
+            pdb.update( ByconBundler().resultsets_callset_bundles(RSS) )
 
     svg_f = ExportFile("svg").checkOutputFile()
-    BP = ByconPlot(byc, pdb)
+    BP = ByconPlot(pdb)
     if svg_f:
         BP.svg2file(svg_f)
     else:
         BP.svgResponse()
+
 
 ################################################################################
 ################################################################################

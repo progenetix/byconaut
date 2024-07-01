@@ -31,8 +31,8 @@ def main():
 ################################################################################
 
 def iscn_segmenter():
-	initialize_bycon_service(byc, "iscn_segmenter")
-	generate_genome_bins(byc)
+	initialize_bycon_service()
+	generate_genome_bins()
 
 	group_parameter = BYC_PARS.get("groupBy", "histological_diagnosis_id")
 	input_file = BYC_PARS.get("inputfile")
@@ -80,11 +80,11 @@ Output will be written to {}""".format(output_file) )
 		n = str(c+1)
 		update_bs ={
 			"id": s.get("biosample_id", "sample-"+n),
-			"callset_id": s.get("callset_id", "exp-"+n),
+			"analysis_id": s.get("analysis_id", "exp-"+n),
 			"individual_id": s.get("individual_id", "ind-"+n),
 		}
 		update_bs = import_datatable_dict_line(update_bs, fieldnames, s, "biosample")
-		h_line = pgxseg_biosample_meta_line(byc, update_bs, group_parameter)
+		h_line = pgxseg_biosample_meta_line(update_bs, group_parameter)
 		pgxseg.write( "{}\n".format(h_line) )
 
 	pgxseg.write( "{}\n".format(pgxseg_header_line()) )
@@ -93,9 +93,9 @@ Output will be written to {}""".format(output_file) )
 
 		n = str(c+1)
 		bs_id = s.get("biosample_id", "sample-"+n)
-		cs_id = s.get("callset_id", "exp-"+n)
+		cs_id = s.get("analysis_id", "exp-"+n)
 
-		variants, v_e = variants_from_revish(bs_id, cs_id, technique, s[iscn_field], byc)
+		variants, v_e = variants_from_revish(bs_id, cs_id, technique, s[iscn_field])
 
 		if len(variants) > 0:
 			s_w_v_no += 1

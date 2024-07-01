@@ -26,18 +26,19 @@ def main():
 ################################################################################
 
 def this():
-    initialize_bycon_service(byc, "biosamples")
+    initialize_bycon_service()
 
-    # if len(byc["dataset_ids"]) != 1:
+    # if len(BYC["BYC_DATASET_IDS"]) != 1:
     #     print("No single existing dataset was provided with -d ...")
     #     exit()
 
     # HACK
-    byc["dataset_ids"] = ["progenetix"]
+    BYC["BYC_DATASET_IDS"] = ["progenetix"]
     match_item = 'tcgaproject_id'
     match_field = 'references.tcgaproject.id'
+    # / HACK
 
-    ds_id = byc["dataset_ids"][0]
+    ds_id = BYC["BYC_DATASET_IDS"][0]
     input_file = BYC_PARS.get("inputfile")
 
     if not input_file:

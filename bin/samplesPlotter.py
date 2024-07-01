@@ -27,16 +27,15 @@ def main():
 ################################################################################
 
 def samples_plotter():
-    initialize_bycon_service(byc, "biosamples")
-    generate_genome_bins(byc)
-    # args_update_form(byc)
+    initialize_bycon_service()
+    generate_genome_bins()
 
     # parameter test
     output_file = BYC_PARS.get("outputfile")
+    # in this case checking for the command line argument; avoiding defaults
     dataset_ids = BYC_PARS.get("dataset_ids", [])
 
     if len(dataset_ids) < 1:
-        # in this case checking for the command line argument; avoiding defaults
         print("No dataset id(s) were specified (-d, --datasetIds) => quitting ...")
         exit()
     if not output_file:
@@ -65,21 +64,21 @@ def samples_plotter():
 
     # processing ...
 
-    RSS = ByconResultSets(byc).datasetsResults()
-    pdb = ByconBundler(byc).resultsets_frequencies_bundles(RSS)
+    RSS = ByconResultSets().datasetsResults()
+    pdb = ByconBundler().resultsets_frequencies_bundles(RSS)
 
     if "y" in todos.get("samplesplot", "n").lower():
-        byc.update({"plot_type": "samplesplot"})
-        pdb.update( ByconBundler(byc).resultsets_callset_bundles(RSS) )        
+        BYC_PARS.update({"plot_type": "samplesplot"})
+        pdb.update( ByconBundler().resultsets_callset_bundles(RSS) )        
         s_file = re.sub(".svg", "_samplesplot.svg", output_file)
         print(f'==> Writing to {s_file}')
-        ByconPlot(byc, pdb).svg2file(s_file)
+        ByconPlot(pdb).svg2file(s_file)
 
     if "y" in todos.get("histoplot", "y").lower():
-        byc.update({"plot_type": "histoplot"})
+        BYC_PARS.update({"plot_type": "histoplot"})
         h_file = re.sub(".svg", "_histoplot.svg", output_file)
         print(f'==> Writing to {h_file}')
-        ByconPlot(byc, pdb).svg2file(h_file)
+        ByconPlot(pdb).svg2file(h_file)
 
 ################################################################################
 ################################################################################

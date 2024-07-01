@@ -31,30 +31,32 @@ def main():
 def genespans():
     """
     """
-    initialize_bycon_service(byc, "genespans")
-    read_service_prefs("genespans", services_conf_path, byc)
+    initialize_bycon_service()
+    read_service_prefs("genespans", services_conf_path)
 
     # form id assumes start match (e.g. for autocompletes)
-    r = ByconautServiceResponse(byc)
+    r = ByconautServiceResponse()
     gene_id = rest_path_value("genespans")
     if gene_id:
         # REST path id assumes exact match
         results = GeneInfo().returnGene(gene_id)
     else:
-        gene_id = BYC_PARS.get("gene_id")
+        gene_ids = BYC_PARS.get("gene_id", [])
+        gene_id = gene_ids[0] if len(gene_ids) > 0 else None
         results = GeneInfo().returnGenelist(gene_id)
 
     if len(BYC["ERRORS"]) > 0:
-        BeaconErrorResponse(byc).response(422)
+        BeaconErrorResponse().response(422)
 
     for gene in results:
-        _gene_add_cytobands(gene, byc)
+        _gene_add_cytobands(gene)
 
-    e_k_s = byc["service_config"]["method_keys"]["genespan"]
+    s_c = BYC.get("service_config", {})
+    e_k_s = s_c["method_keys"]["genespan"]
     if "genespan" in str(BYC_PARS.get("method", "___none___")):
         for i, g in enumerate(results):
             g_n = {}
-            for k in byc["service_config"]["method_keys"]["genespan"]:
+            for k in e_k_s:
                 g_n.update({k: g.get(k, "")})
             results[i] = g_n
 
@@ -72,7 +74,7 @@ def genespans():
 
 ################################################################################
 
-def _gene_add_cytobands(gene, byc):
+def _gene_add_cytobands(gene):
 
     chro_names = ChroNames()
     gene.update({"cytobands": None})
@@ -87,7 +89,7 @@ def _gene_add_cytobands(gene, byc):
     if not start or not end:
         return gene
 
-    gene.update({"cytobands": f'{chro}{cytobands_label_from_positions(byc, chro, start, end)}'})
+    gene.update({"cytobands": f'{chro}{cytobands_label_from_positions(chro, start, end)}'})
 
     return gene
 

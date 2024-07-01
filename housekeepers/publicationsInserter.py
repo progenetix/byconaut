@@ -28,11 +28,12 @@ def main():
 ##############################################################################
 
 def publications_inserter():
-    initialize_bycon_service(byc, "publications_inserter")
-    read_service_prefs("publications_inserter", services_conf_path, byc)
+    initialize_bycon_service()
+    read_service_prefs("publications_inserter", services_conf_path)
     
-    g_url = byc["service_config"]["google_spreadsheet_tsv_url"]
-    skip_cols = byc["service_config"]["skipped_columns"]
+    s_c = BYC.get("service_config", {})
+    g_url = s_c["google_spreadsheet_tsv_url"]
+    skip_cols = s_c.get("skipped_columns", [])
     input_file = BYC_PARS.get("inputfile")
     if input_file:
         pub_file = input_file
@@ -91,7 +92,7 @@ def publications_inserter():
                     n_p = mongo_client["progenetix"]["publications"].find_one({"id": p_k })
                     print(p_k, ": existed but overwritten since *update* in effect")
             else:
-                n_p = get_empty_publication(byc)
+                n_p = get_empty_publication()
                 n_p.update({"id":p_k})
 
             for k, v in pub.items():
@@ -236,7 +237,7 @@ def get_ncit_tumor_types(n_p, pub):
 
 ##############################################################################
 
-def get_empty_publication(byc):
+def get_empty_publication():
     publication = object_instance_from_schema_name("Publication", "")
     publication.update({
         "updated": date_isoformat(datetime.datetime.now()),

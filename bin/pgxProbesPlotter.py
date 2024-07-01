@@ -24,20 +24,20 @@ def main():
 ################################################################################
 
 def pgx_probes_plotter():
-    initialize_bycon_service(byc, "pgx_probes_plotter")
-    generate_genome_bins(byc)
+    initialize_bycon_service()
+    generate_genome_bins()
 
     input_file = BYC_PARS.get("inputfile")
     output_file = BYC_PARS.get("outputfile")
 
     if not input_file:
-        print("No input file specified (-i, --inputfile) => read_probedata_file(filepath, byc):quitting ...")
+        print("No input file specified (-i, --inputfile) => read_probedata_file(filepath):quitting ...")
         exit()
     if not "probe" in input_file:
         print('Only probe files are accepted (should have "...probes..." in name).')
         exit()
 
-    pb = ByconBundler(byc)
+    pb = ByconBundler()
 
     # TODO: method for multiple?
     cs_probes = pb.read_probedata_file(input_file)
@@ -49,7 +49,7 @@ def pgx_probes_plotter():
     if not output_file:
         output_file = re.sub(".tsv", "_sampleplots.svg", input_file)
 
-    ByconPlot(byc, plot_data_bundle).svg2file(output_file)
+    ByconPlot(plot_data_bundle).svg2file(output_file)
 
 ################################################################################
 ################################################################################

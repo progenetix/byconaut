@@ -40,27 +40,24 @@ def main():
 ################################################################################
 
 def retriever():
-    initialize_bycon_service(byc, "retriever")
-    read_service_prefs("aggregator", services_conf_path, byc)
+    initialize_bycon_service()
+    read_service_prefs("aggregator", services_conf_path)
 
-    r = ByconautServiceResponse(byc)
+    r = ByconautServiceResponse()
 
     b = BYC_PARS.get("selected_beacons", [])
     url = BYC_PARS.get("url", "")
     # print(url)
     if len(b) != 1:
         print_text_response('not a single "selectedBeacons" value')
-    byc["service_config"].update({"selected_beacons": b})
+    s_c = BYC.get("service_config", {})
+    s_c.update({"selected_beacons": b})
     b = b[0]
     if not "http" in url:
         print_text_response('url seems missing / incomplete')    
-    b_p = byc["service_config"]["beacon_params"]["instances"]
+    b_p = s_c["beacon_params"]["instances"]
     if not b in b_p.keys():
         print_text_response(f'"{b}"is not in available beacon definitions')
-
-    byc["service_response"]["meta"]["received_request_summary"]["requested_granularity"] ="boolean"
-    check_switch_to_boolean_response(byc)
-    byc["service_response"].update({"response": { "response_sets": [] }})
 
     ext_defs = b_p[b]
 
@@ -72,20 +69,20 @@ def retriever():
 
     resp_start = time.time()
     # print_text_response(url)
-    r = retrieve_beacon_response(url, byc)
+    r = retrieve_beacon_response(url)
     resp_end = time.time()
     # prjsoncam(r)
     # print(url)
-    r_f = format_response(r, url, ext_defs, ds_id, byc)
+    r_f = format_response(r, url, ext_defs, ds_id)
     r_f["info"].update({"response_time": "{}ms".format(round((resp_end - resp_start) * 1000, 0)) })
-    byc["service_response"]["response"]["response_sets"].append(r_f)
+    BYC["service_response"]["response"]["response_sets"].append(r_f)
 
-    for r in byc["service_response"]["response"]["response_sets"]:
+    for r in BYC["service_response"]["response"]["response_sets"]:
         if r["exists"] is True:
-            byc["service_response"]["response_summary"].update({"exists": True})
+            BYC["service_response"]["response_summary"].update({"exists": True})
             continue
 
-    print_json_response(byc["service_response"])
+    print_json_response(BYC["service_response"])
 
 
 ################################################################################

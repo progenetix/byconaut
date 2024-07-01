@@ -30,18 +30,19 @@ def main():
 ################################################################################
 
 def collations_creator():
-    initialize_bycon_service(byc, "collations_creator")
+    initialize_bycon_service()
 
-    if len(byc["dataset_ids"]) > 1:
+    if len(BYC["BYC_DATASET_IDS"]) > 1:
         print("Please give only one dataset using -d")
         exit()
-    ds_id = byc["dataset_ids"][0]
+    ds_id = BYC["BYC_DATASET_IDS"][0]
 
     print(f'Creating collations for {ds_id}')
 
-    set_collation_types(byc)
+    set_collation_types()
+    f_d_s = BYC.get("filter_definitions", {})
 
-    for coll_type, coll_defs in byc["filter_definitions"].items():
+    for coll_type, coll_defs in f_d_s.items():
         collationed = coll_defs.get("collationed")
         if not collationed:
             continue
@@ -51,14 +52,14 @@ def collations_creator():
         db_key = coll_defs["db_key"]
 
         if "pubmed" in coll_type:
-            hier =  _make_dummy_publication_hierarchy(byc)
+            hier =  _make_dummy_publication_hierarchy()
         elif path.exists( pre_h_f ):
             print( "Creating hierarchy for " + coll_type)
-            hier =  get_prefix_hierarchy( ds_id, coll_type, pre_h_f, byc)
+            hier =  get_prefix_hierarchy(ds_id, coll_type, pre_h_f)
         else:
             # create /retrieve hierarchy tree; method to be developed
             print( "Creating dummy hierarchy for " + coll_type)
-            hier =  _get_dummy_hierarchy( ds_id, coll_type, coll_defs, byc )
+            hier =  _get_dummy_hierarchy(ds_id, coll_type, coll_defs)
 
         coll_client = MongoClient(host=DB_MONGOHOST)
         coll_coll = coll_client[ ds_id ]["collations"]
@@ -140,9 +141,14 @@ def collations_creator():
      
 ################################################################################
 
-def get_prefix_hierarchy( ds_id, coll_type, pre_h_f, byc):
-    coll_defs = byc["filter_definitions"][coll_type]
-    hier = hierarchy_from_file(ds_id, coll_type, pre_h_f, byc)
+def get_prefix_hierarchy( ds_id, coll_type, pre_h_f):
+    f_d_s = BYC.get("filter_definitions", {})
+
+    if not (coll_defs := f_d_s.get(coll_type)):
+        print(f'¡¡¡ missing {coll_type} !!!')
+        return
+
+    hier = hierarchy_from_file(ds_id, coll_type, pre_h_f)
     no = len(hier.keys())
 
     # now adding terms missing from the tree ###################################
@@ -224,9 +230,10 @@ def get_prefix_hierarchy( ds_id, coll_type, pre_h_f, byc):
 
 ################################################################################
 
-def _make_dummy_publication_hierarchy(byc):
+def _make_dummy_publication_hierarchy():
+    f_d_s = BYC.get("filter_definitions", {})
     coll_type = "pubmed"
-    coll_defs = byc["filter_definitions"][coll_type]
+    coll_defs = f_d_s[coll_type]
     data_db = "progenetix"
     data_coll = MongoClient(host=DB_MONGOHOST)[data_db]["publications"]
     query = { "id": { "$regex": r'^PMID\:\d+?$' } }
@@ -260,7 +267,7 @@ def _make_dummy_publication_hierarchy(byc):
 
 ################################################################################
 
-def _get_dummy_hierarchy(ds_id, coll_type, coll_defs, byc):
+def _get_dummy_hierarchy(ds_id, coll_type, coll_defs):
     data_client = MongoClient(host=DB_MONGOHOST)
     data_db = data_client[ ds_id ]
     data_coll = data_db[ coll_defs["scope"] ]

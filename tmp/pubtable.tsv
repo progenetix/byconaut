@@ -39,3 +39,4 @@ SKIP	LINK	pubmedid	counts.ccgh	counts.acgh	counts.wes	counts.wgs	counts.genomes	
 #	EPMC link	35977518					0	James A Bibb	jbibb@uab.edu		Department of Surgery, University of Alabama at Birmingham Heersink School of Medicine, Birmingham, AL 35233, USA	birmingham::unitedstates	excluded [no CNV profiling]	NCIT:C3326::Adrenal Gland Pheochromocytoma::93	use progenetix data	yes	Ziying Yang
 #	EPMC link	31618260	0	190	0	0	190	Erik Thunnissen	ln.cmumadretsma@nessinnuht.e		VUMC, Department of Pathology, Amsterdam, The Netherlands.	amsterdam::netherlands		NCIT:C3200::Lung Neoplasm::190	GSE87058	no	Rahel Paloots
 	EPMC link	29641966	0	574	574	0	574				National Institutes of Health, Bethesda	bethesda::unitedstates	TCGA; numbers there different?			no	Michael Baudis
+	EPMC link	38157850	0	0	0	0										yes	Michael Baudis

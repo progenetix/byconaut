@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
-import re, json, yaml
-from os import environ, pardir, path, scandir
-import sys, datetime
-from humps import camelize
+import sys, json, traceback
+from os import environ, path
 
-from bycon import *
+from bycon import (
+    PKG_PATH,
+    initialize_bycon_service,
+    load_yaml_empty_fallback,
+    print_text_response,
+    prdbug,
+    rest_path_value
+)
 
 """podmd
 The service provides the schemas for the `BeaconMap` OpenAPI endpoints.
@@ -25,15 +30,15 @@ def main():
 ################################################################################
 
 def endpoints():
-    initialize_bycon_service(byc, "endpoints")
+    initialize_bycon_service()
     # TODO: This needs some error fallback, test for existing entities etc.
     schema_name = rest_path_value("endpoints")
     prdbug(f'Schema name: {schema_name}')
     if schema_name:
-        p = path.join( pkg_path, "schemas", "models", "src", "progenetix-model", schema_name, "endpoints.yaml")
+        p = path.join( PKG_PATH, "schemas", "models", "src", "progenetix-model", schema_name, "endpoints.yaml")
         prdbug(f'Endpoint path: {p}')
     else:
-        p = path.join( pkg_path, "schemas", "models", "src", "progenetix-model", "endpoints.yaml")
+        p = path.join( PKG_PATH, "schemas", "models", "src", "progenetix-model", "endpoints.yaml")
 
     e_p = load_yaml_empty_fallback(p)
     print('Content-Type: application/json')

@@ -36,26 +36,27 @@ def main():
 ################################################################################
 
 def housekeeping():
-    initialize_bycon_service(byc, "housekeeping")
-    read_service_prefs("housekeeping", services_conf_path, byc)
+    initialize_bycon_service()
+    read_service_prefs("housekeeping", services_conf_path)
 
     # TODO: rewrap, use config etc.
     generated_docs_path = path.join( dir_path, pardir, "docs", "generated")
     bycon_generated_docs_path = path.join( dir_path, pardir, pardir, "bycon", "docs", "generated")
-    doc_generator(byc, generated_docs_path)
-    doc_generator(byc, bycon_generated_docs_path)
+    doc_generator(generated_docs_path)
+    doc_generator(bycon_generated_docs_path)
 
-    if len(byc["dataset_ids"]) != 1:
+    if len(BYC["BYC_DATASET_IDS"]) != 1:
         print("No single existing dataset was provided with -d ...")
         exit()
 
-    ds_id = byc["dataset_ids"][0]
+    ds_id = BYC["BYC_DATASET_IDS"][0]
 
     # collecting the actions
     todos = {
         "mongodb_index_creation": input("Check & refresh MongoDB indexes?\n(y|N): "),
         "individual_age_days": input("Recalculate `age_days` in individuals?\n(y|N): "),
         "analyses_labels": input("Create/update `label` field for analyses, from biosamples?\n(y|N): "),
+        "variant_lengths": input("Recalculate `info.var_length` in variants?\n(y|N): "),
         "update_cs_statusmaps": input(f'Update statusmaps in `analyses` for {ds_id}?\n(y|N): '),
         "update_collations": input(f'Create `collations` for {ds_id}?\n(Y|n): '),
         "update_frequencymaps": input(f'Create `frequencymaps` for {ds_id} collations?\n(Y|n): '),
@@ -68,7 +69,7 @@ def housekeeping():
 
     if "y" in todos.get("mongodb_index_creation", "n").lower():
         print(f'\n{__hl()}==> updating indexes for {ds_id}"')
-        mongodb_update_indexes(ds_id, byc)
+        mongodb_update_indexes(ds_id)
 
     #>------------------- / MongoDB index updates ----------------------------<#
 
@@ -79,6 +80,15 @@ def housekeeping():
         analyses_coll = data_db["analyses"]
         bios_coll = data_db["biosamples"]
         no = analyses_coll.count_documents(cs_query)
+
+        relabf = path.join( services_conf_path, "relabel.tsv" )
+        relabel = []
+        with open(relabf, newline='') as csvfile:
+            data = csv.DictReader(filter(lambda row: row.startswith('#') is False, csvfile), delimiter="\t")
+            fieldnames = list(data.fieldnames)
+            for l in data:
+                relabel.append(dict(l))
+
         if not BYC["TEST_MODE"]:
             bar = Bar(f"=> `labels` for {no} analyses", max = no, suffix='%(percent)d%%'+" of "+str(no) )
         for cs in analyses_coll.find(cs_query):
@@ -95,61 +105,8 @@ def housekeeping():
                 bs_label = bs_id
 
             # TODO: this is very temporary .........
-            bs_label = re.sub(r'Acute myeloid leukemia', 'AML', bs_label, flags=re.I)
-            bs_label = re.sub(r'Acute myeloblastic leukemia with maturation', 'AML', bs_label, flags=re.I)
-            bs_label = re.sub(r'Acute myeloblastic leukemia without maturation', 'AML', bs_label, flags=re.I)
-            bs_label = re.sub(r'Acute myeloblastic leukemia with minimal differentiation', 'AML', bs_label, flags=re.I)
-            bs_label = re.sub(r'Acute lymphoblastic leukemia', 'AML', bs_label, flags=re.I)
-            bs_label = re.sub(r'cell line', 'CL', bs_label, flags=re.I)
-            bs_label = re.sub(r'myelodysplastic syndrome', 'MDS', bs_label, flags=re.I)
-            bs_label = re.sub(r'Refractory cytopenia with multilineage dysplasia and ring sideroblasts$', 'MDS [RCMD]', bs_label, flags=re.I)
-            bs_label = re.sub(r'B-cell chronic lymphocytic leukemia/small lymphocytic lymphoma', 'CLL', bs_label, flags=re.I)
-            bs_label = re.sub(r'chronic lymphocytic leukemia', 'CLL', bs_label, flags=re.I)
-            bs_label = re.sub(r'myeloid proliferative disorder', 'MPS', bs_label, flags=re.I)
-            bs_label = re.sub(r'non-Hodgkins Lymphoma', 'NHL', bs_label, flags=re.I)
-            bs_label = re.sub(r'Diffuse large B-cell lymphoma', 'DLBCL', bs_label, flags=re.I)
-            bs_label = re.sub(r'classic medulloblastoma', 'medulloblastoma', bs_label, flags=re.I)
-            bs_label = re.sub(r'nodular/desmoplastic medulloblastoma', 'medulloblastoma [N/D]', bs_label, flags=re.I)
-            bs_label = re.sub(r'Anaplastic pleomorphic xanthoastrocytoma', 'xanthoastrocytoma [AP]', bs_label, flags=re.I)
-            bs_label = re.sub(r'colorectal cancer', 'CRC', bs_label, flags=re.I)
-            bs_label = re.sub(r'ovarian carcinoma', 'OvCa', bs_label, flags=re.I)
-            bs_label = re.sub(r'breast carcinoma', 'BrCa', bs_label, flags=re.I)
-            bs_label = re.sub(r'prostate carcinoma', 'PrCa', bs_label, flags=re.I)
-            bs_label = re.sub(r'Hepatocellular carcinoma', 'HepCa', bs_label, flags=re.I)
-            bs_label = re.sub(r'Myelodysplasia', 'MDS', bs_label, flags=re.I)
-            bs_label = re.sub(r'Malignant peripheral nerve sheath tumor', 'MPNST', bs_label, flags=re.I)
-            bs_label = re.sub(r'neurofibromatosis', 'NF', bs_label, flags=re.I)
-            bs_label = re.sub(r'glioblastoma multiforme', 'GBM', bs_label, flags=re.I)
-            bs_label = re.sub(r'glioblastoma$', 'GBM', bs_label, flags=re.I)
-            bs_label = re.sub(r'pilocytic astrocytoma', 'pil. astrocytoma', bs_label, flags=re.I)
-            bs_label = re.sub(r'Pediatric undifferentiated sarcoma', 'ped. undiff. sarcoma', bs_label, flags=re.I)
-            bs_label = re.sub(r'mycosis fungoides', 'MF', bs_label, flags=re.I)
-            bs_label = re.sub(r'burkitt lymphoma', 'BL', bs_label, flags=re.I)
-            bs_label = re.sub(r'Anaplastic large cell lymphoma', 'ALCL', bs_label, flags=re.I)
-            bs_label = re.sub(r'Peripheral T-cell lymphoma', 'PTNHL', bs_label, flags=re.I)
-            bs_label = re.sub(r'follicular lymphoma', 'FCL', bs_label, flags=re.I)
-            bs_label = re.sub(r'renal cell carcinoma', 'RCC', bs_label, flags=re.I)
-            bs_label = re.sub(r'Mantle cell lymphoma', 'MCL', bs_label, flags=re.I)
-            bs_label = re.sub(r'Marginal zone lymphoma', 'MZL', bs_label, flags=re.I)
-            bs_label = re.sub(r'marginal zone B-cell lymphoma', 'MZL', bs_label, flags=re.I)
-            bs_label = re.sub(r'squamous cell carcinoma', 'SCC', bs_label, flags=re.I)
-            bs_label = re.sub(r'pancreas ductal adenocarcinoma', 'PDAC', bs_label, flags=re.I)
-            bs_label = re.sub(r'gastrointestinal stromal tumor', 'GIST', bs_label, flags=re.I)
-            bs_label = re.sub(r'diffuse intrinsic pontine glioma', 'DIPG', bs_label, flags=re.I)
-            bs_label = re.sub(r' Head and neck SCC', 'HNSCC', bs_label, flags=re.I)
-            bs_label = re.sub(r'T-cell lymphoblastic lymphoma', 'T-NHL', bs_label, flags=re.I)
-            bs_label = re.sub(r'Infant Acute Lymphoblastic Leukaemia', 'ALL', bs_label, flags=re.I)
-            bs_label = re.sub(r'Wilms\' Tumor', 'retinoblastoma', bs_label, flags=re.I)
-            bs_label = re.sub(r'Unclassified RCC', 'RCC', bs_label, flags=re.I)
-            bs_label = re.sub(r'Thyroid Carcinoma', 'ThyCa', bs_label, flags=re.I)
-            bs_label = re.sub(r'adenocarcinoma', 'AdCa', bs_label, flags=re.I)
-            bs_label = re.sub(r'  ', ' ', bs_label, flags=re.I)
-            bs_label = re.sub(r'Nasopharyngeal carcinoma', 'NPC', bs_label, flags=re.I)
-            bs_label = re.sub(r'microsatellite stable', 'MSS', bs_label, flags=re.I)
-            bs_label = re.sub(r'microsatellite unstable', 'MSI', bs_label, flags=re.I)
-            bs_label = re.sub(r'Non-small cell carcinoma', 'NSCC', bs_label, flags=re.I)
-            bs_label = re.sub(r'primitive neuroectodermal tumor', 'PNET', bs_label, flags=re.I)
-            bs_label = re.sub(r'Central nervous system', 'CNS', bs_label, flags=re.I)
+            for r_l in relabel:
+                bs_label = re.sub(f'{r_l.get("from", "___none___")}', f'{r_l.get("to", "")}', bs_label, flags=re.I)
 
             if BYC["TEST_MODE"] is True:
                 print(f'{cs["id"]} => {bs_label}')
@@ -173,7 +130,7 @@ def housekeeping():
 
     # age_days
     if "y" in todos.get("individual_age_days", "n").lower():
-        query = {"index_disease.onset.age": {"$regex": "^P\d"}}
+        query = {"index_disease.onset.age": {"$regex": '^P'}}
         no = ind_coll.count_documents(query)
         bar = Bar(f"=> `age_days` ...", max = no, suffix='%(percent)d%%'+" of "+str(no) )
 
@@ -192,13 +149,46 @@ def housekeeping():
 
     #>----------------------- / individuals ----------------------------------<#
 
+    #>-------------------------- variants ------------------------------------<#
+
+    ind_coll = data_db["variants"]
+    update_field = "info.var_length"
+
+    # length
+    if "y" in todos.get("variant_lengths", "n").lower():
+        # query = {"location.start": {"$exists": True}, "location.end": {"$exists": True}}
+        # no = ind_coll.count_documents(query)
+        query = {}
+        no = ind_coll.estimated_document_count(query)
+        bar = Bar(f"=> `{update_field}` ...", max = no, suffix='%(percent)d%%'+" of "+str(no) )
+
+        v_c = 0
+        e_c = 0
+        for ind in ind_coll.find(query):
+            loc = ind.get("location", {})
+            s = loc.get("start")
+            e = loc.get("end")
+            if not s or not e:
+                e_c += 1
+                continue
+            ind_coll.update_one({"_id": ind["_id"]}, {"$set": {update_field: e - s}})
+            v_c += 1
+            bar.next()
+
+        bar.finish()
+
+        print(f'=> {v_c} variants with updated `{update_field}` value.')
+        print(f'=> {e_c} variants failed to update...')
+
+    #>------------------------- / variants -----------------------------------<#
+
     #>---------------------- info db update ----------------------------------<#
 
     if "y" in todos.get("datasets_counts", "n").lower():
 
         print(f'\n{__hl()}==> Updating dataset statistics in "{HOUSEKEEPING_DB}.{HOUSEKEEPING_INFO_COLL}"')
 
-        b_info = __dataset_update_counts(byc)
+        b_info = __dataset_update_counts()
 
         info_coll = MongoClient(host=DB_MONGOHOST)[ HOUSEKEEPING_DB ][ HOUSEKEEPING_INFO_COLL ]
         info_coll.delete_many( { "date": b_info["date"] } ) #, upsert=True
@@ -228,16 +218,15 @@ def housekeeping():
 #################################### subs ######################################
 ################################################################################
 
-def __dataset_update_counts(byc):
+def __dataset_update_counts():
 
     b_info = { "date": date_isoformat(datetime.datetime.now()), "datasets": { } }
     mongo_client = MongoClient(host=DB_MONGOHOST)
 
     # this is independend of the dataset selected for the script & will update
     # for all in any run
-    dbs = mongo_client.list_database_names()
-    for i_ds_id in byc["dataset_definitions"].keys():
-        if not i_ds_id in dbs:
+    for i_ds_id in BYC["dataset_definitions"].keys():
+        if not i_ds_id in BYC["DATABASE_NAMES"]:
             print(f'¡¡¡ Dataset "{i_ds_id}" does not exist !!!')
             continue
 

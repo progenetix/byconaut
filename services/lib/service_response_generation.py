@@ -1,12 +1,11 @@
 from deepmerge import always_merger
 from os import environ
 
+from beacon_response_generation import BeaconResponseMeta
 from bycon_helpers import mongo_result_list, mongo_test_mode_query, return_paginated_list
 from cgi_parsing import prdbug
 from config import AUTHORIZATIONS, BYC, BYC_PARS
 from export_file_generation import *
-from query_execution import execute_bycon_queries
-from query_generation import ByconQuery
 from response_remapping import *
 from schema_parsing import object_instance_from_schema_name
 
@@ -16,18 +15,15 @@ from service_helpers import set_selected_delivery_keys
 
 class ByconautServiceResponse:
 
-    def __init__(self, byc: dict, response_schema="byconautServiceResponse"):
-        self.byc = byc
-        self.service_config = self.byc.get("service_config", {})
+    def __init__(self, response_schema="byconautServiceResponse"):
         self.response_schema = response_schema
         self.requested_granularity = BYC_PARS.get("requested_granularity", "record")
         # TBD for authentication? 
-        self.returned_granularity = byc.get("returned_granularity", "boolean")
-        self.beacon_schema = self.byc["response_entity"].get("beacon_schema", "___none___")
+        self.returned_granularity = BYC.get("returned_granularity", "record")
+        self.beacon_schema = BYC["response_entity"].get("beacon_schema", "___none___")
         self.data_response = object_instance_from_schema_name(response_schema, "")
         self.error_response = object_instance_from_schema_name("beaconErrorResponse", "")
-        self.__meta_add_received_request_summary_parameters()
-        self.__meta_add_parameters()
+        self.data_response.update({"meta": BeaconResponseMeta(self.data_response).populatedMeta() })
 
         return
     
@@ -40,7 +36,7 @@ class ByconautServiceResponse:
         if not "byconautServiceResponse" in self.response_schema:
             return
 
-        colls = ByconCollations(self.byc).populatedCollations()
+        colls = ByconCollations().populatedCollations()
         self.data_response["response"].update({"results": colls})
         self.__service_response_update_summaries()
         self.__serviceResponse_force_granularities()
@@ -76,82 +72,6 @@ class ByconautServiceResponse:
     # ----------------------------- private -----------------------------------#
     # -------------------------------------------------------------------------#
 
-    def __meta_add_parameters(self):
-        r_m = self.data_response.get("meta", {})
-        if BYC["TEST_MODE"] is True:
-            r_m.update({"test_mode": BYC["TEST_MODE"]})
-        if "returned_schemas" in r_m:
-            r_m.update({"returned_schemas":[self.beacon_schema]})
-
-        info = BYC["entity_defaults"]["info"].get("content", {"api_version": "___none___"})
-        for p in ["api_version", "beacon_id"]:
-            if p in info.keys():
-                r_m.update({p: info.get(p, "___none___")})
-
-        # TODO: this is hacky; need a separate setting of the returned granularity
-        # since the server may decide so...
-        if "returned_granularity" in r_m:
-            r_m.update({"returned_granularity": self.returned_granularity})
-
-        service_meta = self.service_config.get("meta", {})
-        for rrs_k, rrs_v in service_meta.items():
-            r_m.update({rrs_k: rrs_v})
-
-        return
-
-
-    # -------------------------------------------------------------------------#
-
-    def __meta_add_received_request_summary_parameters(self):
-        r_m = self.data_response.get("meta", {})
-        if not "received_request_summary" in r_m:
-            return
-
-        r_r_s = r_m["received_request_summary"]
-        r_r_s.update({
-            "requested_schemas": [self.beacon_schema]
-        })
-        if BYC["TEST_MODE"] is True:
-            r_r_s.update({"test_mode": BYC["TEST_MODE"]})
-
-        for name in ["dataset_ids"]:
-            value = self.byc.get(name)
-            if not value:
-                continue
-            r_r_s.update({name: value})
-
-        vargs = self.byc.get("varguments", [])
-        # TODO: a bit hacky; len == 1 woulld be the default assemblyId ...
-        if len(vargs) > 1:
-            r_r_s.update({"request_parameters":{"g_variant":vargs}})
-
-        fs = self.byc.get("filters", [])
-        fs_p = []
-        if len(fs) > 0:
-            for f in fs:
-                fs_p.append(f.get("id"))
-            r_r_s.update({"filters":fs_p})
-        else:
-            r_r_s.pop("filters", None)
-
-        for p in ["requested_granularity"]:
-            if p in BYC_PARS and p in r_r_s:
-                r_r_s.update({p: BYC_PARS.get(p)})
-
-        for q in ["collation_types"]:
-            if q in BYC_PARS:
-                r_r_s.update({"request_parameters": always_merger.merge( r_r_s.get("request_parameters", {}), { "collation_types": BYC_PARS.get(q) })})
-
-        info = BYC["entity_defaults"]["info"].get("content", {"api_version": "___none___"})
-        for p in ["api_version"]:
-            if p in info.keys():
-                r_r_s.update({p: info.get(p, "___none___")})
-
-        return
-
-
-   # -------------------------------------------------------------------------#
-
     def __service_response_update_summaries(self):
         if not "response" in self.data_response:
             return
@@ -184,16 +104,11 @@ class ByconautServiceResponse:
 ################################################################################
 
 class ByconCollations:
-    def __init__(self, byc: dict):
-        self.byc = byc
+    def __init__(self):
         self.delivery_method = BYC_PARS.get("method", "___none___")
         self.output = BYC_PARS.get("output", "___none___")
-        self.dataset_ids = byc.get("dataset_ids", [])
-        self.service_config = byc.get("service_config", {})
-        self.filter_definitions = byc.get("filter_definitions", {})
-        self.filters = byc.get("filters", [])
-        self.response_entity_id = byc.get("response_entity_id", "filteringTerm")
-        self.path_id_value = byc.get("request_entity_path_id_value", False)
+        self.response_entity_id = BYC.get("response_entity_id", "filteringTerm")
+        self.path_id_value = BYC.get("request_entity_path_id_value", False)
         self.filter_collation_types = set()
         self.collations = []
 
@@ -213,22 +128,25 @@ class ByconCollations:
 
     def __return_collations(self):
         f_coll = "collations"
-        d_k = set_selected_delivery_keys(self.service_config.get("method_keys"))
+        s_c = BYC.get("service_config", {})
+        d_k = set_selected_delivery_keys(s_c.get("method_keys", []))
 
         c_id = BYC_PARS.get("id", "")
         # TODO: This should be derived from some entity definitions
         # TODO: whole query generation in separate function ...
         query = {}
 
+        prdbug(BYC.get("BYC_FILTERS", []))
+
         if BYC["TEST_MODE"] is True:
             t_m_c = BYC_PARS.get("test_mode_count", 5)
-            query = mongo_test_mode_query(self.dataset_ids[0], f_coll, t_m_c)
+            query = mongo_test_mode_query(BYC["BYC_DATASET_IDS"][0], f_coll, t_m_c)
         elif len(c_id) > 0:
             query = { "id": c_id }
         else:
             q_list = []
             ft_fs = []
-            for f in self.filters:
+            for f in BYC.get("BYC_FILTERS", []):
                 ft_fs.append('(' + f.get("id", "___none___") + ')')
             if len(ft_fs) > 0:
                 f_s = '|'.join(ft_fs)
@@ -253,7 +171,9 @@ class ByconCollations:
         #     warning = 'No limit (filters, collationTypes, id) on collation listing -> abortin...'
 
         s_s = { }
-        for ds_id in self.dataset_ids:
+        for ds_id in BYC["BYC_DATASET_IDS"]:
+            prdbug(f'... parsing collations for {ds_id}')
+
             fields = {"_id": 0}
             f_s = mongo_result_list(ds_id, f_coll, query, fields)
             for f in f_s:
@@ -266,7 +186,7 @@ class ByconCollations:
                 if len(d_k) < 1:
                     d_k = list(f.keys())                    
                 for k in d_k:
-                    if k in self.service_config.get("integer_keys", []):
+                    if k in s_c.get("integer_keys", []):
                         s_s[ i_d ].update({k: s_s[ i_d ].get(k, 0) + f.get(k, 0)})
                     elif k == "name":
                         s_s[ i_d ][ "type" ] = f.get(k)

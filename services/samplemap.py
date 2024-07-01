@@ -7,7 +7,7 @@ from bycon import *
 
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
 sys.path.append( services_lib_path )
-from geomap_utils import print_map_from_geolocations
+from geomap_utils import *
 
 """
 """
@@ -22,20 +22,19 @@ def main():
 ################################################################################
 
 def samplemap():
-    initialize_bycon_service(byc, "biosamples")
+    initialize_bycon_service()
+    BYC.update({"response_entity_id": "biosample"})
     if not "map" in BYC_PARS.get("output", "___none___"):
         BYC_PARS.update({"output":"map"})
-    BYC_PARS.update({"marker_type":"marker"})
-    RSD = ByconResultSets(byc).datasetsData()
+    BYC_PARS.update({"marker_type": "marker"})
+    RSD = ByconResultSets().datasetsData()
 
     collated_results = []
     for ds_id, data in RSD.items():
         collated_results += data
 
     geob = __geo_bundle_from_results(collated_results)
-    if len(geob) > 10:
-        BYC_PARS.update({"marker_type":"circle"})
-    print_map_from_geolocations(byc, geob)
+    ByconMap(geob).printMapHTML()
 
 
 ################################################################################

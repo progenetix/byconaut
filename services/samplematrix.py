@@ -27,16 +27,17 @@ def main():
 ################################################################################
 
 def samplematrix():
-    initialize_bycon_service(byc, "biosamples")
-    generate_genome_bins(byc)
+    initialize_bycon_service()
+    BYC.update({"response_entity_id": "biosample"})
+    generate_genome_bins()
     if not "pgxmatrix" in BYC_PARS.get("output", "___none___"):
         BYC_PARS.update({"output":"pgxmatrix"})
 
-    rss = ByconResultSets(byc).datasetsResults()
+    rss = ByconResultSets().datasetsResults()
 
     # Note: only the first dataset will be exported ...
     ds_id = list(rss.keys())[0]
-    export_callsets_matrix(rss, ds_id, byc)
+    export_callsets_matrix(rss, ds_id)
 
 
 ################################################################################

@@ -33,41 +33,35 @@ def main():
 def services():
     set_debug_state(debug=0)
 
-    p_e_m = BYC.get("path_entry_type_mappings", {})
-    e_p_m = BYC.get("entry_type_path_mappings", {})
+    rq_id = BYC.get("request_entity_id", "ids")
+    rq_p_id = BYC.get("request_entity_path_id", "info")
+    rp_id = BYC.get("response_entity_id")
 
-    byc.update({"request_path_root": "services"})
-    rest_path_elements(byc)
-    e_p_id = BYC_PARS.get("request_entity_path_id", "___none___")
-    if e_p_id in p_e_m:
-        byc.update({"request_entity_path_id": e_p_id})
-    r_p_id = byc.get("request_entity_path_id", "ids")
-    prdbug(f'services.py - request_entity_path_id: {r_p_id}')
+    prdbug(f'request_entity_id : {rq_id}')
+    prdbug(f'request_entity_path_id : {rq_p_id}')
+    prdbug(f'response_entity_id : {rp_id}')
 
-    e = p_e_m.get(r_p_id)   # entry type
-    f = e_p_m.get(e)        # canonical entry type path
-
-    if not f:
+    if not rp_id:
         pass
-    elif f:
+    elif rq_p_id:
         # dynamic package/function loading; e.g. `intervalFrequencies` loads
         # `intervalFrequencies` from `interval_frequencies.py` which is an alias to
         # the `interval_frequencies` function there...
         try:
-            mod = import_module(f)
-            serv = getattr(mod, f)
+            mod = import_module(rq_p_id)
+            serv = getattr(mod, rq_p_id)
             serv()
             exit()
         except Exception as e:
             print('Content-Type: text')
             print('status:422')
             print()
-            print(f'Service {f} WTF error: {e}')
+            print(f'Service {rq_id} WTF error: {e}')
 
             exit()
 
     BYC["ERRORS"].append("No correct service path provided. Please refer to the documentation at http://docs.progenetix.org")
-    BeaconErrorResponse(byc).response(422)
+    BeaconErrorResponse().response(422)
 
 
 ################################################################################

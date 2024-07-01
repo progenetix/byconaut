@@ -24,12 +24,12 @@ def main():
 ################################################################################
 
 def database_archiver():
-    initialize_bycon_service(byc, "database_archiver")
+    initialize_bycon_service()
 
-    if len(byc["dataset_ids"]) != 1:
+    if len(BYC["BYC_DATASET_IDS"]) != 1:
         print("No single existing dataset was provided with -d ...")
         exit()
-    ds_id = byc["dataset_ids"][0]
+    ds_id = BYC["BYC_DATASET_IDS"][0]
 
     output_dir = BYC_PARS.get("outputdir")
     if not output_dir:

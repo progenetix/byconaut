@@ -7,18 +7,18 @@ from bycon import assign_nested_value, get_nested_value, prdbug, prjsonnice, BYC
 
 ################################################################################
 
-def export_datatable_download(results, byc):
+def export_datatable_download(results):
     # TODO: separate table generation from HTTP response
     output = BYC_PARS.get("output", "___none___")
     prdbug(f'... in export_datatable_download => {output}')
     dt_m = BYC["datatable_mappings"]
-    r_t = byc.get("response_entity_id", "___none___")
+    r_t = BYC.get("response_entity_id", "___none___")
     if not r_t in dt_m["definitions"]:
         return
     io_params = dt_m["definitions"][ r_t ]["parameters"]
     if not "local" in ENV:
         print('Content-Type: text/tsv')
-        print('Content-Disposition: attachment; filename='+byc["response_entity_id"]+'.tsv')
+        print('Content-Disposition: attachment; filename='+BYC["response_entity_id"]+'.tsv')
         print('status: 200')
         print()
     if "idtable" in output:
@@ -85,7 +85,7 @@ def import_datatable_dict_line(parent, fieldnames, lineobj, primary_scope="biosa
         # this makes only sense for updating existing data; if there would be
         # no value, the parameter would just be excluded from the update object
         # if there was an empy value
-        if v.lower() in ("___delete___", "__delete__", "none", "___none___", "-"):
+        if v.lower() in ("___delete___", "__delete__", "none", "___none___", "__none__", "-"):
             v = ""
         parameter_type = par_defs.get("type", "string")
         if "num" in parameter_type:

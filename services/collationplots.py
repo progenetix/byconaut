@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 
 from os import path, environ, pardir
-import sys, datetime, argparse
+import sys, datetime, argparse, traceback
 from pymongo import MongoClient
 
 from bycon import (
     BeaconErrorResponse,
-    byc,
     initialize_bycon_service,
     print_text_response,
     rest_path_value,
@@ -46,22 +45,22 @@ def main():
 ################################################################################
 
 def collationplots():
-    initialize_bycon_service(byc, "collationplots")
-    generate_genome_bins(byc)
+    initialize_bycon_service()
+    generate_genome_bins()
 
     if (id_from_path := rest_path_value("collationplots")):
-        byc["filters"] = [ {"id": id_from_path } ]
+        BYC.update({"BYC_FILTERS": [ {"id": id_from_path } ] })
     elif "id" in BYC_PARS:
-        byc["filters"] = [ {"id": BYC_PARS["id"]} ]
+        BYC.update({"BYC_FILTERS": [ {"id": BYC_PARS["id"]} ] })
     if BYC_PARS.get("plot_type", "___none___") not in ["histoplot", "histoheatplot", "histosparkplot"]:
         BYC_PARS.update({"plot_type": "histoplot"})
 
-    pdb = ByconBundler(byc).collationsPlotbundles()
+    pdb = ByconBundler().collationsPlotbundles()
     if len(BYC["ERRORS"]) >1:
-        BeaconErrorResponse(byc).response(422)
+        BeaconErrorResponse().response(422)
 
     svg_f = ExportFile("svg").checkOutputFile()
-    BP = ByconPlot(byc, pdb)
+    BP = ByconPlot(pdb)
     if svg_f:
         BP.svg2file(svg_f)
     else:

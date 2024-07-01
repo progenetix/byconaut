@@ -1,12 +1,12 @@
 from config import *
 
-def doc_generator(byc, generated_docs_path):
+def doc_generator(generated_docs_path):
 
     if path.exists(generated_docs_path):
         file_pars = {
             "plot_defaults":{
                 "chapters": {
-                    "plot_types": "Plot Types",
+                    "plot_type_defs": "Plot Types",
                     "plot_parameters": "Plot Parameters"
                 },
                 "title": "Plot Parameters and Information"
@@ -18,7 +18,7 @@ def doc_generator(byc, generated_docs_path):
         }
 
         for d_k, d_v in file_pars.items():
-            if d_k not in byc:
+            if d_k not in BYC:
                 continue
 
             pp_f = path.join(generated_docs_path, f"{d_k}.md")
@@ -34,9 +34,9 @@ def doc_generator(byc, generated_docs_path):
 
             for chapter, title in d_v.get("chapters").items():
                 if "root" in chapter:
-                    pp = byc[d_k]
+                    pp = BYC[d_k]
                 else:
-                    pp = byc[d_k].get(chapter, {})
+                    pp = BYC[d_k].get(chapter, {})
                 ls.append(f'## {title}')
                 for pk, pi in pp.items():
                     ls.append(f'### `{pk}` \n')

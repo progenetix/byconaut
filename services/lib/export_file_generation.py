@@ -12,10 +12,10 @@ from service_helpers import open_text_streaming, close_text_streaming
 
 ################################################################################
 
-def stream_pgx_meta_header(ds_id, ds_results, byc):
+def stream_pgx_meta_header(ds_id, ds_results):
     skip = BYC_PARS.get("skip", 0)
     limit = BYC_PARS.get("limit", 0)
-    ds_d = byc.get("dataset_definitions", {})
+    ds_d = BYC.get("dataset_definitions", {})
     ds_ds_d = ds_d.get(ds_id, {})
 
     mongo_client = MongoClient(host=DB_MONGOHOST)
@@ -29,13 +29,13 @@ def stream_pgx_meta_header(ds_id, ds_results, byc):
     #     print("#meta=>{}={}".format(k, n))
     print(f'#meta=>pagination.skip={skip};pagination.limit={limit}')
             
-    print_filters_meta_line(byc)
+    print_filters_meta_line()
 
     for bs_id in ds_results["biosamples.id"][ "target_values" ]:
         bs = bs_coll.find_one( { "id": bs_id } )
         if not bs:
             continue
-        h_line = pgxseg_biosample_meta_line(byc, bs, "histological_diagnosis_id")
+        h_line = pgxseg_biosample_meta_line(bs, "histological_diagnosis_id")
         print(h_line)
 
     return
@@ -43,7 +43,7 @@ def stream_pgx_meta_header(ds_id, ds_results, byc):
 
 ################################################################################
 
-def pgxseg_biosample_meta_line(byc, biosample, group_id_key="histological_diagnosis_id"):
+def pgxseg_biosample_meta_line(biosample, group_id_key="histological_diagnosis_id"):
     dt_m = BYC["datatable_mappings"]
     io_params = dt_m["definitions"][ "biosample" ]["parameters"]
 
@@ -93,19 +93,19 @@ def pgxseg_biosample_meta_line(byc, biosample, group_id_key="histological_diagno
 
 ################################################################################    
 
-def __pgxmatrix_interval_header(info_columns, byc):
+def __pgxmatrix_interval_header(info_columns):
     int_line = info_columns.copy()
-    for iv in byc["genomic_intervals"]:
+    for iv in BYC["genomic_intervals"]:
         int_line.append(f'{iv["reference_name"]}:{iv["start"]}-{iv["end"]}:DUP')
-    for iv in byc["genomic_intervals"]:
+    for iv in BYC["genomic_intervals"]:
         int_line.append(f'{iv["reference_name"]}:{iv["start"]}-{iv["end"]}:DEL')
     return int_line
 
 
 ################################################################################
 
-def print_filters_meta_line(byc):
-    filters = byc.get("filters", [])
+def print_filters_meta_line():
+    filters = BYC.get("BYC_FILTERS", [])
     if len(filters) < 1:
         return
     f_vs = []
@@ -117,7 +117,9 @@ def print_filters_meta_line(byc):
 
 ################################################################################
 
-def export_pgxseg_download(datasets_results, ds_id, byc):
+def export_pgxseg_download(datasets_results, ds_id):
+    skip = BYC_PARS.get("skip", 0)
+    limit = BYC_PARS.get("limit", 0)
     data_client = MongoClient(host=DB_MONGOHOST)
     v_coll = data_client[ ds_id ][ "variants" ]
     ds_results = datasets_results.get(ds_id, {})
@@ -126,15 +128,15 @@ def export_pgxseg_download(datasets_results, ds_id, byc):
         return
     v__ids = ds_results["variants._id"].get("target_values", [])
     if test_truthy( BYC_PARS.get("paginate_results", True) ):
-        v__ids = return_paginated_list(v__ids, byc.get("skip", 0), byc.get("limit", 0))
+        v__ids = return_paginated_list(v__ids, skip, limit)
 
-    stream_pgx_meta_header(ds_id, ds_results, byc)
+    stream_pgx_meta_header(ds_id, ds_results)
     print_pgxseg_header_line()
 
     v_instances = []
     for v_id in v__ids:
         v_s = v_coll.find_one( { "_id": v_id }, { "_id": 0 } )
-        v_instances.append(ByconVariant(byc).byconVariant(v_s))
+        v_instances.append(ByconVariant().byconVariant(v_s))
 
     v_instances = list(sorted(v_instances, key=lambda x: (f'{x["location"]["chromosome"].replace("X", "XX").replace("Y", "YY").zfill(2)}', x["location"]['start'])))
     for v in v_instances:
@@ -144,11 +146,10 @@ def export_pgxseg_download(datasets_results, ds_id, byc):
 
 ################################################################################
 
-def write_variants_bedfile(datasets_results, ds_id, byc):
+def write_variants_bedfile(datasets_results, ds_id):
     """podmd
     ##### Accepts
 
-    * a Bycon `byc` object
     * a Bycon `h_o` handover object with its `target_values` representing `_id` 
     objects of a `variants` collection
         
@@ -165,14 +166,13 @@ def write_variants_bedfile(datasets_results, ds_id, byc):
     * evaluate to use "bedDetails" format
 
     podmd"""
-    local_paths = byc.get("local_paths")
-    if not local_paths:
+    if not (local_paths := BYC.get("local_paths")):
         return False
     tmp_path = path.join( *local_paths[ "server_tmp_dir_loc" ])
     if not path.isdir(tmp_path):
         BYC["ERRORS"].append(f"Temporary directory `{tmp_path}` not found.")
         return False
-    h_o_server = select_this_server(byc)
+    h_o_server = select_this_server()
     ext_url = f'http://genome.ucsc.edu/cgi-bin/hgTracks?org=human&db=hg38'
     bed_url = f''
 
@@ -203,7 +203,7 @@ def write_variants_bedfile(datasets_results, ds_id, byc):
 
     for v__id in v__ids:
         v = v_coll.find_one( { "_id": v__id }, { "_id": 0 } )
-        pv = ByconVariant(byc).byconVariant(v)
+        pv = ByconVariant().byconVariant(v)
         if (pvt := pv.get("variant_type", "___none___")) not in vs.keys():
             continue
         vs[pvt].append(pv)
@@ -280,12 +280,12 @@ def pgxseg_variant_line(v_pgxseg):
 
 ################################################################################
 
-def export_callsets_matrix(datasets_results, ds_id, byc):
+def export_callsets_matrix(datasets_results, ds_id):
     skip = BYC_PARS.get("skip", 0)
     limit = BYC_PARS.get("limit", 0)
     output = BYC_PARS.get("output", "___none___")
     g_b = BYC_PARS.get("genome_binning", "")
-    i_no = len(byc["genomic_intervals"])
+    i_no = len(BYC["genomic_intervals"])
 
     m_format = "coverage"
     if "val" in output:
@@ -301,14 +301,14 @@ def export_callsets_matrix(datasets_results, ds_id, byc):
     open_text_streaming("interval_callset_matrix.pgxmatrix")
 
     for d in ["id", "assemblyId"]:
-        d_v = byc["dataset_definitions"][ds_id].get(d)
+        d_v = BYC["dataset_definitions"][ds_id].get(d)
         if d_v:
             print(f'#meta=>{d}={d_v}')
-    print_filters_meta_line(byc)
+    print_filters_meta_line()
     print(f'#meta=>data_format=interval_{m_format}')
 
     info_columns = [ "analysis_id", "biosample_id", "group_id" ]
-    h_line = __pgxmatrix_interval_header(info_columns, byc)
+    h_line = __pgxmatrix_interval_header(info_columns)
     info_col_no = len(info_columns)
     int_col_no = len(h_line) - len(info_columns)
     print(f'#meta=>genome_binning={g_b};interval_number={i_no}')
@@ -363,9 +363,9 @@ def export_callsets_matrix(datasets_results, ds_id, byc):
 
 ################################################################################
 
-def export_pgxseg_frequencies(byc, results):
+def export_pgxseg_frequencies(results):
     g_b = BYC_PARS.get("genome_binning", "")
-    i_no = len(byc["genomic_intervals"])
+    i_no = len(BYC["genomic_intervals"])
 
     open_text_streaming("interval_frequencies.pgxfreq")
     print(f'#meta=>genome_binning={g_b};interval_number={i_no}')
@@ -389,9 +389,9 @@ def export_pgxseg_frequencies(byc, results):
 
 ################################################################################
 
-def export_pgxmatrix_frequencies(byc, results):
+def export_pgxmatrix_frequencies(results):
     g_b = BYC_PARS.get("genome_binning", "")
-    i_no = len(byc["genomic_intervals"])
+    i_no = len(BYC["genomic_intervals"])
 
     open_text_streaming("interval_frequencies.pgxmatrix")
 
@@ -406,7 +406,7 @@ def export_pgxmatrix_frequencies(byc, results):
     # header
 
     h_line = [ "group_id" ]
-    h_line = __pgxmatrix_interval_header(h_line, byc)
+    h_line = __pgxmatrix_interval_header(h_line)
     print("\t".join(h_line))
 
     for f_set in results:
@@ -422,10 +422,12 @@ def export_pgxmatrix_frequencies(byc, results):
 
 ################################################################################
 
-def export_vcf_download(datasets_results, ds_id, byc):
+def export_vcf_download(datasets_results, ds_id):
     """
     """
     # TODO: VCF schema in some config file...
+    skip = BYC_PARS.get("skip", 0)
+    limit = BYC_PARS.get("limit", 0)
     open_text_streaming(f"{ds_id}_variants.vcf")
     print(
         """##fileformat=VCFv4.4
@@ -460,12 +462,12 @@ def export_vcf_download(datasets_results, ds_id, byc):
         return
     v__ids = ds_results["variants._id"].get("target_values", [])
     if test_truthy( BYC_PARS.get("paginate_results", True) ):
-        v__ids = return_paginated_list(v__ids, byc.get("skip", 0), byc.get("limit", 0))
+        v__ids = return_paginated_list(v__ids, skip, limit)
 
     v_instances = []
     for v_id in v__ids:
         v = v_coll.find_one( { "_id": v_id }, { "_id": 0 } )
-        v_instances.append(ByconVariant(byc).byconVariant(v))
+        v_instances.append(ByconVariant().byconVariant(v))
 
 
     v_instances = list(sorted(v_instances, key=lambda x: (f'{x["location"]["chromosome"].replace("X", "XX").replace("Y", "YY").zfill(2)}', x["location"]['start'])))
@@ -487,7 +489,7 @@ def export_vcf_download(datasets_results, ds_id, byc):
 
     print("\t".join(v_o.keys()))
 
-    bv = ByconVariant(byc)
+    bv = ByconVariant()
     for d in variant_ids:
         d_vs = [var for var in v_instances if var.get('variant_internal_id', "__none__") == d]
         vcf_v = bv.vcfVariant(d_vs[0])

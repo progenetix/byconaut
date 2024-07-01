@@ -9,7 +9,6 @@ from bycon import BYC, BYC_PARS, ENV, bands_from_cytobands, prjsonnice, test_tru
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ) )
 sys.path.append( services_lib_path )
 from clustering_utils import cluster_frequencies, cluster_samples
-from cytoband_utils import bands_from_cytobands
 
 # http://progenetix.org/services/sampleplots?&filters=pgx:icdom-85003&plotType=histoplot&skip=0&limit=100&plotPars=plot_chros=8,9,17::labels=8:120000000-123000000:Some+Interesting+Region::plot_gene_symbols=MYCN,REL,TP53,MTAP,CDKN2A,MYC,ERBB2,CDK1::plot_width=800&filters=pgx:icdom-85003&plotType=histoplot
 # http://progenetix.org/services/samplesplot?datasetIds=progenetix&referenceName=9&variantType=DEL&start=21500000&start=21975098&end=21967753&end=22500000&filters=NCIT:C3058&plotType=histoplot&plotPars=plot_gene_symbols=CDKN2A,MTAP,EGFR,BCL6
@@ -19,134 +18,84 @@ from cytoband_utils import bands_from_cytobands
 ################################################################################
 ################################################################################
 
-class ByconPlot:
-    """
-    # The `ByconPlot` class
+class ByconPlotPars:
 
-    ## Input
+    def __init__(self):
 
-    A plot data bundle containing lists of callset object bundles (_i.e._ the
-    analyses with all their individual variants added) and/or interval frequencies
-    set bundles (_i.e._ list of one or more binned CNV frequencies in object
-    wrappers with some information about the set).
+        self.plot_type = BYC_PARS.get("plot_type", "histoplot")
+        self.plot_defaults = BYC.get("plot_defaults", {})
+        p_t_s = self.plot_defaults.get("plot_type_defs", {})
+        p_d_p = self.plot_defaults.get("plot_parameters", {})
 
-    """
-
-    def __init__(self, byc: dict, plot_data_bundle: dict):
-        self.ChroNames = ChroNames()
-        self.argdefs = byc.get("argument_definitions", {})
-        self.plot_defaults = byc.get("plot_defaults", {})
-        self.plot_types = self.plot_defaults.get("plot_types", {})
-        self.cytobands = byc.get("cytobands", [])
-        self.cytolimits = byc.get("cytolimits", {})
-        self.plot_data_bundle = plot_data_bundle
-        self.svg = None
         self.plv = {}
-        self.plot_time_init = datetime.now()
+
+        p_t = self.plot_type
+        if not (p_t_d := p_t_s.get(p_t)):
+            self.plot_type = "histoplot"
+            p_t_d = p_t_s.get("histoplot")
+
+        p_d_m = p_t_d.get("mods", {})
+
+        for p_k, p_d in p_d_p.items():
+            if "default" in p_d:
+                self.plv.update({p_k: p_d["default"]})
+                if (p_k := p_d_m):
+                    self.plv.update({p_k: p_d_m[p_k]})
+            else:
+                self.plv.update({p_k: ""})
+
+        m_t = p_t_d.get("modded")
+        if m_t:
+            self.plot_type = m_t
 
 
     # -------------------------------------------------------------------------#
     # ----------------------------- public ------------------------------------#
     # -------------------------------------------------------------------------#
 
-    def get_svg(self) -> str:
-        self.__plot_pipeline()
-        return self.svg
+    def plotType(self):
+        return self.plot_type
 
 
     # -------------------------------------------------------------------------#
 
-    def svg2file(self, filename):
-        self.__plot_pipeline()
-        svg_fh = open(filename, "w")
-        svg_fh.write(self.svg)
-        svg_fh.close()
+    def plotTypeDefinitions(self):
+        return self.plot_defaults.get("plot_type_defs", {})
 
 
     # -------------------------------------------------------------------------#
 
-    def svgResponse(self):
-        self.__plot_pipeline()
-        print_svg_response(self.svg)
+    def plotDefaults(self):
+        return self.plv
+
+
+    # -------------------------------------------------------------------------#
+
+    def plotParameters(self, modded={}):
+        for m_k, m_v in modded.items():
+            self.plv.update({m_k: m_v})
+        self.__process_plot_parameters()
+        return self.plv
 
 
     # -------------------------------------------------------------------------#
     # ----------------------------- private -----------------------------------#
     # -------------------------------------------------------------------------#
 
-    def __plot_pipeline(self):
-        dbm = f'{inspect.stack()[1][3]} from {inspect.stack()[2][3]}'
-        prdbug(dbm)
-        self.plot_pipeline_start = datetime.now()
-        self.__set_plot_type()
-        self.__initialize_plot_values()
-        if self.__plot_respond_empty_results() is False:
-            self.__plot_add_title()
-            self.__plot_add_cytobands()
-            self.__plot_add_samplestrips()
-            self.__plot_add_histodata()
-            self.__plot_add_probesplot()
-            self.__plot_add_cluster_tree()
-            prdbug(f'HERE plot type: {self.plot_type}')
-            self.__plot_add_markers()
-        self.__plot_add_footer()
-        prdbug(f'FOOT plot type: {self.plot_type}')
-
-        self.svg = self.__create_svg()
-        self.plot_pipeline_end = datetime.now()
-        self.plot_pipeline_duration = self.plot_pipeline_end - self.plot_pipeline_start
-        dbm = f'... plot pipeline duration for {self.plot_type} was {self.plot_pipeline_duration.total_seconds()} seconds'
-        prdbug(dbm)
-
-
-    # -------------------------------------------------------------------------#
-
-    def __set_plot_type(self):
-        p_t_s = self.plot_types
-        p_t = BYC_PARS.get("plot_type", "___none___")
-        if p_t not in p_t_s.keys():
-            p_t = "histoplot"
-        self.plot_type = p_t
-
-
-    # -------------------------------------------------------------------------#
-
-    def __set_plot_defaults(self):
-
+    def __process_plot_parameters(self):
         p_d_p = self.plot_defaults.get("plot_parameters", {})
-        p_t = self.plot_type
-        p_t_s = self.plot_types
-        p_d_m = p_t_s[p_t].get("mods", {})
-
-        for p_k, p_d in p_d_p.items():
-            if "default" in p_d:
-                self.plv.update({p_k: p_d["default"]})
-                if p_k in p_d_m:
-                    self.plv.update({p_k: p_d_m[p_k]})
-            else:
-                self.plv.update({p_k: ""})
-
-        m_t = p_t_s[p_t].get("modded")
-        if m_t:
-            self.plot_type = m_t
-
-
-    # -------------------------------------------------------------------------#
-
-    def __get_plot_parameters(self):
-        p_d_p = self.plot_defaults.get("plot_parameters", {})
-        p_t_s = self.plot_types
 
         bps = {}
         plot_pars = BYC_PARS.get("plot_pars", "")
+        prdbug(f'__process_plot_parameters - all: {plot_pars}')
         for ppv in re.split(r'::|&', plot_pars):
             pp_pv = ppv.split('=')
             if len(pp_pv) == 2:
                 pp, pv = pp_pv
                 pp = decamelize(pp)
                 bps.update({pp: pv})
+                prdbug(f'__process_plot_parameters {pp} => {pv}')
 
-        # BYC_PARS.pop("plot_pars", None)
         dbm = f'... plotPars: {bps}'
         for p_k, p_d in p_d_p.items():
             if p_k in bps:
@@ -165,11 +114,6 @@ class ByconPlot:
                     else:
                         p_d = list(map(str, p_d))
 
-                    # TODO: map potential NC_ values
-                    if "plot_chros" in p_k:
-                        p_d_c = [self.ChroNames.chro(x) for x in p_d]
-                        p_d = p_d_c
-
                     if len(p_d) > 0:
                         self.plv.update({p_k: p_d})
                 elif "int" in p_k_t:
@@ -181,6 +125,93 @@ class ByconPlot:
                 else:
                     self.plv.update({p_k: str(p_d)})
 
+        # TODO: map potential NC_ values
+        k = "plot_chros"
+        p_cs = bps.get(k, [])
+        if len(p_cs) > 0:
+            self.plv.update({k: [ChroNames().chro(x) for x in p_cs]})
+
+
+################################################################################
+################################################################################
+################################################################################
+
+class ByconPlot:
+    """
+    # The `ByconPlot` class
+
+    ## Input
+
+    A plot data bundle containing lists of callset object bundles (_i.e._ the
+    analyses with all their individual variants added) and/or interval frequencies
+    set bundles (_i.e._ list of one or more binned CNV frequencies in object
+    wrappers with some information about the set).
+ 
+    """
+
+    def __init__(self, plot_data_bundle: dict):
+        bpp = ByconPlotPars()
+        self.plot_type = bpp.plotType()
+        prdbug(f"... plot_type: {self.plot_type}")
+        self.plot_type_defs = bpp.plotTypeDefinitions()
+        self.plv = bpp.plotDefaults()
+
+        self.cytobands = BYC.get("cytobands", [])
+        self.cytolimits = BYC.get("cytolimits", {})
+        self.plot_data_bundle = plot_data_bundle
+        self.svg = None
+        self.plot_time_init = datetime.now()
+
+        self.__plot_pipeline()
+
+
+    # -------------------------------------------------------------------------#
+    # ----------------------------- public ------------------------------------#
+    # -------------------------------------------------------------------------#
+
+    def get_svg(self) -> str:
+        return self.svg
+
+
+    # -------------------------------------------------------------------------#
+
+    def svg2file(self, filename):
+        svg_fh = open(filename, "w")
+        svg_fh.write(self.svg)
+        svg_fh.close()
+
+
+    # -------------------------------------------------------------------------#
+
+    def svgResponse(self):
+        self.__print_svg_response()
+
+
+    # -------------------------------------------------------------------------#
+    # ----------------------------- private -----------------------------------#
+    # -------------------------------------------------------------------------#
+
+    def __plot_pipeline(self):
+        dbm = f'{inspect.stack()[1][3]} from {inspect.stack()[2][3]}'
+        prdbug(dbm)
+        self.plot_pipeline_start = datetime.now()
+        self.__initialize_plot_values()
+        if self.__plot_respond_empty_results() is False:
+            self.__plot_add_title()
+            self.__plot_add_cytobands()
+            self.__plot_add_samplestrips()
+            self.__plot_add_histodata()
+            self.__plot_add_probesplot()
+            self.__plot_add_cluster_tree()
+            self.__plot_add_markers()
+        self.__plot_add_footer()
+
+        self.svg = self.__create_svg()
+        self.plot_pipeline_end = datetime.now()
+        self.plot_pipeline_duration = self.plot_pipeline_end - self.plot_pipeline_start
+        dbm = f'... plot pipeline duration for {self.plot_type} was {self.plot_pipeline_duration.total_seconds()} seconds'
+        prdbug(dbm)
+
 
     # -------------------------------------------------------------------------#
 
@@ -188,9 +219,7 @@ class ByconPlot:
         dbm = f'{inspect.stack()[1][3]} from {inspect.stack()[2][3]}'
         prdbug(dbm)
 
-        self.__set_plot_defaults()
-
-        p_t_s = self.plot_types
+        p_t_s = self.plot_type_defs
         p_t = self.plot_type
         d_k = p_t_s[p_t].get("data_key")
         d_t = p_t_s[p_t].get("data_type", "analyses")
@@ -215,7 +244,9 @@ class ByconPlot:
         else:
             self.plv.update({"plot_dendrogram_width": 0})
 
-        self.__get_plot_parameters()
+        self.plv.update(ByconPlotPars().plotParameters(self.plv))
+
+        prdbug(f'... testing plot_width: {self.plv["plot_width"]}')
 
         pax = self.plv["plot_margins"] + self.plv["plot_labelcol_width"] + self.plv["plot_axislab_y_width"]
 
@@ -244,7 +275,6 @@ class ByconPlot:
             self.plv.update({"plot_labelcol_font_size": lab_f_s})
 
         self.plv.update({
-            "cytoband_shades": self.plot_defaults.get("cytoband_shades", {}),
             "styles": [
                 f'.plot-area {{fill: {self.plv.get("plot_area_color", "#66ddff")}; fill-opacity: {self.plv.get("plot_area_opacity", 0.8)};}}',
                 f'.title-left {{text-anchor: end; fill: {self.plv["plot_font_color"]}; font-size: {self.plv["plot_labelcol_font_size"]}px;}}'
@@ -263,8 +293,8 @@ class ByconPlot:
         })
 
 
-    # --------------------------------------------------------------------------#
-    # --------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
 
     def __filter_empty_callsets_results(self):
         dbm = f'{inspect.stack()[1][3]} from {inspect.stack()[2][3]}'
@@ -273,7 +303,7 @@ class ByconPlot:
         if not "samplesplot" in self.plot_type:
             return
 
-        p_t_s = self.plot_defaults.get("plot_types", {})
+        p_t_s = self.plot_type_defs
         d_k = p_t_s["samplesplot"].get("data_key")
 
         if test_truthy(self.plv.get("plot_filter_empty_samples", False)):
@@ -285,8 +315,8 @@ class ByconPlot:
         })
 
 
-    # --------------------------------------------------------------------------#
-    # --------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
 
     def __plot_respond_empty_results(self):
         if self.plv["results_number"] > 0:
@@ -306,8 +336,8 @@ class ByconPlot:
 
         self.__plot_add_title()
 
-    # --------------------------------------------------------------------------#
-    # --------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
 
     def __format_resultset_title(self):
         prdbug(f'{inspect.stack()[1][3]} from {inspect.stack()[2][3]}')
@@ -327,13 +357,13 @@ class ByconPlot:
         return title
 
 
-    # --------------------------------------------------------------------------#
-    # --------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
 
     def __plot_add_title(self):
         prdbug(f'{inspect.stack()[1][3]} from {inspect.stack()[2][3]}')
-        prdbug(f'font: {self.plv["plot_title_font_size"]}')
-        prdbug(f'title: {self.plv["plot_title"]}')
+        # prdbug(f'font: {self.plv["plot_title_font_size"]}')
+        # prdbug(f'title: {self.plv["plot_title"]}')
 
         if self.plv["plot_title_font_size"] < 1:
             return
@@ -354,13 +384,15 @@ class ByconPlot:
         self.plv["Y"] += self.plv["plot_title_font_size"]
 
 
-    # --------------------------------------------------------------------------#
-    # --------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
 
     def __plot_add_cytobands(self):
         if self.plv["plot_chro_height"] < 1:
             return
         prdbug(f'{inspect.stack()[1][3]} from {inspect.stack()[2][3]}')
+        chr_h = self.plv.get("plot_chro_height", 12)
+        prg_w = self.plv.get("plot_region_gap_width", 2)
 
         self.__plot_add_cytoband_svg_gradients()
 
@@ -379,9 +411,9 @@ class ByconPlot:
                 f'<text x="{chr_c}" y="{self.plv["Y"]}" style="text-anchor: middle; font-size: {self.plv["plot_font_size"]}px">{chro}</text>')
 
             x += chr_w
-            x += self.plv["plot_region_gap_width"]
+            x += prg_w
 
-        self.plv["Y"] += self.plv["plot_region_gap_width"]
+        self.plv["Y"] += prg_w
 
         # ---------------------------- chromosomes ----------------------------#
 
@@ -401,52 +433,49 @@ class ByconPlot:
             for cb in chr_cb_s:
 
                 this_n += 1
-
                 s_b = cb["start"]
                 e_b = cb["end"]
                 c = cb["staining"]
+
                 cb_l = int(e_b) - int(s_b)
                 l_px = cb_l * self.plv["plot_b2pf"]
 
                 by = self.plv["Y"]
-                bh = self.plv["plot_chro_height"]
+                bh = chr_h
 
                 if "cen" in c:
-                    by += 0.2 * self.plv["plot_chro_height"]
-                    bh -= 0.4 * self.plv["plot_chro_height"]
+                    by += 0.2 * chr_h
+                    bh -= 0.4 * chr_h
                 elif "stalk" in c:
-                    by += 0.3 * self.plv["plot_chro_height"]
-                    bh -= 0.6 * self.plv["plot_chro_height"]
+                    by += 0.3 * chr_h
+                    bh -= 0.6 * chr_h
                 elif this_n == 1 or this_n == last:
-                    by += 0.1 * self.plv["plot_chro_height"]
-                    bh -= 0.2 * self.plv["plot_chro_height"]
+                    by += 0.1 * chr_h
+                    bh -= 0.2 * chr_h
 
                 self.plv["pls"].append(
                     f'<rect x="{round(x, 1)}" y="{round(by, 1)}" width="{round(l_px, 1)}" height="{round(bh, 1)}" style="fill: url(#{self.plv["plot_id"]}{c}); " />')
 
                 x += l_px
 
-            x += self.plv["plot_region_gap_width"]
+            x += prg_w
 
         # -------------------------- / chromosomes -----------------------------#
 
-        self.plv["Y"] += self.plv["plot_chro_height"]
-        self.plv["Y"] += self.plv["plot_region_gap_width"]
+        self.plv["Y"] += chr_h
+        self.plv["Y"] += prg_w
 
 
-    # --------------------------------------------------------------------------#
-    # --------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
 
     def __plot_add_cytoband_svg_gradients(self):
         prdbug(f'{inspect.stack()[1][3]} from {inspect.stack()[2][3]}')
 
         c_defs = ""
-
         for cs_k, cs_c in self.plv["cytoband_shades"].items():
-
             p_id = self.plv.get("plot_id", "")
             c_defs += f'\n<linearGradient id="{p_id}{cs_k}" x1="0%" x2="0%" y1="0%" y2="80%" spreadMethod="reflect">'
-
             for k, v in cs_c.items():
                 c_defs += f'\n  <stop offset="{k}" stop-color="{v}" />'
             c_defs += f'\n</linearGradient>'
@@ -454,13 +483,13 @@ class ByconPlot:
         self.plv["pls"].insert(0, c_defs)
 
 
-    # --------------------------------------------------------------------------#
-    # --------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
 
     def __plot_add_samplestrips(self):
         if not "sample" in self.plot_type:
             return
-        prdbug(f'{inspect.stack()[1][3]} from {inspect.stack()[2][3]}')
+        # prdbug(f'{inspect.stack()[1][3]} from {inspect.stack()[2][3]}')
 
         self.plv.update({"plot_first_area_y0": self.plv["Y"]})
         self.plv["pls"].append("")
@@ -536,7 +565,7 @@ class ByconPlot:
     def __plot_add_one_samplestrip(self, s):
         x = self.plv["plot_area_x0"]
         h = self.plv["plot_samplestrip_height"]
-        pvts = self.plot_defaults.get("plot_variant_types", {})
+        pvts = self.plv.get("plot_variant_types", {})
 
         col_c = {}
         for vt, cd in pvts.items():
@@ -587,6 +616,7 @@ class ByconPlot:
         prdbug(f'{inspect.stack()[1][3]} from {inspect.stack()[2][3]}')
 
         ci_h = self.plv["plot_clusteritem_height"]
+        cl_h_g = self.plv.get("cluster_head_gap", 2)
         p_s_c = self.plv.get("plot_dendrogram_color", '#ee0000')
         p_s_w = self.plv.get("plot_dendrogram_stroke", 1)
 
@@ -611,12 +641,12 @@ class ByconPlot:
             n = f'<polyline points="'
 
             for j, x in enumerate(node):
-                y = d_y_s[i][j] * t_y_f - self.plv["cluster_head_gap"]
+                y = d_y_s[i][j] * t_y_f - cl_h_g
 
                 for h, f_set in enumerate(self.plv["results"]):
-                    h_y_e = h * (ci_h + self.plv["cluster_head_gap"])
+                    h_y_e = h * (ci_h + cl_h_g)
                     if y > h_y_e:
-                        y += self.plv["cluster_head_gap"]
+                        y += cl_h_g
 
                 n += f' {round(t_x_0 + x * t_x_f, 1)},{round(t_y_0 + y, 1)}'
 
@@ -625,8 +655,8 @@ class ByconPlot:
             self.plv["pls"].append(n)
 
 
-    # --------------------------------------------------------------------------#
-    # --------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
 
     def __plot_add_histodata(self):
         if "histo" not in self.plot_type:
@@ -650,8 +680,8 @@ class ByconPlot:
         self.plv["plot_last_area_ye"] = self.plv["Y"]
 
 
-    # --------------------------------------------------------------------------#
-    # --------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
 
     def __plot_order_histograms(self):
         prdbug(f'{inspect.stack()[1][3]} from {inspect.stack()[2][3]}')
@@ -663,8 +693,8 @@ class ByconPlot:
                 self.plv.update({"dendrogram": dendrogram})
 
 
-    # --------------------------------------------------------------------------#
-    # --------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
 
     def __plot_add_one_histogram(self, f_set):
         prdbug(f'{inspect.stack()[1][3]} from {inspect.stack()[2][3]}')
@@ -672,7 +702,6 @@ class ByconPlot:
         self.__plot_add_one_histogram_canvas(f_set)
 
         i_f = f_set.get("interval_frequencies", [])
-
         x = self.plv["plot_area_x0"]
         h_y_0 = self.plv["Y"] + self.plv["plot_area_height"] * 0.5
 
@@ -683,9 +712,16 @@ class ByconPlot:
 
         cnv_c = {
             "gain_frequency": self.plv["plot_dup_color"],
-            "loss_frequency": self.plv["plot_del_color"]
+            "loss_frequency": self.plv["plot_del_color"],
+            "gain_hlfrequency": self.plv["plot_amp_color"],
+            "loss_hlfrequency": self.plv["plot_homodel_color"]
         }
-        cnv_f = {"gain_frequency": -1, "loss_frequency": 1}
+        cnv_f = {
+            "gain_frequency": -1,
+            "gain_hlfrequency": -1,
+            "loss_frequency": 1,
+            "loss_hlfrequency": 1
+        }
 
         for chro in self.plv["plot_chros"]:
 
@@ -695,7 +731,8 @@ class ByconPlot:
             c_i_f = list(filter(lambda d: d["reference_name"] == chro, i_f.copy()))
             c_i_no = len(c_i_f)
 
-            for GL in ["gain_frequency", "loss_frequency"]:
+            # here w/ given order for overplotting the HL ones ...
+            for GL in ["gain_frequency", "gain_hlfrequency", "loss_frequency", "loss_hlfrequency"]:
 
                 p_c = cnv_c[GL]
                 h_f = cnv_f[GL]
@@ -705,6 +742,8 @@ class ByconPlot:
                 i_x_0 = x
                 prev = -1
                 for c_i_i, i_v in enumerate(c_i_f, start=1):
+
+                    prdbug(i_v)
 
                     s = i_x_0 + i_v.get("start", 0) * self.plv["plot_b2pf"]
                     e = i_x_0 + i_v.get("end", 0) * self.plv["plot_b2pf"]
@@ -731,15 +770,15 @@ class ByconPlot:
             x += chr_w
             x += self.plv["plot_region_gap_width"]
 
-        # ------------------------ / histogram data ----------------------------#
+        # ------------------------ / histogram data ---------------------------#
 
         self.plv["Y"] += self.plv["plot_area_height"]
         self.plv.update({"plot_last_area_ye": self.plv["Y"]})
         self.plv["Y"] += self.plv["plot_region_gap_width"]
 
 
-    # --------------------------------------------------------------------------#
-    # --------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
 
     def __plot_draw_one_heatstrip(self, f_set):
         prdbug(f'{inspect.stack()[1][3]} from {inspect.stack()[2][3]}')
@@ -886,8 +925,8 @@ class ByconPlot:
         self.__plot_area_add_grid()
 
 
-    # --------------------------------------------------------------------------#
-    # --------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
 
     def __histoplot_add_left_label(self, f_set):
         if self.plv["plot_labelcol_width"] < 10:
@@ -918,8 +957,8 @@ class ByconPlot:
             self.plv["pls"].append(f'<text x="{lab_x_e}" y="{lab_y}" class="title-left">{g_id}{count_lab}</text>')
 
 
-    # --------------------------------------------------------------------------#
-    # --------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
 
     def __plot_area_add_grid(self):
         prdbug(f'{inspect.stack()[1][3]} from {inspect.stack()[2][3]}')
@@ -935,12 +974,12 @@ class ByconPlot:
             f'.gridline {{stroke-width: {self.plv["plot_grid_stroke"]}px; stroke: {self.plv["plot_grid_color"]}; opacity: {self.plv["plot_grid_opacity"]} ; }}',
         )
 
-        # -------------------------- center line -----------------------------------#
+        # -------------------------- center line ------------------------------#
 
         self.plv["pls"].append(
             f'<line x1="{x_a_0 - self.plv["plot_region_gap_width"] - self.plv["plot_axislab_y_width"]}"  y1="{h_y_0}"  x2="{x_c_e}"  y2="{h_y_0}" class="gridline" />')
 
-        # --------------------------- grid lines -----------------------------------#
+        # --------------------------- grid lines ------------------------------#
 
         for y_m in self.plv["plot_label_y_values"]:
 
@@ -999,7 +1038,7 @@ class ByconPlot:
             return
         prdbug(f'{inspect.stack()[1][3]} from {inspect.stack()[2][3]}')
 
-        p_t_s = self.plot_defaults.get("plot_types", {})
+        p_t_s = self.plot_type_defs
         d_k = p_t_s["probesplot"].get("data_key")
 
         probebundles = self.plot_data_bundle.get(d_k, [{"id":"___undefined___"}])
@@ -1062,7 +1101,7 @@ class ByconPlot:
 
             x += chr_w + self.plv["plot_region_gap_width"]
 
-        # ------------------------ / histogram data ----------------------------#
+        # ------------------------ / histogram data ---------------------------#
 
         in_mem_file = io.BytesIO()
         image.save(in_mem_file, format = "PNG")
@@ -1091,8 +1130,8 @@ class ByconPlot:
         self.plv.update({"plot_last_area_ye": self.plv["Y"]})
         self.plv["Y"] += self.plv["plot_region_gap_width"]
 
-    # --------------------------------------------------------------------------#
-    # --------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
 
     def __plot_add_markers(self):
         self.__add_labs_from_plot_region_labels()
@@ -1160,7 +1199,7 @@ class ByconPlot:
             x += chr_w
             x += self.plv["plot_region_gap_width"]
 
-        # --------------------- end chromosome loop --------------------------------#
+        # --------------------- end chromosome loop ---------------------------#
 
         if max_lane > 0:
             self.plv["Y"] += max_lane * p_m_lane_h
@@ -1170,8 +1209,8 @@ class ByconPlot:
             )
 
 
-    # --------------------------------------------------------------------------#
-    # --------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
 
     def __add_labs_from_plot_region_labels(self):
         r_l_s = self.plv.get("plot_region_labels", [])
@@ -1204,8 +1243,8 @@ class ByconPlot:
             self.plv["plot_labels"].update(m)
 
 
-    # --------------------------------------------------------------------------#
-    # --------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
 
     def __add_labs_from_gene_symbols(self):
         GI = GeneInfo()
@@ -1230,8 +1269,8 @@ class ByconPlot:
         prdbug(self.plv["plot_labels"])
 
 
-    # --------------------------------------------------------------------------#
-    # --------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
 
     def __add_labs_from_cytobands(self):
         g_s_s = self.plv.get("plot_cytoregion_labels", [])
@@ -1239,7 +1278,7 @@ class ByconPlot:
             return
         g_l = []
         for q_g in g_s_s:
-            cytoBands, chro, start, end, error = bands_from_cytobands(q_g, self.cytobands, self.argdefs)
+            cytoBands, chro, start, end, error = bands_from_cytobands(q_g)
             if len(cytoBands) < 1:
                 continue
             m = self.__make_marker_object(
@@ -1252,8 +1291,8 @@ class ByconPlot:
             if m is not None:
                 self.plv["plot_labels"].update(m)
 
-    # --------------------------------------------------------------------------#
-    # --------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
 
     def __make_marker_object(self, chromosome, start, end, color, label=""):
         prdbug(f'label color: {color}')
@@ -1276,8 +1315,8 @@ class ByconPlot:
         return m
 
 
-    # --------------------------------------------------------------------------#
-    # --------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
 
     def __plot_add_footer(self):
         today = date.today()
@@ -1300,8 +1339,8 @@ class ByconPlot:
         self.plv["Y"] += self.plv["plot_margins"]
 
 
-    # --------------------------------------------------------------------------#
-    # --------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
 
     def __create_svg(self):
 
@@ -1331,19 +1370,22 @@ style="margin: auto; font-family: Helvetica, sans-serif;">
 
         return svg
 
-################################################################################
-################################################################################
-################################################################################
+    # -------------------------------------------------------------------------#
+    # -------------------------------------------------------------------------#
 
-def print_svg_response(this):
-    if not "local" in ENV:
-        print('Content-Type: image/svg+xml')
-        print('status: 200')
-        print()
-        print()
+    def __print_svg_response(self):
+        if not "local" in ENV:
+            print('Content-Type: image/svg+xml')
+            print('status: 200')
+            print()
+            print()
 
-    print(this)
-    print()
-    exit()
+        print(self.svg)
+        print()
+        exit()
+
+################################################################################
+################################################################################
+################################################################################
 
 

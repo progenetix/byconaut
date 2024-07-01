@@ -1,32 +1,35 @@
 import re
 from progress.bar import Bar
 
-from config import BYC_PARS
+from config import BYC, BYC_PARS
 
 ################################################################################
 
-def set_collation_types(byc):
+def set_collation_types():
+    f_d_s = BYC.get("filter_definitions", {})
     cts = BYC_PARS.get("collation_types")
     if not cts:
-        return byc
+        return
     s_p = {}
     for p in cts:
-        if p in byc["filter_definitions"].keys():
-            if byc["filter_definitions"][p].get("collationed", True) is False:
-                continue
-            s_p.update({p:byc["filter_definitions"][p]})
+        if not (p_d := f_d_s.get(p)):
+            continue
+        if p_d.get("collationed", True) is False:
+            continue
+        s_p.update({p: p_d})
     if len(s_p.keys()) < 1:
         print("No existing collation type was provided with `--collationTypes` ...")
         exit()
-    byc.update({"filter_definitions":s_p})
+    BYC.update({"filter_definitions":s_p})
 
-    return byc
+    return
 
 
 ################################################################################
 
-def hierarchy_from_file(ds_id, coll_type, pre_h_f, byc):
-    coll_defs = byc["filter_definitions"][coll_type]
+def hierarchy_from_file(ds_id, coll_type, pre_h_f):
+    f_d_s = BYC.get("filter_definitions", {})
+    coll_defs = f_d_s[coll_type]
     hier = { }
     f = open(pre_h_f, 'r+')
     h_in  = [line for line in f.readlines()]

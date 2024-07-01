@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import sys
+import sys, traceback
 from os import path
 
 from bycon import *
@@ -30,17 +30,17 @@ def main():
 ################################################################################
 
 def dbstats():
-    initialize_bycon_service(byc, "dbstats")
-    read_service_prefs("dbstats", services_conf_path, byc)
-    r = ByconautServiceResponse(byc)
+    initialize_bycon_service()
+    read_service_prefs("dbstats", services_conf_path)
+    r = ByconautServiceResponse()
 
     stats = MongoClient(host=DB_MONGOHOST)[HOUSEKEEPING_DB][ HOUSEKEEPING_INFO_COLL ].find( { }, { "_id": 0 } ).sort( "date", -1 ).limit( 1 )
 
     results = [ ]
     for stat in stats:
         for ds_id, ds_vs in stat["datasets"].items():
-            if len(byc[ "dataset_ids" ]) > 0:
-                if not ds_id in byc[ "dataset_ids" ]:
+            if len(BYC["BYC_DATASET_IDS"]) > 0:
+                if not ds_id in BYC["BYC_DATASET_IDS"]:
                     continue
             dbs = { "dataset_id": ds_id }
             dbs.update({"counts":ds_vs["counts"]})

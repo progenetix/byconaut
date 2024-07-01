@@ -30,19 +30,20 @@ def main():
 ################################################################################
 
 def schemas():
-    initialize_bycon_service(byc, "schemas")
-    r = ByconautServiceResponse(byc)
+    initialize_bycon_service()
+    r = ByconautServiceResponse()
 
     if "id" in BYC_PARS:
-        schema_name = BYC_PARS.get("id", None)
+        schema_name = BYC_PARS.get("id")
     else:
-        schema_name = byc["request_entity_path_id_value"]
+        schema_name = BYC.get("request_entity_path_id_value")
+        schema_name = schema_name[0]
+
 
     if schema_name:
         comps = schema_name.split('.')
         schema_name = comps.pop(0)
-        prdbug(schema_name)
-        s = read_schema_file(byc, schema_name, "")
+        s = read_schema_file(schema_name, "")
         if s:
             print('Content-Type: application/json')
             print('status:200')
@@ -51,7 +52,7 @@ def schemas():
             exit()
 
     BYC["ERRORS"].append("No correct schema id provided!")
-    BeaconErrorResponse(byc).response(422)
+    BeaconErrorResponse().response(422)
 
 
 ################################################################################

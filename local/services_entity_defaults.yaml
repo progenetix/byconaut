@@ -9,6 +9,9 @@ collationplots:
   request_entity_path_aliases:
     - collationPlots
 
+cytomapper:
+  request_entity_path_id: cytomapper
+
 endpoints:
   request_entity_path_id: endpoints
 
@@ -18,26 +21,40 @@ dbstats:
 ids:
   request_entity_path_id: ids
 
-ontologymappings:
-  request_entity_path_id: ontologymappings
+ontologymaps:
+  request_entity_id: ontologymaps
+  response_entity_id: ontologymaps
+  request_entity_path_id: ontologymaps
   request_entity_path_aliases:
     - ontologymaps
     - ontologyMaps
 
 pgxsegvariants:
   request_entity_path_id: pgxsegvariants
+  collection: variants
+  response_schema: beaconResultsetsResponse
   request_entity_path_aliases:
     - pgxseg
+  response_entity_id: genomicVariant
 
 samplemap:
   request_entity_path_id: samplemap
+  collection: biosamples
+  response_schema: beaconResultsetsResponse
+  response_entity_id: biosample
 
 samplematrix:
   request_entity_path_id: samplematrix
+  collection: biosamples
+  response_schema: beaconResultsetsResponse
+  response_entity_id: biosample
 
 sampletable:
   request_entity_path_id: sampletable
-
+  collection: biosamples
+  response_schema: beaconResultsetsResponse
+  response_entity_id: biosample
+  
 sampleplots:
   request_entity_path_id: sampleplots
   request_entity_path_aliases:
@@ -51,12 +68,18 @@ uploader:
 
 variantsbedfile:
   request_entity_path_id: variantsbedfile
+  collection: variants
+  response_schema: beaconResultsetsResponse
+  response_entity_id: genomicVariant
 
 vcfvariants:
   request_entity_path_id: vcfvariants
   request_entity_path_aliases:
     - vcf
-
+  response_entity_id: genomicVariant
+  collection: variants
+  response_schema: beaconResultsetsResponse
+  h->o_access_key: variants._id
 
 ##############################################################################
 
@@ -67,17 +90,6 @@ collation:
   beacon_schema:
     entity_type: Collation
     schema: https://progenetix.org/services/schemas/Collation/
-
-##############################################################################
-
-CytobandMapping:
-  request_entity_path_id: cytomapper
-  response_entity_id: CytobandMapping
-  collection: Null
-  response_schema: beaconResultsetsResponse
-  beacon_schema:
-    entity_type: CytobandMapping
-    schema: https://progenetix.org/services/schemas/CytobandMapping/
 
 ##############################################################################
 

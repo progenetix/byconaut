@@ -34,22 +34,25 @@ def main():
 ################################################################################
 
 def sampletable():
-    initialize_bycon_service(byc, "biosamples")
+    BYC.update({
+        "request_entity_path_id": "biosamples",
+        "request_entity_id": "biosample"
+    })
+    initialize_bycon_service()
 
     if not "table" in BYC_PARS.get("output", "___none___"):
         BYC_PARS.update({"output":"table"})
 
-    table_type = BYC_PARS.get("response_entity_id", "biosample")
-    if table_type not in ["biosample", "individual", "analysis"]:
+    if (table_type := BYC.get("response_entity_id", "___none___")) not in ["biosample", "individual", "analysis"]:
         table_type = "biosample"
-    byc.update({"response_entity_id": table_type})
-    rsd = ByconResultSets(byc).datasetsData()
+        BYC.update({"response_entity_id": table_type})
+    rsd = ByconResultSets().datasetsData()
 
     collated_results = []
     for ds_id, data in rsd.items():
         collated_results += data
 
-    export_datatable_download(collated_results, byc)
+    export_datatable_download(collated_results)
 
 ################################################################################
 ################################################################################

@@ -83,8 +83,8 @@ def read_www_tsv_to_dictlist(www, max_count=0):
 
 ################################################################################
 
-def callset_guess_probefile_path(callset, local_paths):
-    if not local_paths:
+def callset_guess_probefile_path(callset):
+    if not (local_paths := BYC.get("local_paths")):
         return False
     if not "server_callsets_dir_loc" in local_paths:
         return False

@@ -28,10 +28,10 @@ def main():
 ################################################################################
 
 def variantsbedfile():
-    initialize_bycon_service(byc, "g_variants")
-    rss = ByconResultSets(byc).datasetsResults()
+    initialize_bycon_service()
+    rss = ByconResultSets().datasetsResults()
     ds_id = list(rss.keys())[0]
-    ucsclink, bedfilelink = write_variants_bedfile(rss, ds_id, byc)
+    ucsclink, bedfilelink = write_variants_bedfile(rss, ds_id)
     # TODO: Error
     if "ucsc" in BYC_PARS.get("output", "bed"):
         print_uri_rewrite_response(ucsclink, bedfilelink)
