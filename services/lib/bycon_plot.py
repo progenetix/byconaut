@@ -125,11 +125,11 @@ class ByconPlotPars:
                 else:
                     self.plv.update({p_k: str(p_d)})
 
-        # TODO: map potential NC_ values
-        k = "plot_chros"
-        p_cs = bps.get(k, [])
-        if len(p_cs) > 0:
-            self.plv.update({k: [ChroNames().chro(x) for x in p_cs]})
+        # # TODO: map potential NC_ values
+        # k = "plot_chros"
+        # p_cs = bps.get(k, [])
+        # if len(p_cs) > 0:
+        #     self.plv.update({k: [ChroNames().chro(x) for x in p_cs]})
 
 
 ################################################################################
@@ -249,7 +249,6 @@ class ByconPlot:
         prdbug(f'... testing plot_width: {self.plv["plot_width"]}')
 
         pax = self.plv["plot_margins"] + self.plv["plot_labelcol_width"] + self.plv["plot_axislab_y_width"]
-
         paw = self.plv["plot_width"] - 2 * self.plv["plot_margins"]
         paw -= self.plv["plot_labelcol_width"]
         paw -= self.plv["plot_axislab_y_width"]
@@ -259,7 +258,7 @@ class ByconPlot:
         chr_b_s = 0
         
         c_l_s = dict(self.cytolimits)
-
+        
         for chro in self.plv["plot_chros"]:
             c_l = c_l_s[str(chro)]
             chr_b_s += int(c_l.get("size", 0))
@@ -292,6 +291,7 @@ class ByconPlot:
             "pls": []
         })
 
+        prdbug(f'... done with {dbm}')
 
     # -------------------------------------------------------------------------#
     # -------------------------------------------------------------------------#
