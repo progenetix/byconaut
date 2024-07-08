@@ -57,39 +57,24 @@ def pgxseg_biosample_meta_line(biosample, group_id_key="histological_diagnosis_i
             continue
 
         parameter_type = par_defs.get("type", "string")
-        pres = par_defs.get("prefix_split", {})
-        if len(pres.keys()) < 1:
-            db_key = par_defs.get("db_key", "___undefined___")
-            p_type =par_defs.get("type", "string")
-            v = get_nested_value(biosample, db_key, p_type)
-            h_v = ""
-            if isinstance(v, list):
-                h_v = "::".join(map(str, (v)))
-            else:
-                h_v = str(v)
-
-            if len(h_v) > 0:
-                if g_id_k == par:
-                    line.append("group_id={}".format(h_v))
-                if g_lab_k == par:
-                    line.append("group_label={}".format(h_v))
-                line.append("{}={}".format(par, h_v))
+        db_key = par_defs.get("db_key", "___undefined___")
+        p_type =par_defs.get("type", "string")
+        v = get_nested_value(biosample, db_key, p_type)
+        h_v = ""
+        if isinstance(v, list):
+            h_v = "::".join(map(str, (v)))
         else:
-            par_vals = biosample.get(par, [])
-            if not isinstance(par_vals, list):
-                continue
-            for pre, pre_defs in pres.items():
-                in_pgxseg = pre_defs.get("compact", False)
-                if in_pgxseg is False:
-                    continue
-                for v in par_vals:
-                    if v.get("id", "___none___").startswith(pre):
-                        line.append("{}_id___{}={}".format(par, pre, v.get("id")))
-                        l = v.get("label", "")
-                        if len(l) > 0:
-                            line.append("{}_label___{}={}".format(par, pre, v.get("id")))
-                        continue
+            h_v = str(v)
+
+        if len(h_v) > 0:
+            if g_id_k == par:
+                line.append("group_id={}".format(h_v))
+            if g_lab_k == par:
+                line.append("group_label={}".format(h_v))
+            line.append("{}={}".format(par, h_v))
+
     return ";".join(line)
+
 
 ################################################################################    
 

@@ -84,6 +84,7 @@ def frequencymaps_creator():
 
         BYC.update({"BYC_FILTERS":[{"id":c_id}, {"id": "EDAM:operation_3961"}]})
         BYC.update({"PAGINATED_STATUS": False})
+        
         prdbug(f'=> processing {c_id} with limit {BYC_PARS.get("limit")}')
         RSS = ByconResultSets().datasetsResults()
         pdb = ByconBundler().resultsets_frequencies_bundles(RSS)

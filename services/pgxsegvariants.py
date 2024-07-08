@@ -31,12 +31,8 @@ def main():
 def pgxsegvariants():
     initialize_bycon_service()
     BYC.update({"response_entity_id": "genomicVariant"})
-
-    if not "pgxseg" in BYC_PARS.get("output", "___none___"):
-        BYC_PARS.update({"output":"pgxseg"})
-
     rss = ByconResultSets().datasetsResults()
-
+    # TODO: multi-dataset?
     ds_id = list(rss.keys())[0]
     export_pgxseg_download(rss, ds_id)
 

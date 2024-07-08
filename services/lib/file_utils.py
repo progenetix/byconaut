@@ -108,3 +108,14 @@ def callset_guess_probefile_path(callset):
 
     return p_f
 
+################################################################################
+
+def write_log(log, file):
+    if len(log) > 0:
+        print(f'=> {len(log)} log entries so there are some problems...')
+        log_file = file + '.log'
+        lf = open(log_file, "w")
+        lf.write("\n".join(log))
+        lf.close()
+        print(f'Wrote errors to {log_file}')
+

@@ -1,4 +1,4 @@
-import re
+import re, time, base36
 from humps import decamelize
 from os import path
 from pathlib import Path
@@ -90,6 +90,14 @@ def print_json_download_header(filename):
 def close_json_streaming():
     print(']}}')
     exit()
-    
+
+
+################################################################################
+
+def generate_id(prefix=""):
+    time.sleep(.001)
+    return '{}{}{}'.format(prefix, "-" if len(prefix) > 0 else "", base36.dumps(int(time.time() * 1000)))
+
+
 
 

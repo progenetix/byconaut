@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-from os import path, pardir
-
+from os import path, pardir, system
 from bycon import *
 
 dir_path = path.dirname( path.relpath(__file__) )
@@ -9,6 +8,7 @@ pkg_path = path.join( dir_path, pardir )
 
 services_lib_path = path.join( pkg_path, "services", "lib" )
 sys.path.append( services_lib_path )
+from service_helpers import generate_id
 
 """
 This script uses the `datatable_definitions.yaml` from `bycon` tpo generate import
@@ -30,30 +30,59 @@ def templates_creator():
     initialize_bycon_service()
     dt_m = BYC["datatable_mappings"].get("definitions", {})
     rsrc_p = path.join(pkg_path, "rsrc", "templates")
+    s_no = 0
+    proceed = input(f'Do you want to create biosample_id and analysis_id values?\nEnter a number; hit ENTER for no id values: ')
+    if re.match(r'^\d+?$', proceed):
+        s_no = int(proceed)
+            
+    if s_no > 0:
+        pre = "pgx"
+        proceed = input(f'Do you want a prefix instead of "{pre}"?\nPrefix: ')
+        if re.match(r'^\w+?$', proceed):
+            pre = proceed
+
+        tdir = f'{isotoday()}-{pre}'
+        proceed = input(f'Do you want a specific directory name instead of "{tdir}"?\nDir name (no path, just directory...): ')
+        if re.match(r'^\w+?$', proceed):
+            tdir = proceed
+            rsrc_p = path.join(rsrc_p, tdir)
+
+    ids = []
+    for i in range(s_no):
+        rid = generate_id()
+        ids.append({
+            "biosample_id": f'{pre}bios-{rid}',
+            "analysis_id": f'{pre}ana-{rid}',
+            "individual_id": f'{pre}ind-{rid}'
+        })
+
 
     all_cols = []
 
     for t_t, t_d in dt_m.items():
         entity_cols = []
+        table = []
         for p_n, p_d in t_d["parameters"].items():
             p_t = p_d.get("type", "string")
-            # print(f'{t_t}: {p_n} ({p_t})')
-            prefs = p_d.get("prefix_split")
-            if prefs:
-                for p in prefs:
-                    for t in ("id", "label"):
-                        h = f'{p_n}_{t}___{p}'
-                        entity_cols.append(h)
-                        if "variant" not in t_t.lower() and h not in all_cols:
-                            all_cols.append(h)
-            else:
-                entity_cols.append(p_n)
-                if "variant" not in t_t.lower() and p_n not in all_cols:
-                    all_cols.append(p_n)
+            entity_cols.append(p_n)
+            if "variant" not in t_t.lower() and p_n not in all_cols:
+                all_cols.append(p_n)
+
+        table.append("\t".join(entity_cols))
+
+        if "variant" not in t_t.lower():
+            for id_s in ids:
+                d_line = []
+                for p_n in entity_cols:
+                    t_v = ""
+                    if p_n in id_s:
+                        t_v = id_s.get(p_n)
+                    d_line.append(t_v)
+                table.append("\t".join(d_line))
 
         f_p = path.join(rsrc_p, t_t+"_template.tsv")
         f = open(f_p, "w")
-        f.write("\t".join(entity_cols)+"\n")
+        f.write("\n".join(table))
         f.close()
         print(f'===> Wrote {f_p}')
 
@@ -62,6 +91,7 @@ def templates_creator():
     f.write("\t".join(all_cols)+"\n")
     f.close()
     print(f'===> Wrote {f_p}')
+    system(f'open {rsrc_p}')
 
 ################################################################################
 ################################################################################

@@ -36,16 +36,17 @@ def main():
 def sampletable():
     BYC.update({
         "request_entity_path_id": "biosamples",
-        "request_entity_id": "biosample"
+        "request_entity_id": "biosample",
+        "response_entity_id": "biosample"
     })
+
+    if "analyses" in BYC_PARS.get("response_entity_path_id", "___none___"):
+        BYC.update({"response_entity_id": "analysis"})
+    elif "individuals" in BYC_PARS.get("response_entity_path_id", "___none___"):
+        BYC.update({"response_entity_id": "individual"})
+
     initialize_bycon_service()
 
-    if not "table" in BYC_PARS.get("output", "___none___"):
-        BYC_PARS.update({"output":"table"})
-
-    if (table_type := BYC.get("response_entity_id", "___none___")) not in ["biosample", "individual", "analysis"]:
-        table_type = "biosample"
-        BYC.update({"response_entity_id": table_type})
     rsd = ByconResultSets().datasetsData()
 
     collated_results = []

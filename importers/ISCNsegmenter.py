@@ -70,7 +70,7 @@ Output will be written to {}""".format(output_file) )
 
 	data_no = len(iscn_samples)
 	s_w_v_no = 0
-    print(f'=> The input file contains {data_no} items')
+	print(f'=> The input file contains {data_no} items')
 
 	pgxseg = open(output_file, "w")
 	pgxseg.write( "#meta=>biosample_count={}\n".format(iscn_no) )
@@ -105,8 +105,8 @@ Output will be written to {}""".format(output_file) )
 			for v in v_instances:
 				pgxseg.write(pgxseg_variant_line(v)+"\n")
 
-	print("=> {} samples had variants".format(s_w_v_no))
-	print("Wrote to {}".format(output_file))
+	print(f'=> {s_w_v_no} samples had variants')
+	print(f'Wrote to {output_file}')
 
 	exit()
 

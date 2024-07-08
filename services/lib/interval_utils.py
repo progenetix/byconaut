@@ -325,8 +325,7 @@ def interval_cnv_arrays(cs_vars):
 ################################################################################
 
 def _round_frac(val, maxval, digits=3):
-    f = round(val / maxval, digits)
-    if f > 1:
+    if (f := round(val / maxval, digits)) >1:
         f = 1
     return f
 
@@ -347,9 +346,8 @@ def interval_counts_from_callsets(analyses):
     if type(analyses).__name__ == "Cursor":
         analyses.rewind()
 
-    cs_no = len(list(analyses))
     f_factor = 0
-    if cs_no > 0:
+    if (cs_no := len(list(analyses))) > 0:
         f_factor = 100 / cs_no
     pars = {
         "gain": {"cov_l": "dup", "hl_l": "hldup"},   # "val_l": "max"

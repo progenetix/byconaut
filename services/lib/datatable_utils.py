@@ -3,26 +3,18 @@ import csv, re, requests
 from random import sample as randomSamples
 
 # bycon
-from bycon import assign_nested_value, get_nested_value, prdbug, prjsonnice, BYC, BYC_PARS, ENV
+from bycon import assign_nested_value, get_nested_value, prdbug, prdlhead, prjsonnice, BYC, BYC_PARS, ENV
 
 ################################################################################
 
 def export_datatable_download(results):
     # TODO: separate table generation from HTTP response
-    output = BYC_PARS.get("output", "___none___")
-    prdbug(f'... in export_datatable_download => {output}')
     dt_m = BYC["datatable_mappings"]
     r_t = BYC.get("response_entity_id", "___none___")
     if not r_t in dt_m["definitions"]:
         return
     io_params = dt_m["definitions"][ r_t ]["parameters"]
-    if not "local" in ENV:
-        print('Content-Type: text/tsv')
-        print('Content-Disposition: attachment; filename='+BYC["response_entity_id"]+'.tsv')
-        print('status: 200')
-        print()
-    if "idtable" in output:
-        io_params = {"id": {"db_key":"id", "type": "string" } }
+    prdlhead(f'{r_t}.tsv')
     header = create_table_header(io_params)
     print("\t".join( header ))
 
@@ -30,28 +22,12 @@ def export_datatable_download(results):
         line = [ ]
         for par, par_defs in io_params.items():
             parameter_type = par_defs.get("type", "string")
-            pres = par_defs.get("prefix_split", {})
-            if len(pres.keys()) < 1:
-                db_key = par_defs.get("db_key", "___undefined___")
-                v = get_nested_value(pgxdoc, db_key)
-                if isinstance(v, list):
-                    line.append("::".join(map(str, (v))))
-                else:
-                    line.append(str(v))
+            db_key = par_defs.get("db_key", "___undefined___")
+            v = get_nested_value(pgxdoc, db_key)
+            if isinstance(v, list):
+                line.append("::".join(map(str, (v))))
             else:
-                par_vals = pgxdoc.get(par, [])
-                # TODO: this is based on the same order of prefixes as in the
-                # header generation, w/o checking; should be keyed ...
-                for pre in pres.keys():
-                    p_id = ""
-                    p_label = ""
-                    for v in par_vals:
-                        if v.get("id", "___none___").startswith(pre):
-                            p_id = v.get("id")
-                            p_label = v.get("label", "")
-                            continue
-                    line.append(p_id)
-                    line.append(p_label)
+                line.append(str(v))
         print("\t".join( line ))
 
     exit()
@@ -65,7 +41,6 @@ def import_datatable_dict_line(parent, fieldnames, lineobj, primary_scope="biosa
         return
     io_params = dt_m["definitions"][ primary_scope ]["parameters"]
     def_params = create_table_header(io_params)
-    pref_array_values = {}
     for f_n in fieldnames:
         if "#"in f_n:
             continue
@@ -92,15 +67,6 @@ def import_datatable_dict_line(parent, fieldnames, lineobj, primary_scope="biosa
             v = float(v)
         elif "integer" in parameter_type:
             v = int(v)
-        if re.match(r"^(\w+[a-zA-Z0-9])_(id|label)___(\w+)$", f_n):
-            p, key, pre = re.match(r"^(\w+)_(id|label)___(\w+)$", f_n).group(1,2,3)
-            # TODO: this is a bit complicated - label and id per prefix ...
-            if not p in pref_array_values.keys():
-                pref_array_values.update({p:{pre:{}}})
-            if not pre in pref_array_values[p].keys():
-                pref_array_values[p].update({pre:{}})
-            pref_array_values[p][pre].update({key:v})
-            continue
         
         p_d = io_params.get(f_n)
         if not p_d:
@@ -112,12 +78,6 @@ def import_datatable_dict_line(parent, fieldnames, lineobj, primary_scope="biosa
 
         # assign_nested_attribute(parent, db_key, v)
         assign_nested_value(parent, dotted_key, v, p_d)
-
-    for l_k, pre_item in pref_array_values.items():
-        if not l_k in parent:
-            parent.update({l_k:[]})
-        for pre, p_v in pre_item.items():
-            parent[l_k].append(p_v)
 
     return parent
 
