@@ -56,7 +56,7 @@ class ByconBundler:
 
         self.keyedBundle = {
             "variants_by_callset_id": {},
-            "callsets_by_id": {},
+            "analyses_by_id": {},
             "individuals_by_id": {},
             "biosamples_by_id": {},
             "info": {
@@ -66,7 +66,7 @@ class ByconBundler:
 
         self.plotDataBundle = {
             "interval_frequencies_bundles": [],
-            "callsets_variants_bundles": []
+            "analyses_variants_bundles": []
         }
 
 
@@ -148,13 +148,13 @@ class ByconBundler:
         self.__flatten_keyed_bundle()
         return {
             "interval_frequencies_bundles": self.callsets_frequencies_bundles(),
-            "callsets_variants_bundles": self.callsets_variants_bundles()
+            "analyses_variants_bundles": self.analyses_variants_bundles()
         }
 
 
     #--------------------------------------------------------------------------#
 
-    def callsets_variants_bundles(self):
+    def analyses_variants_bundles(self):
         # TODO: This is similar to a keyed bundle component ...
         bb = self.bundle
         c_p_l = []
@@ -174,7 +174,7 @@ class ByconBundler:
         self.datasets_results = datasets_results
         self.__callsets_bundle_from_result_set()
         self.__callsets_add_database_variants()
-        return { "callsets_variants_bundles": self.callsetVariantsBundles }
+        return { "analyses_variants_bundles": self.callsetVariantsBundles }
 
 
     #--------------------------------------------------------------------------#
@@ -233,7 +233,7 @@ class ByconBundler:
 
             bios.update({"individual_id": ind_id})
 
-            b_k_b["callsets_by_id"].update({ cs_id: cs })
+            b_k_b["analyses_by_id"].update({ cs_id: cs })
             b_k_b["individuals_by_id"].update({ ind_id: ind })
             b_k_b["biosamples_by_id"].update({ bs_id: bios })
             b_k_b["variants_by_callset_id"].update({ cs_id: [] })
@@ -328,7 +328,7 @@ class ByconBundler:
         b_k_b = self.keyedBundle
         inds_ided = b_k_b.get("individuals_by_id", {})
         bios_ided = b_k_b.get("biosamples_by_id", {})
-        cs_ided = b_k_b.get("callsets_by_id", {})
+        cs_ided = b_k_b.get("analyses_by_id", {})
         vars_ided = b_k_b.get("variants_by_callset_id", {})
 
         for v in varlines:
@@ -378,7 +378,7 @@ class ByconBundler:
         self.keyedBundle.update({
             "individuals_by_id": inds_ided,
             "biosamples_by_id": bios_ided,
-            "callsets_by_id": cs_ided,
+            "analyses_by_id": cs_ided,
             "variants_by_callset_id": vars_ided
         })
 
@@ -389,7 +389,7 @@ class ByconBundler:
         b_k_b = self.keyedBundle
         bios_k = b_k_b.get("biosamples_by_id", {})
         ind_k = b_k_b.get("individuals_by_id", {})
-        cs_k = b_k_b.get("callsets_by_id", {})
+        cs_k = b_k_b.get("analyses_by_id", {})
         v_cs_k = b_k_b.get("variants_by_callset_id", {})
 
         self.bundle.update({

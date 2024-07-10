@@ -58,7 +58,7 @@ def geosoft_retriever():
             log.append(f'{gsm}\tnot found again in analyses')
             continue
         # existing ones are skipped
-        if len(ana["analysis_info"].get("experiment_title", "")) > 1:
+        if len(ana["analysis_info"].get("experiment_title", "")) > 0:
             continue
         r =  requests.get(f'{url}')
         if r.ok:

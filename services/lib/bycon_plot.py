@@ -224,6 +224,8 @@ class ByconPlot:
         d_k = p_t_s[p_t].get("data_key")
         d_t = p_t_s[p_t].get("data_type", "analyses")
 
+        sample_count = 0
+
         # TODO: get rid of the "results"?
         self.plv.update({
             "results": self.plot_data_bundle.get(d_k, []),
@@ -665,6 +667,12 @@ class ByconPlot:
 
         self.plv.update({"plot_first_area_y0": self.plv["Y"]})
 
+        s_no = 0
+        for f_set in self.plv["results"]:
+            s_no += f_set.get("sample_count", 0)
+        if s_no > 0:
+            self.plv.update({"sample_count": s_no})
+
         self.__plot_order_histograms()
         if "heat" in self.plot_type:
             self.plv.update({"cluster_head_gap": 0})
@@ -713,9 +721,10 @@ class ByconPlot:
         cnv_c = {
             "gain_frequency": self.plv["plot_dup_color"],
             "loss_frequency": self.plv["plot_del_color"],
-            "gain_hlfrequency": self.plv["plot_amp_color"],
-            "loss_hlfrequency": self.plv["plot_homodel_color"]
+            "gain_hlfrequency": self.plv["plot_hldup_color"],
+            "loss_hlfrequency": self.plv["plot_hldel_color"]
         }
+        # just to have + / - direction by key
         cnv_f = {
             "gain_frequency": -1,
             "gain_hlfrequency": -1,
@@ -1332,9 +1341,9 @@ class ByconPlot:
         self.plv["pls"].append(
             f'<text x="{x_c_e}" y="{self.plv["Y"]}" class="footer-r">&#169; CC-BY 2001 - {today.year} progenetix.org</text>')
 
-        if self.plv.get("results_number", 0) > 1:
+        if self.plv.get("sample_count", 0) > 1:
             self.plv["pls"].append(
-                f'<text x="{x_a_0}" y="{self.plv["Y"]}" class="footer-l">{self.plv["results_number"]} {self.plv["data_type"]}</text>')
+                f'<text x="{x_a_0}" y="{self.plv["Y"]}" class="footer-l">{self.plv["sample_count"]} {self.plv["data_type"]}</text>')
 
         self.plv["Y"] += self.plv["plot_margins"]
 

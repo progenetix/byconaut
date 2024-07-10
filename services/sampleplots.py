@@ -27,6 +27,7 @@ the fallback). Plot options are available as usual.
 * http://progenetix.org/services/sampleplots?filters=pgx:icdom-81703
 * http://progenetix.org/services/sampleplots/?testMode=true&plotType=samplesplot
 * http://progenetix.org/services/sampleplots?filters=pgx:icdom-81703&plotType=histoplot&plotPars=plot_chro_height=0::plot_title_font_size=0::plot_area_height=18::plot_margins=0::plot_axislab_y_width=0::plot_grid_stroke=0::plot_footer_font_size=0::plot_width=400
+* http://progenetix.org/services/sampleplots?datasetIds=progenetix&plotMinLength=1000&plotMaxLength=3000000&geneId=CDKN2A&variantType=EFO:0020073&plotPars=plotChros=9::plotGeneSymbols=CDKN2A::plotWidth=300&plotType=histoplot
 """
 
 ################################################################################
