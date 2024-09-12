@@ -11,6 +11,7 @@ services_lib_path = path.join( path.dirname( path.abspath(__file__) ), pardir, "
 sys.path.append( services_lib_path )
 from interval_utils import generate_genome_bins, interval_cnv_arrays
 from collation_utils import set_collation_types
+from service_helpers import ask_limit_reset
 
 """
 
@@ -27,13 +28,14 @@ from collation_utils import set_collation_types
 ################################################################################
 
 def main():
-    callsets_refresher()
+    analyses_refresher()
 
 ################################################################################
 
-def callsets_refresher():
+def analyses_refresher():
     initialize_bycon_service()
     generate_genome_bins()
+    ask_limit_reset()
 
     if len(BYC["BYC_DATASET_IDS"]) > 1:
         print("Please give only one dataset using -d")
@@ -43,25 +45,32 @@ def callsets_refresher():
     set_collation_types()
     print(f'=> Using data values from {ds_id} for {BYC.get("genomic_interval_count", 0)} intervals...')
 
+    limit = BYC_PARS.get("limit", 0)
     data_client = MongoClient(host=DB_MONGOHOST)
     data_db = data_client[ ds_id ]
     cs_coll = data_db[ "analyses" ]
     v_coll = data_db[ "variants" ]
 
     record_queries = ByconQuery().recordsQuery()
+    ds_results = {}
+    if len(record_queries["entities"].keys()) > 0:
+        DR = ByconDatasetResults(ds_id, record_queries)
+        ds_results = DR.retrieveResults()
 
-    prdbug(record_queries)
-
-    ds_results = execute_bycon_queries(ds_id, record_queries)
-
-    if not ds_results.get("analyses._id"):
+    if not ds_results.get("analyses.id"):
+        print(f'... collecting analysis id values from {ds_id} ...')
         cs_ids = []
-        for cs in cs_coll.find( {} ):
-            cs_ids.append(cs["_id"])
+        c_i = 0
+        for ana in cs_coll.find( {} ):
+            c_i += 1
+            cs_ids.append(ana["id"])
+            if limit > 0:
+                if limit == c_i:
+                    break
         cs_no = len(cs_ids)
-        print(f'¡¡¡ Using all {cs_no} analyses from {ds_id} !!!')
+        print(f'¡¡¡ Using {cs_no} analyses from {ds_id} !!!')
     else:
-        cs_ids = ds_results["analyses._id"]["target_values"]
+        cs_ids = ds_results["analyses.id"]["target_values"]
         cs_no = len(cs_ids)
 
     print(f'Re-generating statusmaps with {BYC["genomic_interval_count"]} intervals for {cs_no} analyses...')
@@ -74,24 +83,24 @@ def callsets_refresher():
         exit()
 
     no_cnv_type = 0
-    for _id in cs_ids:
+    for ana_id in cs_ids:
 
-        cs = cs_coll.find_one( { "_id": _id } )
-        csid = cs["id"]
+        ana = cs_coll.find_one( { "id": ana_id } )
+        _id = ana.get("_id")
         counter += 1
 
         bar.next()
 
-        if "SNV" in cs.get("variant_class", "CNV"):
+        if "SNV" in ana.get("variant_class", "CNV"):
             no_cnv_type += 1
             continue
 
         # only the defined parameters will be overwritten
-        cs_update_obj = { "info": cs.get("info", {}) }
+        cs_update_obj = { "info": ana.get("info", {}) }
         cs_update_obj["info"].pop("statusmaps", None)
         cs_update_obj["info"].pop("cnvstatistics", None)
 
-        cs_vars = v_coll.find({ "analysis_id": csid })
+        cs_vars = v_coll.find({ "analysis_id": ana_id })
         maps, cs_cnv_stats, cs_chro_stats = interval_cnv_arrays(cs_vars)
 
         cs_update_obj.update({"cnv_statusmaps": maps})

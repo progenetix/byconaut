@@ -45,7 +45,7 @@ def database_archiver():
     if path.isdir(tmp_dir):
         shutil.rmtree(tmp_dir)
     mkdir(tmp_dir)
-    for db in (ds_id, "_byconServicesDB"):
+    for db in [ds_id, "_byconServicesDB"]:
         db_tmp = path.join( tmp_dir, db )
         e_ds_archive = f'{db}.tar.gz'
         system(f'rm -rf {db_tmp}')

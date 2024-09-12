@@ -39,6 +39,14 @@ indexed_special_dbs:
         db_key: provenance.geo_location.geometry
         type: 2dsphere
     variants:
+      id_aggregate:
+        db_key:
+          variant_state.id: 1
+          location.sequence_id: 1
+          location.start: 1
+          location.end: 1
+          info.var_length: 1
+        type: compound
       variantbracketquery:
         db_key:
           variant_state.id: 1

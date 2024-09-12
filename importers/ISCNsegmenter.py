@@ -26,11 +26,6 @@ bin/ISCNsegmenter.py -i imports/progenetix-from-filemaker-ISCN-samples-cCGH.tsv 
 ################################################################################
 
 def main():
-	iscn_segmenter()
-
-################################################################################
-
-def iscn_segmenter():
 	initialize_bycon_service()
 	generate_genome_bins()
 

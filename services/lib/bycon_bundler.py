@@ -6,6 +6,7 @@ from copy import deepcopy
 
 from bycon_helpers import return_paginated_list, prdbug
 from config import BYC, BYC_PARS, DB_MONGOHOST
+from datatable_utils import import_datatable_dict_line
 from interval_utils import interval_cnv_arrays, interval_counts_from_callsets
 from variant_mapping import ByconVariant
 
@@ -247,7 +248,7 @@ class ByconBundler:
         # TODO: doesn't really work for biosamples until we have status maps etc.
         # prdbug(self.datasets_results)
         for ds_id, ds_res in self.datasets_results.items():
-            res_k = f'{bundle_type}._id'
+            res_k = f'{bundle_type}.id'
             if not ds_res:
                 continue
             if not res_k in ds_res:
@@ -262,19 +263,22 @@ class ByconBundler:
             if bundle_type == "biosamples":
                 analysis_key = "analysis_id"
 
+            prdbug(f'{bundle_type} => {analysis_key}')
+            prdbug(BYC["BYC_FILTERS"])
+            prdbug(BYC.get("FMAPS_SCOPE"))
+
             mongo_client = MongoClient(host=DB_MONGOHOST)
             sample_coll = mongo_client[ds_id][bundle_type]
             s_r = ds_res[res_k]
-            s__ids = s_r["target_values"]
-            r_no = len(s__ids)
+            s_ids = s_r["target_values"]
+            r_no = len(s_ids)
             if r_no < 1:
                 continue
             prdbug(f'...... __callsets_bundle_from_result_set limit: {self.limit}')
-            s__ids = return_paginated_list(s__ids, self.skip, self.limit)
-            prdbug(f'...... __callsets_bundle_from_result_set after: {len(s__ids)}')
-            for s__id in s__ids:
-                s = sample_coll.find_one({"_id": s__id })
-                s_id = s.get("id", "NA")
+            s_ids = return_paginated_list(s_ids, self.skip, self.limit)
+            prdbug(f'...... __callsets_bundle_from_result_set after: {len(s_ids)}')
+            for s_id in s_ids:
+                s = sample_coll.find_one({"id": s_id })
 
                 cnv_chro_stats = s.get("cnv_chro_stats", False)
                 cnv_statusmaps = s.get("cnv_statusmaps", False)

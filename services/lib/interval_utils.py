@@ -395,7 +395,10 @@ def interval_counts_from_callsets(analyses):
 ################################################################################
 
 def _has_overlap(interval, v):
-    if interval["reference_name"] != v["location"]["chromosome"]:
+    if not (chro := v["location"].get("chromosome")):
+        prdbug(f'!!! no chromosome in variant !!!\n{v}')
+        return False
+    if interval["reference_name"] != chro:
         return False
     if v["location"]["start"] >= interval["end"]:
         return False

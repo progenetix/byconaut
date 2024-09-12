@@ -97,8 +97,7 @@ def publications():
 ################################################################################
 
 def __check_publications_map_response(results):
-    output = BYC_PARS.get("output", "___none___")
-    if not "map" in output:
+    if not "map" in BYC_PARS.get("plotType", "___none___"):
         return
 
     u_locs = {}

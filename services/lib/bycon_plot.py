@@ -92,6 +92,8 @@ class ByconPlotPars:
             pp_pv = ppv.split('=')
             if len(pp_pv) == 2:
                 pp, pv = pp_pv
+                if pv in ["null", "undefined"]:
+                    continue
                 pp = decamelize(pp)
                 bps.update({pp: pv})
                 prdbug(f'__process_plot_parameters {pp} => {pv}')
@@ -525,16 +527,18 @@ class ByconPlot:
     # -------------------------------------------------------------------------#
 
     def __samplestrip_create_label(self, sample):
-        label = sample.get("label")
-        bsl = sample.get("biosample_id", "")
-        if label:
-            if len(bsl) > 3:
-                bsl = f' - {bsl}'
-            return f'{label}{bsl}'
+        lab = ""
+        label = sample.get("label", "")
+        if len(bsl := sample.get("biosample_id", "")) > 3:
+            bsl = f' - {bsl}'
+        if len(asl := sample.get("analysis_id", "")) > 3:
+            asl = f', {asl}'
+        lab = f'{label}{bsl}{asl}'
         ds_lab = ""
         if len(self.plv["dataset_ids"]) > 1:
-            ds_lab = f' ({sample.get("dataset_id", "")})'
-        return f'{bsl}{ds_lab}'
+            if len(ds_lab := sample.get("dataset_id", "")) > 3:
+                ds_lab = f' ({ds_lab})'
+        return f'{lab}{ds_lab}'
 
 
     # -------------------------------------------------------------------------#

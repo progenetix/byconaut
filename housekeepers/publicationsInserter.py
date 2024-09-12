@@ -12,6 +12,7 @@ services_tmp_path = path.join( path.dirname( path.abspath(__file__) ), pardir, "
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ), pardir, "services", "lib" )
 sys.path.append( services_lib_path )
 from service_helpers import read_service_prefs
+from datatable_utils import assign_nested_value
 
 """
 * pubUpdater.py -t 1 -f "../rsrc/publications.txt"

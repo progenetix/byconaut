@@ -47,6 +47,8 @@ def sampletable():
 
     initialize_bycon_service()
 
+    prdbug(f'in sampletable')
+
     rsd = ByconResultSets().datasetsData()
 
     collated_results = []

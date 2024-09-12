@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import re, json, yaml, sys, datetime
-from copy import deepcopy
 from isodate import date_isoformat
 from os import path, environ, pardir, system
 from pymongo import MongoClient
@@ -9,14 +8,14 @@ from progress.bar import Bar
 
 from bycon import *
 
-dir_path = path.dirname( path.abspath(__file__) )
-lib_path = path.join(dir_path , "lib")
+loc_path = path.dirname( path.abspath(__file__) )
+lib_path = path.join(loc_path , "lib")
 sys.path.append( lib_path )
 from mongodb_utils import mongodb_update_indexes
 from doc_generator import doc_generator
 
-services_conf_path = path.join( dir_path, "config" )
-services_lib_path = path.join( dir_path, pardir, "services", "lib" )
+services_conf_path = path.join( loc_path, "config" )
+services_lib_path = path.join( loc_path, pardir, "services", "lib" )
 sys.path.append( services_lib_path )
 from collation_utils import *
 from service_helpers import *
@@ -40,8 +39,8 @@ def housekeeping():
     read_service_prefs("housekeeping", services_conf_path)
 
     # TODO: rewrap, use config etc.
-    generated_docs_path = path.join( dir_path, pardir, "docs", "generated")
-    bycon_generated_docs_path = path.join( dir_path, pardir, pardir, "bycon", "docs", "generated")
+    generated_docs_path = path.join( loc_path, pardir, "docs", "generated")
+    bycon_generated_docs_path = path.join( loc_path, pardir, pardir, "bycon", "docs", "generated")
     doc_generator(generated_docs_path)
     doc_generator(bycon_generated_docs_path)
 
@@ -119,8 +118,8 @@ def housekeeping():
     #>------------------------------------------------------------------------<#
 
     if "y" in todos.get("update_cs_statusmaps", "y").lower():
-        print(f'==> executing "{dir_path}/analysesStatusmapsRefresher.py -d {ds_id}"')
-        system(f'{dir_path}/analysesStatusmapsRefresher.py -d {ds_id}')
+        print(f'==> executing "{loc_path}/analysesStatusmapsRefresher.py -d {ds_id}"')
+        system(f'{loc_path}/analysesStatusmapsRefresher.py -d {ds_id}')
 
     #>------------------------ / analyses ------------------------------------<#
 
@@ -201,16 +200,16 @@ def housekeeping():
     #>---------------------- update collations -------------------------------<#
 
     if not "n" in todos.get("update_collations", "y").lower():
-        print(f'\n{__hl()}==> executing "{dir_path}/collationsCreator.py -d {ds_id}"\n')
-        system(f'{dir_path}/collationsCreator.py -d {ds_id}')
+        print(f'\n{__hl()}==> executing "{loc_path}/collationsCreator.py -d {ds_id}"\n')
+        system(f'{loc_path}/collationsCreator.py -d {ds_id}')
 
     #>--------------------- / update collations ------------------------------<#
 
     #>--------------------- update frequencymaps -----------------------------<#
 
     if not "n" in todos.get("update_frequencymaps", "y").lower():
-        print(f'\n{__hl()}==> executing "{dir_path}/frequencymapsCreator.py -d {ds_id}"\n')
-        system(f'{dir_path}/frequencymapsCreator.py -d {ds_id}')
+        print(f'\n{__hl()}==> executing "{loc_path}/frequencymapsCreator.py -d {ds_id}"\n')
+        system(f'{loc_path}/frequencymapsCreator.py -d {ds_id}')
 
     #>-------------------- / update frequencymaps ----------------------------<#
 

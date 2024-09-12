@@ -10,7 +10,6 @@ from bycon import *
 loc_path = path.dirname( path.abspath(__file__) )
 services_lib_path = path.join( loc_path, pardir, "services", "lib" )
 sys.path.append( services_lib_path )
-# from datatable_utils import import_datatable_dict_line
 from file_utils import read_tsv_to_dictlist
 """
 
@@ -21,11 +20,6 @@ from file_utils import read_tsv_to_dictlist
 ################################################################################
 
 def main():
-    this()
-
-################################################################################
-
-def this():
     initialize_bycon_service()
 
     # if len(BYC["BYC_DATASET_IDS"]) != 1:

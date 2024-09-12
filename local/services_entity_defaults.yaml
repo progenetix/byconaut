@@ -15,6 +15,18 @@ cytomapper:
 endpoints:
   request_entity_path_id: endpoints
 
+cnvstats:
+  request_entity_path_id: cnvstats
+  request_entity_id: analysis
+  response_entity_id: analysis
+  response_entity_path_id: analyses
+  collection: analyses
+  response_schema: beaconResultsetsResponse
+  beacon_schema:
+    entity_type: analysis
+    schema: https://progenetix.org/services/schemas/analysis/
+
+
 dbstats:
   request_entity_path_id: dbstats
 
@@ -45,6 +57,8 @@ samplemap:
 
 samplematrix:
   request_entity_path_id: samplematrix
+  request_entity_id: samplematrix
+  response_entity_id: samplematrix
   collection: biosamples
   response_schema: beaconResultsetsResponse
   response_entity_id: biosample
@@ -68,6 +82,7 @@ uploader:
 
 variantsbedfile:
   request_entity_path_id: variantsbedfile
+  request_entity_id: genomicVariations
   collection: variants
   response_schema: beaconResultsetsResponse
   response_entity_id: genomicVariant

@@ -1,7 +1,7 @@
 from os import path, environ
 from pymongo import MongoClient
 
-from bycon_helpers import get_nested_value, return_paginated_list, select_this_server
+from bycon_helpers import return_paginated_list, select_this_server
 from cgi_parsing import *
 from config import *
 from variant_mapping import ByconVariant
@@ -9,6 +9,7 @@ from variant_mapping import ByconVariant
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ) )
 sys.path.append( services_lib_path )
 from service_helpers import open_text_streaming, close_text_streaming
+from datatable_utils import assign_nested_value, get_nested_value
 
 ################################################################################
 
@@ -51,9 +52,7 @@ def pgxseg_biosample_meta_line(biosample, group_id_key="histological_diagnosis_i
     g_lab_k = re.sub("_id", "_label", g_id_k)
     line = [ f'#sample=>id={biosample.get("id", "¡¡¡NONE!!!")}' ]
     for par, par_defs in io_params.items():
-        in_pgxseg = par_defs.get("compact", False)
-
-        if in_pgxseg is False:
+        if (in_pgxseg := par_defs.get("compact", False)) is False:
             continue
 
         parameter_type = par_defs.get("type", "string")
@@ -108,19 +107,19 @@ def export_pgxseg_download(datasets_results, ds_id):
     data_client = MongoClient(host=DB_MONGOHOST)
     v_coll = data_client[ ds_id ][ "variants" ]
     ds_results = datasets_results.get(ds_id, {})
-    if not "variants._id" in ds_results:
+    if not "variants.id" in ds_results:
         BYC["ERRORS"].append("No variants found in the dataset results.")
         return
-    v__ids = ds_results["variants._id"].get("target_values", [])
+    v_ids = ds_results["variants.id"].get("target_values", [])
     if test_truthy( BYC_PARS.get("paginate_results", True) ):
-        v__ids = return_paginated_list(v__ids, skip, limit)
+        v_ids = return_paginated_list(v_ids, skip, limit)
 
     stream_pgx_meta_header(ds_id, ds_results)
     print_pgxseg_header_line()
 
     v_instances = []
-    for v_id in v__ids:
-        v_s = v_coll.find_one( { "_id": v_id }, { "_id": 0 } )
+    for v_id in v_ids:
+        v_s = v_coll.find_one( { "id": v_id }, { "_id": 0 } )
         v_instances.append(ByconVariant().byconVariant(v_s))
 
     v_instances = list(sorted(v_instances, key=lambda x: (f'{x["location"]["chromosome"].replace("X", "XX").replace("Y", "YY").zfill(2)}', x["location"]['start'])))
@@ -174,20 +173,20 @@ def write_variants_bedfile(datasets_results, ds_id):
     data_client = MongoClient(host=DB_MONGOHOST)
     v_coll = data_client[ ds_id ][ "variants" ]
     ds_results = datasets_results.get(ds_id, {})
-    if not "variants._id" in ds_results:
+    if not "variants.id" in ds_results:
         BYC["ERRORS"].append("No variants found in the dataset results.")
         return [ext_url, bed_url]
-    v__ids = ds_results["variants._id"].get("target_values", [])
-    v_count = ds_results["variants._id"].get("target_count", 0)
-    accessid = ds_results["variants._id"].get("id", "___none___")
+    v_ids = ds_results["variants.id"].get("target_values", [])
+    v_count = ds_results["variants.id"].get("target_count", 0)
+    accessid = ds_results["variants.id"].get("id", "___none___")
     if test_truthy( BYC_PARS.get("paginate_results", True) ):
         v__ids = return_paginated_list(v__ids, BYC_PARS.get("skip", 0), BYC_PARS.get("limit", 0))
 
     bed_file_name = f'{accessid}.bed'
     bed_file = path.join( tmp_path, bed_file_name )
 
-    for v__id in v__ids:
-        v = v_coll.find_one( { "_id": v__id }, { "_id": 0 } )
+    for v_id in v_ids:
+        v = v_coll.find_one( { "id": v__id }, { "_id": 0 } )
         pv = ByconVariant().byconVariant(v)
         if (pvt := pv.get("variant_type", "___none___")) not in vs.keys():
             continue
@@ -268,16 +267,12 @@ def pgxseg_variant_line(v_pgxseg):
 def export_callsets_matrix(datasets_results, ds_id):
     skip = BYC_PARS.get("skip", 0)
     limit = BYC_PARS.get("limit", 0)
-    output = BYC_PARS.get("output", "___none___")
     g_b = BYC_PARS.get("genome_binning", "")
     i_no = len(BYC["genomic_intervals"])
 
-    m_format = "coverage"
-    if "val" in output:
-        m_format = "values"
+    m_format = "values" if "val" in BYC_PARS.get("output", "") else "coverage"
 
-    cs_r = datasets_results[ds_id].get("analyses._id")
-    if not cs_r:
+    if not (cs_r := datasets_results[ds_id].get("analyses.id")):
         return
     mongo_client = MongoClient(host=DB_MONGOHOST)
     bs_coll = mongo_client[ ds_id ][ "biosamples" ]
@@ -286,8 +281,7 @@ def export_callsets_matrix(datasets_results, ds_id):
     open_text_streaming("interval_callset_matrix.pgxmatrix")
 
     for d in ["id", "assemblyId"]:
-        d_v = BYC["dataset_definitions"][ds_id].get(d)
-        if d_v:
+        if (d_v := BYC["dataset_definitions"][ds_id].get(d)):
             print(f'#meta=>{d}={d_v}')
     print_filters_meta_line()
     print(f'#meta=>data_format=interval_{m_format}')
@@ -308,15 +302,14 @@ def export_callsets_matrix(datasets_results, ds_id):
 
     bios_ids = set()
     cs_ids = {}
-    cs_cursor = cs_coll.find({"_id": {"$in": q_vals } } )
+    cs_cursor = cs_coll.find({"id": {"$in": q_vals }, "cnv_statusmaps": {"$exists": True}} )
     for cs in cs_cursor:
         bios = bs_coll.find_one( { "id": cs["biosample_id"] } )
         bios_ids.add(bios["id"])
         s_line = "#sample=>biosample_id={};analysis_id={}".format(bios["id"], cs["id"])
         h_d = bios["histological_diagnosis"]
         cs_ids.update({cs["id"]: h_d.get("id", "NA")})
-        s_line = '{};group_id={};group_label={};NCIT::id={};NCIT::label={}'.format(s_line, h_d.get("id", "NA"), h_d.get("label", "NA"), h_d.get("id", "NA"), h_d.get("label", "NA"))
-        print(s_line)
+        print(f'{s_line};group_id={h_d.get("id", "NA")};group_label={h_d.get("label", "NA")};NCIT::id={h_d.get("id", "NA")};NCIT::label={h_d.get("label", "NA")}')
 
     print("#meta=>biosampleCount={};analysisCount={}".format(len(bios_ids), cs_r["target_count"]))
     print("\t".join(h_line))
@@ -442,16 +435,16 @@ def export_vcf_download(datasets_results, ds_id):
     data_client = MongoClient(host=DB_MONGOHOST)
     v_coll = data_client[ ds_id ][ "variants" ]
     ds_results = datasets_results.get(ds_id, {})
-    if not "variants._id" in ds_results:
+    if not "variants.id" in ds_results:
         # TODO: error message here
         return
-    v__ids = ds_results["variants._id"].get("target_values", [])
+    v_ids = ds_results["variants.id"].get("target_values", [])
     if test_truthy( BYC_PARS.get("paginate_results", True) ):
-        v__ids = return_paginated_list(v__ids, skip, limit)
+        v_ids = return_paginated_list(v_ids, skip, limit)
 
     v_instances = []
-    for v_id in v__ids:
-        v = v_coll.find_one( { "_id": v_id }, { "_id": 0 } )
+    for v_id in v_ids:
+        v = v_coll.find_one( { "id": v_id }, { "_id": 0 } )
         v_instances.append(ByconVariant().byconVariant(v))
 
 

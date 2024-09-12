@@ -22,13 +22,21 @@ def mongodb_update_indexes(ds_id):
         io_params = dt_m["definitions"][ r_t ]["parameters"]
 
         for p_k, p_v in io_params.items():
-            i_t = p_v.get("indexed", False)
-            if i_t is False:
+            if (i_t := p_v.get("indexed", False)) is False:
                 continue
-            k = p_v["db_key"]
-            print('Creating index "{}" in {} from {}'.format(k, collname, ds_id))
-            m = i_coll.create_index(k)
-            print(m)
+
+            if (k := p_v.get("db_key")):
+                if (i_d := p_v.get("items")):
+                    if (i_d_i := i_d.get("indexed")):
+                        for i_p in i_d_i:
+                            i_k = f'{k}.{i_p}'
+                            print(f'Creating index "{i_k}" in {collname} from {ds_id}')
+                            i_m = i_coll.create_index(i_k)
+                            print(i_m)
+                    continue
+                print(f'Creating index "{k}" in {collname} from {ds_id}')
+                m = i_coll.create_index(k)
+                print(m)
 
         # TODO: 
 

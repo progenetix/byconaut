@@ -6,7 +6,6 @@ from bycon import *
 
 services_lib_path = path.join( path.dirname( path.abspath(__file__) ), "lib" )
 sys.path.append( services_lib_path )
-from export_file_generation import export_callsets_matrix
 from interval_utils import generate_genome_bins
 
 """
@@ -21,19 +20,19 @@ the path is interpreted for an biosample `id` value if there is an entry at
 ################################################################################
 
 def main():
-    samplematrix()
+    cnvstats()
 
 
 ################################################################################
 
-def samplematrix():
+def cnvstats():
     initialize_bycon_service()
-    generate_genome_bins()
-    rss = ByconResultSets().datasetsResults()
-
-    # TODO: right now only the first dataset will be exported ...
-    ds_id = list(rss.keys())[0]
-    export_callsets_matrix(rss, ds_id)
+    BYC_PARS.update({
+        "output":"cnvstats",
+        "include_handovers": False
+    })
+    rss = BeaconDataResponse().resultsetResponse()
+    print_json_response(rss)
 
 
 ################################################################################

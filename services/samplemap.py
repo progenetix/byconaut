@@ -24,8 +24,6 @@ def main():
 def samplemap():
     initialize_bycon_service()
     BYC.update({"response_entity_id": "biosample"})
-    if not "map" in BYC_PARS.get("output", "___none___"):
-        BYC_PARS.update({"output":"map"})
     BYC_PARS.update({"marker_type": "marker"})
     RSD = ByconResultSets().datasetsData()
 

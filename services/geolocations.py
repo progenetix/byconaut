@@ -52,7 +52,7 @@ def geolocations():
     if len(BYC["ERRORS"]) > 0:
         BeaconErrorResponse().response(422)
 
-    if "map" in BYC_PARS.get("output", "___none___"):
+    if "map" in BYC_PARS.get("plotType", "___none___"):
         ByconMap(results).printMapHTML()
 
     if len(results) == 1:

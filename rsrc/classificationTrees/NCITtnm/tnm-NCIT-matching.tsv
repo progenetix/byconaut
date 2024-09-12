@@ -10,6 +10,54 @@ N2	NCIT:C48786	N2 Stage Finding	3
 N3	NCIT:C48714	N3 Stage Finding	3
 N4	NCIT:C96026	N4 Stage Finding	3
 NX	NCIT:C48718	NX Stage Finding	3
+T0	NCIT:C48719	T0 Stage Finding	3
+T1	NCIT:C48720	T1 Stage Finding	3
+T2	NCIT:C48724	T2 Stage Finding	3
+T3	NCIT:C48728	T3 Stage Finding	3
+T4	NCIT:C48732	T4 Stage Finding	3
+T5	NCIT:C132010	T5 Stage Finding	3
+Tis	NCIT:C48738	Tis Stage Finding	3
+TX	NCIT:C48737	TX Stage Finding	3
+cM0 (i+)	NCIT:C95956	cM0 (i+) Stage Finding	4
+M1a	NCIT:C48701	M1a Stage Finding	4
+M1b	NCIT:C48702	M1b Stage Finding	4
+M1c	NCIT:C48703	M1c Stage Finding	4
+N0	NCIT:C48705	N0 Stage Finding	3
+N0 (i-)	NCIT:C95921	N0 (i-) Stage Finding	4
+N0 (i+)	NCIT:C95922	N0 (i+) Stage Finding	4
+N0 (mol-)	NCIT:C95923	N0 (mol-) Stage Finding	4
+N0 (mol+)	NCIT:C95925	N0 (mol+) Stage Finding	4
+N1a	NCIT:C48707	N1a Stage Finding	4
+N1b	NCIT:C48708	N1b Stage Finding	4
+N1c	NCIT:C48709	N1c Stage Finding	4
+N1mi	NCIT:C95955	N1mi Stage Finding	4
+N2a	NCIT:C48711	N2a Stage Finding	4
+N2b	NCIT:C48712	N2b Stage Finding	4
+N2c	NCIT:C48713	N2c Stage Finding	4
+N3a	NCIT:C48715	N3a Stage Finding	4
+N3b	NCIT:C48716	N3b Stage Finding	4
+N3c	NCIT:C48717	N3c Stage Finding	4
+T1a	NCIT:C48721	T1a Stage Finding	4
+T1b	NCIT:C48722	T1b Stage Finding	4
+T1c	NCIT:C48723	T1c Stage Finding	4
+T1mi	NCIT:C95805	T1mi Stage Finding	4
+T2a	NCIT:C48725	T2a Stage Finding	4
+T2b	NCIT:C48726	T2b Stage Finding	4
+T2c	NCIT:C48727	T2c Stage Finding	4
+T2d	NCIT:C148411	T2d Stage Finding	4
+T3a	NCIT:C48729	T3a Stage Finding	4
+T3b	NCIT:C48730	T3b Stage Finding	4
+T3c	NCIT:C48731	T3c Stage Finding	4
+T3d	NCIT:C148412	T3d Stage Finding	4
+T4a	NCIT:C48733	T4a Stage Finding	4
+T4b	NCIT:C48734	T4b Stage Finding	4
+T4c	NCIT:C48735	T4c Stage Finding	4
+T4d	NCIT:C48736	T4d Stage Finding	4
+Ta	NCIT:C96025	Ta Stage Finding	4
+N1bI	NCIT:C95929	N1bI Stage Finding	5
+N1bII	NCIT:C95935	N1bII Stage Finding	5
+N1bIII	NCIT:C95936	N1bIII Stage Finding	5
+N1bIV	NCIT:C95937	N1bIV Stage Finding	5
 pM0	NCIT:C48740	pM0 Stage Finding	3
 pM1	NCIT:C48741	pM1 Stage Finding	3
 pN0	NCIT:C48745	pN0 Stage Finding	3
@@ -21,32 +69,6 @@ pT1	NCIT:C48759	pT1 Stage Finding	3
 pT2	NCIT:C48764	pT2 Stage Finding	3
 pT3	NCIT:C48768	pT3 Stage Finding	3
 pT4	NCIT:C48772	pT4 Stage Finding	3
-T0	NCIT:C48719	T0 Stage Finding	3
-T1	NCIT:C48720	T1 Stage Finding	3
-T2	NCIT:C48724	T2 Stage Finding	3
-T3	NCIT:C48728	T3 Stage Finding	3
-T4	NCIT:C48732	T4 Stage Finding	3
-T5	NCIT:C132010	T5 Stage Finding	3
-Tis	NCIT:C48738	Tis Stage Finding	3
-TX	NCIT:C48737	TX Stage Finding	3
-cM0	NCIT:C95956	cM0 (i+) Stage Finding	4
-M1a	NCIT:C48701	M1a Stage Finding	4
-M1b	NCIT:C48702	M1b Stage Finding	4
-M1c	NCIT:C48703	M1c Stage Finding	4
-N0	NCIT:C95921	N0 (i-) Stage Finding	4
-N0	NCIT:C95922	N0 (i+) Stage Finding	4
-N0	NCIT:C95923	N0 (mol-) Stage Finding	4
-N0	NCIT:C95925	N0 (mol+) Stage Finding	4
-N1a	NCIT:C48707	N1a Stage Finding	4
-N1b	NCIT:C48708	N1b Stage Finding	4
-N1c	NCIT:C48709	N1c Stage Finding	4
-N1mi	NCIT:C95955	N1mi Stage Finding	4
-N2a	NCIT:C48711	N2a Stage Finding	4
-N2b	NCIT:C48712	N2b Stage Finding	4
-N2c	NCIT:C48713	N2c Stage Finding	4
-N3a	NCIT:C48715	N3a Stage Finding	4
-N3b	NCIT:C48716	N3b Stage Finding	4
-N3c	NCIT:C48717	N3c Stage Finding	4
 pM1a	NCIT:C48742	pM1a Stage Finding	4
 pM1b	NCIT:C48743	pM1b Stage Finding	4
 pM1c	NCIT:C48744	pM1c Stage Finding	4
@@ -72,24 +94,3 @@ pT4a	NCIT:C48773	pT4a Stage Finding	4
 pT4b	NCIT:C48774	pT4b Stage Finding	4
 pT4c	NCIT:C48775	pT4c Stage Finding	4
 pT4d	NCIT:C48776	pT4d Stage Finding	4
-T1a	NCIT:C48721	T1a Stage Finding	4
-T1b	NCIT:C48722	T1b Stage Finding	4
-T1c	NCIT:C48723	T1c Stage Finding	4
-T1mi	NCIT:C95805	T1mi Stage Finding	4
-T2a	NCIT:C48725	T2a Stage Finding	4
-T2b	NCIT:C48726	T2b Stage Finding	4
-T2c	NCIT:C48727	T2c Stage Finding	4
-T2d	NCIT:C148411	T2d Stage Finding	4
-T3a	NCIT:C48729	T3a Stage Finding	4
-T3b	NCIT:C48730	T3b Stage Finding	4
-T3c	NCIT:C48731	T3c Stage Finding	4
-T3d	NCIT:C148412	T3d Stage Finding	4
-T4a	NCIT:C48733	T4a Stage Finding	4
-T4b	NCIT:C48734	T4b Stage Finding	4
-T4c	NCIT:C48735	T4c Stage Finding	4
-T4d	NCIT:C48736	T4d Stage Finding	4
-Ta	NCIT:C96025	Ta Stage Finding	4
-N1bI	NCIT:C95929	N1bI Stage Finding	5
-N1bII	NCIT:C95935	N1bII Stage Finding	5
-N1bIII	NCIT:C95936	N1bIII Stage Finding	5
-N1bIV	NCIT:C95937	N1bIV Stage Finding	5

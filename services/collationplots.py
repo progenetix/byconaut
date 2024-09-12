@@ -25,11 +25,10 @@ from service_response_generation import *
 """podmd
 
 * https://progenetix.org/services/collationplots/?datasetIds=progenetix&filters=NCIT:C7376,PMID:22824167,pgx:icdom-85003
-* https://progenetix.org/services/collationplots/?datasetIds=progenetix&filters=NCIT:C7376,PMID:22824167&output=histoplot
+* https://progenetix.org/services/collationplots/?datasetIds=progenetix&filters=NCIT:C7376,PMID:22824167&plotType=histoplot
 * https://progenetix.org/services/collationplots/?datasetIds=progenetix&id=pgxcohort-TCGAcancers
-* http://progenetix.org/services/collationplots/?datasetIds=progenetix&filters=NCIT&filterPrecision=start&withSamples=20&collationTypes=NCIT&output=histoplot&plot_area_height=20&plot_labelcol_font_size=6&plot_axislab_y_width=2&plot_label_y_values=0&plot_axis_y_max=80&plot_region_gap_width=1&debug=
-* http://progenetix.test/services/collationplots/?datasetIds=progenetix&filters=NCIT:C7376,PMID:22824167&output=histoheatplot
-* http://progenetix.test/services/collationplots/?datasetIds=progenetix&collationTypes=NCIT&minNumber=500&plotType=histoheatplot&method=codematches
+* http://progenetix.test/services/collationplots/?datasetIds=progenetix&filters=NCIT:C7376,PMID:22824167&plotType=histoheatplot
+* http://progenetix.test/services/collationplots/?datasetIds=progenetix&collationTypes=NCIT&minNumber=500&plotType=histoheatplot&includeDescendantTerms=false
 podmd"""
 
 ################################################################################

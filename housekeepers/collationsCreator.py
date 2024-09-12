@@ -46,7 +46,6 @@ def collations_creator():
         collationed = coll_defs.get("collationed")
         if not collationed:
             continue
-        pre = coll_defs["namespace_prefix"]
         pre_h_f = path.join( pkg_path, "rsrc", "classificationTrees", coll_type, "numbered_hierarchies.tsv" )
         collection = coll_defs["scope"]
         db_key = coll_defs["db_key"]
@@ -81,7 +80,7 @@ def collations_creator():
         no = len(hier.keys())
         matched = 0
         if not BYC["TEST_MODE"]:
-            bar = Bar("Writing "+pre, max = no, suffix='%(percent)d%%'+" of "+str(no) )      
+            bar = Bar("Writing "+coll_type, max = no, suffix='%(percent)d%%'+" of "+str(no) )      
         for count, code in enumerate(hier.keys(), start=1):
             if not BYC["TEST_MODE"]:
                 bar.next()
@@ -99,7 +98,6 @@ def collations_creator():
             else:
                 child_no =  data_coll.count_documents( { db_key: { "$in": children } } )
             if child_no > 0:
-                # sub_id = re.sub(pre, coll_type, code)
                 sub_id = code
                 update_obj = hier[code].copy()
                 update_obj.update({
@@ -127,7 +125,7 @@ def collations_creator():
                 if not BYC["TEST_MODE"]:
                     sel_hiers.append( update_obj )
                 else:
-                    print(f'{sub_id}:\t{code_no} ({child_no} deep) samples - {count} / {no} {pre}')
+                    print(f'{sub_id}:\t{code_no} ({child_no} deep) samples - {count} / {no} {coll_type}')
         # UPDATE   
         if not BYC["TEST_MODE"]:
             bar.finish()
@@ -342,11 +340,13 @@ def _get_child_ids_for_prefix(data_coll, coll_defs):
 
 def _get_label_for_code(data_coll, coll_defs, code):
 
-    label_keys = ["label", "description"]
+    label_keys = ["label", "description", "note"]
 
     db_key = coll_defs["db_key"]
     id_key = re.sub(".id", "", db_key)
     example = data_coll.find_one( { db_key: code } )
+
+    # prdbug(f'{db_key} - example {example}')
 
     if id_key in example.keys():
         if isinstance(example[ id_key ], list):
@@ -356,14 +356,15 @@ def _get_label_for_code(data_coll, coll_defs, code):
                         if k in o_t:
                             return o_t[k]
                     continue
-        else:
+        elif type(example[ id_key ]) is object:
             o_t = example[ id_key ]
-            if code in o_t["id"]:
+            if code in o_t.get("id", "___none___"):
                 for k in label_keys:
                         if k in o_t:
                             return o_t[k]
 
-    return ""
+
+    return code
 
 ################################################################################
 ################################################################################

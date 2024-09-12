@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-from os import path
+from os import pardir, path
 from bycon import *
 
 loc_path = path.dirname( path.abspath(__file__) )
-lib_path = path.join(loc_path , "lib")
+lib_path = path.join(loc_path , pardir, "importers", "lib")
 sys.path.append( lib_path )
 from importer_helpers import *
 
@@ -15,7 +15,7 @@ from importer_helpers import *
 def main():
     initialize_bycon_service()
     BI = ByconautImporter()
-    BI.update_biosamples()
+    BI.delete_biosamples_and_downstream()
 
 
 ################################################################################

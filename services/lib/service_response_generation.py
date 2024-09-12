@@ -177,7 +177,7 @@ class ByconCollations:
             fields = {"_id": 0}
             f_s = mongo_result_list(ds_id, f_coll, query, fields)
             for f in f_s:
-                if "codematches" in str(self.delivery_method):
+                if BYC_PARS.get("include_descendant_terms", True) is False:
                     if int(f.get("code_matches", 0)) < 1:
                         continue
                 i_d = f.get("id", "NA")
@@ -186,7 +186,7 @@ class ByconCollations:
                 if len(d_k) < 1:
                     d_k = list(f.keys())                    
                 for k in d_k:
-                    if k in s_c.get("integer_keys", []):
+                    if k in ["count", "code_matches", "cnv_analyses"]:
                         s_s[ i_d ].update({k: s_s[ i_d ].get(k, 0) + f.get(k, 0)})
                     elif k == "name":
                         s_s[ i_d ][ "type" ] = f.get(k)

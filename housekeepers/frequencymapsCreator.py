@@ -16,6 +16,7 @@ sys.path.append( services_lib_path )
 from bycon_bundler import ByconBundler
 from interval_utils import generate_genome_bins, interval_cnv_arrays, interval_counts_from_callsets
 from collation_utils import set_collation_types
+from service_helpers import ask_limit_reset
 
 """
 ## `frequencymapsCreator`
@@ -33,18 +34,7 @@ def main():
 def frequencymaps_creator():
     initialize_bycon_service()
     generate_genome_bins()
-
-    # avoiding pagination default ...
-    limit = BYC_PARS.get("limit")
-    if limit > 0 and limit < 10000: 
-        proceed = input(f'Do you want to really want to process max. `--limit {limit}` samples per subset?\n(Y, n or enter number; use 0 for no limit): ')
-        if "n" in proceed.lower():
-            exit()
-        elif re.match(r'^\d+?$', proceed):
-            BYC_PARS.update({"limit": int(proceed)})
-            if int(proceed) == 0:
-                proceed = "∞"
-            print(f'... now using {proceed} samples for frequency calculations')
+    ask_limit_reset()
 
     if len(BYC["BYC_DATASET_IDS"]) > 1:
         print("Please give only one dataset using -d")
@@ -82,8 +72,11 @@ def frequencymaps_creator():
 
         start_time = time.time()
 
+        # prdbug(coll)
+
         BYC.update({"BYC_FILTERS":[{"id":c_id}, {"id": "EDAM:operation_3961"}]})
         BYC.update({"PAGINATED_STATUS": False})
+        BYC.update({"FMAPS_SCOPE": coll.get("scope", "biosamples")})
         
         prdbug(f'=> processing {c_id} with limit {BYC_PARS.get("limit")}')
         RSS = ByconResultSets().datasetsResults()
@@ -97,7 +90,7 @@ def frequencymaps_creator():
             prdbug(f'No interval_frequencies for {c_id}')
             continue
 
-        analyses_count = RSS[ds_id]["analyses._id"]["target_count"]
+        analyses_count = RSS[ds_id]["analyses.id"]["target_count"]
         cnv_cs_count = if_bundles[0].get("sample_count", 0)
 
         coll_coll.update_one(

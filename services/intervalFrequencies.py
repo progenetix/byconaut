@@ -46,7 +46,7 @@ def interval_frequencies():
     read_service_prefs("interval_frequencies", services_conf_path)
     generate_genome_bins()
 
-    if (id_from_path := rest_path_value("collationplots")):
+    if (id_from_path := rest_path_value("intervalFrequencies")):
         BYC.update({"BYC_FILTERS": [ {"id": id_from_path } ] })
     elif "id" in BYC_PARS:
         BYC.update({"BYC_FILTERS": [ {"id": BYC_PARS["id"]} ] })

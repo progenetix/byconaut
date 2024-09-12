@@ -7,6 +7,21 @@ from bycon import load_yaml_empty_fallback, BYC, BYC_PARS, ENV
 
 ################################################################################
 
+def ask_limit_reset():
+    limit = BYC_PARS.get("limit")
+    if limit > 0 and limit < 10000: 
+        proceed = input(f'Do you want to really want to process max. `--limit {limit}` items?\n(Y, n or enter number; use 0 for no limit): ')
+        if "n" in proceed.lower():
+            exit()
+        elif re.match(r'^\d+?$', proceed):
+            BYC_PARS.update({"limit": int(proceed)})
+            if int(proceed) == 0:
+                proceed = "∞"
+            print(f'... now using {proceed} items')
+
+
+################################################################################
+
 def read_service_prefs(service, service_pref_path):
     # snake_case paths; e.g. `intervalFrequencies` => `interval_frequencies.yaml`
     service = decamelize(service)

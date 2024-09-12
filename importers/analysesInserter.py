@@ -15,8 +15,7 @@ from importer_helpers import *
 def main():
     initialize_bycon_service()
     BI = ByconautImporter()
-    BI.update_biosamples()
-
+    BI.import_analyses()
 
 ################################################################################
 ################################################################################

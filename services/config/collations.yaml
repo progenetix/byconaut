@@ -1,33 +1,8 @@
 defaults:
   method: counts
   response_entity_id: collation
-integer_keys:
-  - count
-  - code_matches
-  - cnv_analyses
 method_keys:
   details: []
-  child_terms:
-    - id
-    - label
-    - count
-    - child_terms
-    - code_matches
-    - cnv_analyses
-    - collation_type
-    - type
-    - reference
-  paths:
-    - id
-    - label
-    - count
-    - code_matches
-    - cnv_analyses
-    - child_terms
-    - hierarchy_paths
-    - collation_type
-    - type
-    - reference
   counts:
     - id
     - label
@@ -37,15 +12,6 @@ method_keys:
     - collation_type
     - type
     - reference
-  codematches:
-    - id
-    - label
-    - code_matches
-    - cnv_analyses
-    - collation_type
-    # - type
-    - reference
-    - name
   ids:
     - id
     - label
