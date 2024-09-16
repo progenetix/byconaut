@@ -5,6 +5,7 @@ from progress.bar import Bar
 # bycon
 from config import *
 from bycon_helpers import prjsonnice, prdbug
+from variant_mapping import ByconVariant
 
 loc_path = path.dirname( path.abspath(__file__) )
 services_lib_path = path.join( loc_path, pardir, pardir, "services", "lib" )
@@ -23,12 +24,14 @@ class ByconautImporter():
         self.import_collname = None
         self.import_entity = None
         self.import_id = None
-        self.import_upstream = ["individuals", "biosamples", "analyses"]
-        self.delete_downstream = []
+        self.upstream = ["individuals", "biosamples", "analyses"]
+        self.downstream = []
         self.mongo_client = MongoClient(host=DB_MONGOHOST)
         self.ind_coll = mongo_client[ self.dataset_id ]["individuals"]
         self.bios_coll = mongo_client[ self.dataset_id ]["biosamples"]
         self.ana_coll = mongo_client[ self.dataset_id ]["analyses"]
+        self.target_db = "___none___"
+        self.allow_duplicates = False
 
         self.__initialize_importer()
 
@@ -100,7 +103,7 @@ class ByconautImporter():
 
     def delete_individuals_and_downstream(self):
         self.__prepare_individuals()
-        self.delete_downstream = ["biosamples", "analyses", "variants"]
+        self.downstream = ["biosamples", "analyses", "variants"]
         self.__delete_database_records()
 
 
@@ -115,7 +118,7 @@ class ByconautImporter():
 
     def delete_biosamples_and_downstream(self):
         self.__prepare_biosamples()
-        self.delete_downstream = ["analyses", "variants"]
+        self.downstream = ["analyses", "variants"]
         self.__delete_database_records()
 
 
@@ -130,8 +133,24 @@ class ByconautImporter():
 
     def delete_analyses_and_downstream(self):
         self.__prepare_analyses()
-        self.delete_downstream = ["variants"]
+        self.downstream = ["variants"]
         self.__delete_database_records()
+
+
+    #--------------------------------------------------------------------------#
+
+    def import_variants(self):
+        self.__prepare_variants()
+        self.__insert_variant_records_from_file()
+
+
+    #--------------------------------------------------------------------------#
+
+    def move_individuals_and_downstream(self):
+        self.__prepare_individuals()
+        self.target_db = BYC_PARS.get("output", "___none___")
+        self.downstream = ["biosamples", "analyses", "variants"]
+        self.__move_database_records()
 
 
     #--------------------------------------------------------------------------#
@@ -166,7 +185,7 @@ class ByconautImporter():
         self.import_collname = "individuals"
         self.import_entity = "individual"
         self.import_id = "individual_id"
-        self.import_upstream = []
+        self.upstream = []
         self.__check_dataset()
         self.__read_data_file()
 
@@ -179,7 +198,7 @@ class ByconautImporter():
         self.import_collname = "biosamples"
         self.import_entity = "biosample"
         self.import_id = "biosample_id"
-        self.import_upstream = ["individuals"]
+        self.upstream = ["individuals"]
         self.__check_dataset()
         self.__read_data_file()
 
@@ -192,7 +211,21 @@ class ByconautImporter():
         self.import_collname = "analyses"
         self.import_entity = "analysis"
         self.import_id = "analysis_id"
-        self.import_upstream = ["individuals", "biosamples"]
+        self.upstream = ["individuals", "biosamples"]
+        self.__check_dataset()
+        self.__read_data_file()
+
+
+    #--------------------------------------------------------------------------#
+    #--------------------------------------------------------------------------#
+
+    def __prepare_variants(self):
+        # TODO: have those parameters read from bycon globals
+        self.import_collname = "variants"
+        self.import_entity = "genomicVariant"
+        self.import_id = "analysis_id"
+        self.upstream = ["individuals", "biosamples", "analyses"]
+        self.allow_duplicates = True
         self.__check_dataset()
         self.__read_data_file()
 
@@ -231,7 +264,7 @@ class ByconautImporter():
             if not (import_id_v := new_doc.get(iid)):
                 self.log.append(f'¡¡¡ no {iid} value in entry {l_no} => skipping !!!')
                 continue
-            if import_id_v in import_ids:
+            if import_id_v in import_ids and not self.allow_duplicates:
                 self.log.append(f'¡¡¡ duplicated {iid} value in entry {l_no} => skipping !!!')
                 continue
 
@@ -242,10 +275,83 @@ class ByconautImporter():
     #--------------------------------------------------------------------------#
     #--------------------------------------------------------------------------#
 
+    def __move_database_records(self):
+        ds_id = self.dataset_id
+        tds_id = self.target_db
+        icn = self.import_collname
+        dcs = self.downstream
+        iid = self.import_id
+        fn = self.data_in.fieldnames
+
+        if tds_id not in BYC["DATABASE_NAMES"]:
+            print(f'¡¡¡ No existing target database defined using `--output` !!!')
+            exit()
+
+        source_coll = self.mongo_client[ds_id][icn]
+        target_coll = self.mongo_client[tds_id][icn]
+
+        #----------------------- Checking database content --------------------#
+
+        source_ids = []
+        for test_doc in self.import_docs:
+            s_id_v = test_doc[iid]
+            if not source_coll.find_one({"id": s_id_v}):
+                self.log.append(f'id {s_id_v} does not exist in {ds_id}.{icn} => maybe deleted already ...')
+            else:
+                source_ids.append(s_id_v)
+
+        self.__parse_log()
+
+        #---------------------------- Mover Stage -----------------------------#
+
+        mov_nos = {icn: 0}
+        bar = Bar("Moving ", max = len(source_ids), suffix='%(percent)d%%'+f' of {str(len(source_ids))} {icn}' ) if not BYC["TEST_MODE"] else False
+        for m_id in source_ids:
+            d_c = source_coll.count_documents({"id": m_id})
+            t_c = target_coll.count_documents({"id": m_id})
+            if d_c > 0 and t_c < 1:
+                mov_nos[icn] += d_c
+                if not BYC["TEST_MODE"]:
+                    s = source_coll.find_one({"id": m_id})
+                    t = target_coll.insert_one(s)
+            if not BYC["TEST_MODE"]:
+                bar.next()
+        if not BYC["TEST_MODE"]:
+            bar.finish()
+
+        for c in dcs:
+            bar = Bar(f'Moving {c} for ', max = len(source_ids), suffix='%(percent)d%%'+f' of {str(len(source_ids))} {icn}' ) if not BYC["TEST_MODE"] else False
+            source_coll = self.mongo_client[ds_id][c]
+            target_coll = self.mongo_client[tds_id][c]
+            mov_nos.update({c: 0})
+            for m_id in source_ids:
+                d_c = source_coll.count_documents({iid: m_id})
+                if d_c > 0:
+                    mov_nos[c] += d_c
+                    if not BYC["TEST_MODE"]:
+                        target_coll.delete_many({iid: m_id})
+                        for s in source_coll.find({iid: m_id}):
+                            t = target_coll.insert_one(s)
+                if not BYC["TEST_MODE"]:
+                    bar.next()
+            if not BYC["TEST_MODE"]:
+                bar.finish()
+
+        if not BYC["TEST_MODE"]:
+            for k, v in mov_nos.items():
+                print(f'==> moved {v} {k} from {ds_id} to {tds_id}')
+        else:
+            for k, v in mov_nos.items():
+                print(f'==> would have moved {v} {k} from {ds_id} to {tds_id}')
+
+
+    #--------------------------------------------------------------------------#
+    #--------------------------------------------------------------------------#
+
     def __delete_database_records(self):
         ds_id = self.dataset_id
         icn = self.import_collname
-        dcs = self.delete_downstream
+        dcs = self.downstream
         iid = self.import_id
         fn = self.data_in.fieldnames
 
@@ -264,9 +370,7 @@ class ByconautImporter():
 
         #---------------------------- Delete Stage ----------------------------#
 
-        del_nos = {
-            icn: 0
-        }
+        del_nos = { icn: 0 }
         bar = Bar("Deleting ", max = len(del_ids), suffix='%(percent)d%%'+f' of {str(len(del_ids))} {icn}' ) if not BYC["TEST_MODE"] else False
         for del_id in del_ids:
             d_c = del_coll.count_documents({"id": del_id})
@@ -398,17 +502,78 @@ class ByconautImporter():
     #--------------------------------------------------------------------------#
     #--------------------------------------------------------------------------#
 
+    def __insert_variant_records_from_file(self):
+        ds_id = self.dataset_id
+        icn = self.import_collname 
+        ien = self.import_entity
+        iid = self.import_id
+        fn = self.data_in.fieldnames
+
+        import_coll = self.mongo_client[ ds_id ][icn]
+
+        delMatchedVars = "y"
+        if not BYC["TEST_MODE"]:
+            delMatchedVars = input(f'Delete the variants of the same analysis ids as in the input file?\n(Y|n): ')
+
+        #----------------------- Checking database content --------------------# 
+
+        for test_doc in self.import_docs:
+            self.__check_upstream_ids(test_doc)
+        self.__parse_log()
+
+        #---------------------------- Delete Stage ----------------------------#
+
+        ana_ids = set()
+        for v in self.import_docs:
+            if not (vs_id := v.get("variant_state_id")):
+                print(f"¡¡¡ The `variant_state_id` parameter is required for variant assignment  line {c}!!!")
+                exit()
+            if not (ana_id := v.get("analysis_id")):
+                print(f"¡¡¡ The `analysis_id` parameter is required for variant assignment  line {c}!!!")
+                exit()
+            ana_ids.add(ana_id)
+
+        if not "n" in delMatchedVars.lower():
+            for ana_id in ana_ids:
+                v_dels = import_coll.delete_many({"analysis_id": ana_id})
+                print(f'==>> deleted {v_dels.deleted_count} variants from {ana_id}')
+
+
+        #---------------------------- Import Stage ----------------------------# 
+
+        i_no = 0
+        for new_doc in self.import_docs:
+            insert_v = import_datatable_dict_line({}, fn, new_doc, ien)
+            insert_v = ByconVariant().pgxVariant(insert_v)
+            insert_v.update({"updated": datetime.datetime.now().isoformat()})
+
+            if not BYC["TEST_MODE"]:
+                vid = import_coll.insert_one(insert_v).inserted_id
+                vstr = f'pgxvar-{vid}'
+                import_coll.update_one({'_id': vid}, {'$set': {'id': vstr}})
+                i_no += 1
+            else:
+                prjsonnice(insert_v)
+
+        #-------------------------------- Summary -----------------------------#
+
+        print(f'=> {i_no} records were inserted into {ds_id}.{icn}')
+
+
+    #--------------------------------------------------------------------------#
+    #--------------------------------------------------------------------------#
+
     def __check_upstream_ids(self, new_doc):
         ind_id = new_doc.get("individual_id", "___none___")
         bios_id = new_doc.get("biosample_id", "___none___")
         ana_id = new_doc.get("analysis_id", "___none___")
-        if "individuals" in self.import_upstream:
+        if "individuals" in self.upstream:
             if not self.ind_coll.find_one({"id": ind_id}):
                 self.log.append(f'individual {ind_id} for {ien} {import_id_v} should exist before {ien} import')
-        if "biosamples" in self.import_upstream:
+        if "biosamples" in self.upstream:
             if not self.bios_coll.find_one({"id": bios_id}):
                 self.log.append(f'biosample {bios_id} for {ien} {import_id_v} should exist before {ien} import')
-        if "analyses" in self.import_upstream:
+        if "analyses" in self.upstream:
             if not self.ana_coll.find_one({"id": ana_id}):
                 self.log.append(f'analysis {ana_id} for {ien} {import_id_v} should exist before {ien} import')
 

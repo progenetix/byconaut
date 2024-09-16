@@ -8,6 +8,10 @@ lib_path = path.join(loc_path , pardir, "importers", "lib")
 sys.path.append( lib_path )
 from importer_helpers import *
 
+"""
+./housekeepers/recordsMoverWDS.py -d progenetix --output cellz -i ./imports/1kdeltest.tsv --testMode false
+"""
+
 ################################################################################
 ################################################################################
 ################################################################################
@@ -15,7 +19,7 @@ from importer_helpers import *
 def main():
     initialize_bycon_service()
     BI = ByconautImporter()
-    BI.delete_biosamples()
+    BI.move_individuals_and_downstream()
 
 
 ################################################################################

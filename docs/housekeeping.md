@@ -72,3 +72,13 @@ Records are deleted by providing a standard pgx-style tab-delimited metadata fil
 where only the corresponding `..._id` column is essential. As example, the 
 `deleteIndividuals.py` app will take a table which includes a column `individual_id`
 and use these values to delete the matching records.
+
+### Deleting variants
+
+Variant `id` values are generated upon insertion and are not supposed to be
+stable or recoverable. For variants it only makes sense to perform management
+at the `analysis` level. Therefore variants should be deleted removing the
+corresponding analyses and their variants using the `deleteAnalysesWDS.py` app.
+Also, when inserting variants through `importers/variantsInserter.py` by default
+all existing variants with the `id` values corresponding to any of the `analysis_id`
+values in the variants file are being purged before inserting the variants themselves.

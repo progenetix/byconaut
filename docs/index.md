@@ -33,6 +33,33 @@ mongorestore --db $database .../mongodump/examplez/
 
 ### Option B: Create your own databases
 
+#### Core Data
+
+A basic setup for a Beacon compatible database - as supported by the `bycon` package -
+consists of the core data collections mirroring the Beacon default data model:
+
+* `variants`
+* `analyses` (which covers parameters from both Beacon `analysis` and `run` entity schemas)
+* `biosamples`
+* `individuals`
+
+Databases are implemented in an existing MongoDB setup using utility applications
+contained in the `importers` directory by importing data from tab-delimited data
+files. In principle, only 2 import files are needed for inserting and updating of records:
+* a file for the non-variant metadata[^1] with specific header values, where as
+  the absolute minimum id values for the different entities have to be provided
+* a file for genomic variants, again with specific headers but also containing
+  the upstream ids for the corresponding analysis, biosample and individual
+
+Examples:
+
+```
+individual_id   biosample_id    analysis_id
+pgxind-kftx25eh pgxbs-kftva59y  pgxcs-kftvldsu
+```
+
+#### Further and optional procedures
+
 1. Create database and variants collection
 2. update the local `bycon` installation for your database information andlocal parameters
     * database name(s)
@@ -49,4 +76,8 @@ mongorestore --db $database .../mongodump/examplez/
 ## Data maintenance scripts
 
 Please see the [helper apps documentation](applications/#data-transformation-database-maintenance).
+
+
+
+[^1]: Metadata in biomedical genomics is "everything but the sequence variation"
 
