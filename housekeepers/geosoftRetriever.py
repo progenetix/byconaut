@@ -6,14 +6,10 @@ from progress.bar import Bar
 import sys, datetime
 
 from bycon import *
+from bycon.services import file_utils
 
 loc_path = path.dirname( path.abspath(__file__) )
-services_lib_path = path.join( loc_path, pardir, "services", "lib" )
-services_tmp_path = path.join( loc_path, pardir, "tmp" )
-sys.path.append( services_lib_path )
-from bycon_bundler import ByconBundler
-from datatable_utils import import_datatable_dict_line
-from file_utils import read_tsv_to_dictlist, write_log
+log_path = path.join( loc_path, pardir, "logs" )
 """
 
 """
@@ -84,7 +80,7 @@ def geosoft_retriever():
         bar.finish()
         print(f'==> updated {up_no} analyses')
 
-    write_log(log, path.join( services_tmp_path, "geosoft_retriever_gsm" ))
+    file_utils.write_log(log, path.join( log_path, "geosoft_retriever_gsm" ))
 
 
 ################################################################################

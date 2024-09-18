@@ -7,6 +7,11 @@ from pymongo import MongoClient
 from progress.bar import Bar
 
 from bycon import *
+from bycon.services import collation_utils, service_helpers
+
+# from collation_utils import *
+from service_helpers import *
+
 
 loc_path = path.dirname( path.abspath(__file__) )
 lib_path = path.join(loc_path , "lib")
@@ -15,10 +20,6 @@ from mongodb_utils import mongodb_update_indexes
 from doc_generator import doc_generator
 
 services_conf_path = path.join( loc_path, "config" )
-services_lib_path = path.join( loc_path, pardir, "services", "lib" )
-sys.path.append( services_lib_path )
-from collation_utils import *
-from service_helpers import *
 
 """
 The housekeeping script contains **non-destructive** maintenance scripts which
@@ -37,6 +38,8 @@ def main():
 def housekeeping():
     initialize_bycon_service()
     read_service_prefs("housekeeping", services_conf_path)
+
+    collation_utils.set_collation_types()
 
     # TODO: rewrap, use config etc.
     generated_docs_path = path.join( loc_path, pardir, "docs", "generated")

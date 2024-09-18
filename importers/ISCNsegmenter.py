@@ -5,16 +5,7 @@ from os import path, environ, pardir
 import sys, datetime
 
 from bycon import *
-
-loc_path = path.dirname( path.abspath(__file__) )
-services_lib_path = path.join( loc_path, pardir, "services", "lib" )
-sys.path.append( services_lib_path )
-from cytoband_utils import variants_from_revish
-from export_file_generation import pgxseg_biosample_meta_line, pgxseg_header_line, pgxseg_variant_line
-from file_utils import read_tsv_to_dictlist
-from interval_utils import generate_genome_bins
-from bycon_bundler import ByconBundler
-from datatable_utils import import_datatable_dict_line
+from bycon.services import cytoband_utils, datatable_utils, export_file_generation, interval_utils
 
 """
 bin/ISCNsegmenter.py -i imports/ccghtest.tab -o exports/cghvars.tsv
@@ -27,7 +18,7 @@ bin/ISCNsegmenter.py -i imports/progenetix-from-filemaker-ISCN-samples-cCGH.tsv 
 
 def main():
 	initialize_bycon_service()
-	generate_genome_bins()
+	interval_utils.generate_genome_bins()
 
 	group_parameter = BYC_PARS.get("groupBy", "histological_diagnosis_id")
 	input_file = BYC_PARS.get("inputfile")
@@ -55,7 +46,7 @@ Output will be written to {}""".format(output_file) )
 
 	output_file += ".pgxseg"
 
-	iscn_samples, fieldnames = read_tsv_to_dictlist(input_file, int(BYC_PARS.get("limit", 0)))
+	iscn_samples, fieldnames = file_utils.read_tsv_to_dictlist(input_file, int(BYC_PARS.get("limit", 0)))
 
 	if not iscn_field in fieldnames:
 		print('The samplefile header does not contain the "{}" column => quitting'.format(iscn_field))
@@ -78,11 +69,11 @@ Output will be written to {}""".format(output_file) )
 			"analysis_id": s.get("analysis_id", "exp-"+n),
 			"individual_id": s.get("individual_id", "ind-"+n),
 		}
-		update_bs = import_datatable_dict_line(update_bs, fieldnames, s, "biosample")
-		h_line = pgxseg_biosample_meta_line(update_bs, group_parameter)
+		update_bs = datatable_utils.import_datatable_dict_line(update_bs, fieldnames, s, "biosample")
+		h_line = export_file_generation.pgxseg_biosample_meta_line(update_bs, group_parameter)
 		pgxseg.write( "{}\n".format(h_line) )
 
-	pgxseg.write( "{}\n".format(pgxseg_header_line()) )
+	pgxseg.write( "{}\n".format(export_file_generation.pgxseg_header_line()) )
 
 	for c, s in enumerate(iscn_samples):
 
@@ -90,7 +81,7 @@ Output will be written to {}""".format(output_file) )
 		bs_id = s.get("biosample_id", "sample-"+n)
 		cs_id = s.get("analysis_id", "exp-"+n)
 
-		variants, v_e = variants_from_revish(bs_id, cs_id, technique, s[iscn_field])
+		variants, v_e = cytoband_utils.variants_from_revish(bs_id, cs_id, technique, s[iscn_field])
 
 		if len(variants) > 0:
 			s_w_v_no += 1
@@ -98,7 +89,7 @@ Output will be written to {}""".format(output_file) )
 			v_instances = list(sorted(variants, key=lambda x: (f'{x["reference_name"].replace("X", "XX").replace("Y", "YY").zfill(2)}', x['start'])))
 		
 			for v in v_instances:
-				pgxseg.write(pgxseg_variant_line(v)+"\n")
+				pgxseg.write(export_file_generation.pgxseg_variant_line(v)+"\n")
 
 	print(f'=> {s_w_v_no} samples had variants')
 	print(f'Wrote to {output_file}')

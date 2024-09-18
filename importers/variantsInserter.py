@@ -6,7 +6,7 @@ from bycon import *
 loc_path = path.dirname( path.abspath(__file__) )
 lib_path = path.join(loc_path , "lib")
 sys.path.append( lib_path )
-from importer_helpers import *
+from importer_helpers import ByconautImporter
 """
 
 """

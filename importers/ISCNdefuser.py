@@ -7,15 +7,11 @@ from progress.bar import Bar
 from tabulate import tabulate
 
 from bycon import *
+from bycon.services import bycon_bundler, datatable_utils, file_utils, service_helpers
 
 loc_path = path.dirname( path.abspath(__file__) )
-services_lib_path = path.join( loc_path, pardir, "services", "lib" )
 services_tmp_path = path.join( loc_path, pardir, "tmp" )
-sys.path.append( services_lib_path )
-from bycon_bundler import ByconBundler
-from datatable_utils import import_datatable_dict_line
-from file_utils import write_log
-from service_helpers import generate_id
+
 """
 
 """
@@ -57,7 +53,7 @@ def main():
 
     #-------------------------- Read ISCN from file ---------------------------#
 
-    vb = ByconBundler()
+    vb = bycon_bundler.ByconBundler()
     iscndata = vb.read_pgx_file(input_file)
     for h in ["biosample_id", "iscn_fusions"]:
         if h not in iscndata.fieldnames:
@@ -117,7 +113,7 @@ def main():
         for f_s in s.get("iscn_fusions").strip().split(','):
             # all 2 or more fusions get the same id - e.g. a three way
             # t(8;14;18)(q24;q32;q21) => 8q24::14q32&&14q32::18q21 
-            f_id = generate_id("fusionId")
+            f_id = service_helpers.generate_id("fusionId")
             for f_v_s in f_s.split('&&'):
 
                 # print(f_v_s)
@@ -178,7 +174,7 @@ def main():
     print(f'Wrote to {output_file}')
 
     if len(log) > 0:
-        write_log(log, output_file)
+        file_utils.write_log(log, output_file)
         exit()
 
     if len(analyses) > 0:
@@ -188,11 +184,6 @@ def main():
         ana.write(tabulate(analyses, headers='keys', tablefmt="tsv", stralign=None, numalign=None))
         ana.close()
         print(f'Wrote to {output_file}')
-
-
-
-
-
 
 
 ################################################################################

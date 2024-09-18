@@ -19,9 +19,7 @@ While there is also a `pip` installation possible over `pip3 install bycon`
 this will _not_ include the local configuration files necessary e.g. for
 processing the databases.
 
-## Database setup
-
-### Option A: `examplez` from <rsrc/mongodump>
+## Test with `examplez` database from <rsrc/mongodump>
 
 1. download <rsrc/mongodump/examplez.zip>
 2. unpack somewhere & restore with (your paths etc.):
@@ -31,9 +29,9 @@ mongorestore --db $database .../mongodump/examplez/
 ```
 3. proceed w/ step 4 ... below
 
-### Option B: Create your own databases
+## Create your own databases
 
-#### Core Data
+### Core Data
 
 A basic setup for a Beacon compatible database - as supported by the `bycon` package -
 consists of the core data collections mirroring the Beacon default data model:
@@ -51,14 +49,24 @@ files. In principle, only 2 import files are needed for inserting and updating o
 * a file for genomic variants, again with specific headers but also containing
   the upstream ids for the corresponding analysis, biosample and individual
 
-Examples:
+#### Examples
+
+##### Minimal metadata file
 
 ```
 individual_id   biosample_id    analysis_id
-pgxind-kftx25eh pgxbs-kftva59y  pgxcs-kftvldsu
+BRCA-patient-001 brca-001  brca-001-cnv
+BRCA-patient-001 brca-001  brca-001-snv
+BRCA-patient-002 brca-002  brca-002-cnv
+```
+##### Variant file
+
 ```
 
-#### Further and optional procedures
+```
+
+
+## Further and optional procedures
 
 1. Create database and variants collection
 2. update the local `bycon` installation for your database information andlocal parameters

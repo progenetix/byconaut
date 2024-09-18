@@ -7,13 +7,11 @@ from config import *
 from bycon_helpers import prjsonnice, prdbug
 from variant_mapping import ByconVariant
 
-loc_path = path.dirname( path.abspath(__file__) )
-services_lib_path = path.join( loc_path, pardir, pardir, "services", "lib" )
-sys.path.append( services_lib_path )
-from bycon_bundler import ByconBundler
-from datatable_utils import import_datatable_dict_line
-from file_utils import write_log
-from service_helpers import ask_limit_reset
+from bycon.services import bycon_bundler, datatable_utils, file_utils
+
+################################################################################
+################################################################################
+################################################################################
 
 class ByconautImporter():
     def __init__(self):
@@ -26,6 +24,7 @@ class ByconautImporter():
         self.import_id = None
         self.upstream = ["individuals", "biosamples", "analyses"]
         self.downstream = []
+        self.downstream_only = False
         self.mongo_client = MongoClient(host=DB_MONGOHOST)
         self.ind_coll = mongo_client[ self.dataset_id ]["individuals"]
         self.bios_coll = mongo_client[ self.dataset_id ]["biosamples"]
@@ -134,6 +133,15 @@ class ByconautImporter():
     def delete_analyses_and_downstream(self):
         self.__prepare_analyses()
         self.downstream = ["variants"]
+        self.__delete_database_records()
+
+
+    #--------------------------------------------------------------------------#
+
+    def delete_variants_of_analyses(self):
+        self.__prepare_analyses()
+        self.downstream = ["variants"]
+        self.downstream_only = True
         self.__delete_database_records()
 
 
@@ -251,7 +259,7 @@ class ByconautImporter():
     def __read_data_file(self):
         iid = self.import_id
 
-        bb = ByconBundler()
+        bb = bycon_bundler.ByconBundler()
         self.data_in = bb.read_pgx_file(self.input_file)
         print(f'=> The input file contains {len(self.data_in.data)} items')
 
@@ -359,27 +367,28 @@ class ByconautImporter():
 
         #----------------------- Checking database content --------------------#
 
-        del_ids = []
+        del_ids = set()
         for test_doc in self.import_docs:
             del_id_v = test_doc[iid]
             if not del_coll.find_one({"id": del_id_v}):
                 self.log.append(f'id {del_id_v} does not exist in {ds_id}.{icn} => maybe deleted already ...')
-            del_ids.append(del_id_v)
+            del_ids.add(del_id_v)
 
         self.__parse_log()
 
         #---------------------------- Delete Stage ----------------------------#
 
         del_nos = { icn: 0 }
-        bar = Bar("Deleting ", max = len(del_ids), suffix='%(percent)d%%'+f' of {str(len(del_ids))} {icn}' ) if not BYC["TEST_MODE"] else False
-        for del_id in del_ids:
-            d_c = del_coll.count_documents({"id": del_id})
-            del_nos[icn] += d_c
+        if not self.downstream_only:
+            bar = Bar("Deleting ", max = len(del_ids), suffix='%(percent)d%%'+f' of {str(len(del_ids))} {icn}' ) if not BYC["TEST_MODE"] else False
+            for del_id in del_ids:
+                d_c = del_coll.count_documents({"id": del_id})
+                del_nos[icn] += d_c
+                if not BYC["TEST_MODE"]:
+                    del_coll.delete_many({"id": del_id})
+                    bar.next()
             if not BYC["TEST_MODE"]:
-                del_coll.delete_many({"id": del_id})
-                bar.next()
-        if not BYC["TEST_MODE"]:
-            bar.finish()
+                bar.finish()
 
         for c in dcs:
             bar = Bar(f'Deleting {c} for ', max = len(del_ids), suffix='%(percent)d%%'+f' of {str(len(del_ids))} {icn}' ) if not BYC["TEST_MODE"] else False
@@ -437,7 +446,7 @@ class ByconautImporter():
         for new_doc in checked_docs:
             o_id = new_doc[iid]
             update_i = import_coll.find_one({"id": o_id})
-            update_i = import_datatable_dict_line(update_i, fn, new_doc, ien)
+            update_i = datatable_utils.import_datatable_dict_line(update_i, fn, new_doc, ien)
             update_i.update({"updated": datetime.datetime.now().isoformat()})
 
             if not BYC["TEST_MODE"]:
@@ -486,7 +495,7 @@ class ByconautImporter():
         i_no = 0
         for new_doc in checked_docs:
             update_i = {"id": new_doc[iid]}
-            update_i = import_datatable_dict_line(update_i, fn, new_doc, ien)
+            update_i = datatable_utils.import_datatable_dict_line(update_i, fn, new_doc, ien)
             update_i.update({"updated": datetime.datetime.now().isoformat()})
 
             if not BYC["TEST_MODE"]:
@@ -523,7 +532,8 @@ class ByconautImporter():
 
         #---------------------------- Delete Stage ----------------------------#
 
-        ana_ids = set()
+        ana_del_ids = set()
+        import_vars = []
         for v in self.import_docs:
             if not (vs_id := v.get("variant_state_id")):
                 print(f"¡¡¡ The `variant_state_id` parameter is required for variant assignment  line {c}!!!")
@@ -531,19 +541,20 @@ class ByconautImporter():
             if not (ana_id := v.get("analysis_id")):
                 print(f"¡¡¡ The `analysis_id` parameter is required for variant assignment  line {c}!!!")
                 exit()
-            ana_ids.add(ana_id)
+            if not "n" in delMatchedVars.lower():
+                ana_del_ids.add(ana_id)
+            if not "delete" in vs_id.lower():
+                import_vars.append(v)
 
-        if not "n" in delMatchedVars.lower():
-            for ana_id in ana_ids:
-                v_dels = import_coll.delete_many({"analysis_id": ana_id})
-                print(f'==>> deleted {v_dels.deleted_count} variants from {ana_id}')
-
+        for ana_id in ana_del_ids:
+            v_dels = import_coll.delete_many({"analysis_id": ana_id})
+            print(f'==>> deleted {v_dels.deleted_count} variants from {ana_id}')
 
         #---------------------------- Import Stage ----------------------------# 
 
         i_no = 0
-        for new_doc in self.import_docs:
-            insert_v = import_datatable_dict_line({}, fn, new_doc, ien)
+        for new_doc in import_vars:
+            insert_v = datatable_utils.import_datatable_dict_line({}, fn, new_doc, ien)
             insert_v = ByconVariant().pgxVariant(insert_v)
             insert_v.update({"updated": datetime.datetime.now().isoformat()})
 
@@ -567,6 +578,9 @@ class ByconautImporter():
         ind_id = new_doc.get("individual_id", "___none___")
         bios_id = new_doc.get("biosample_id", "___none___")
         ana_id = new_doc.get("analysis_id", "___none___")
+        ien = self.import_entity
+        iid = self.import_id
+        import_id_v = new_doc[iid]
         if "individuals" in self.upstream:
             if not self.ind_coll.find_one({"id": ind_id}):
                 self.log.append(f'individual {ind_id} for {ien} {import_id_v} should exist before {ien} import')
@@ -585,7 +599,7 @@ class ByconautImporter():
         if len(self.log) < 1:
             return
 
-        write_log(self.log, self.input_file)
+        file_utils.write_log(self.log, self.input_file)
         if (force := BYC_PARS.get("force")):
             print(f'¡¡¡ {len(self.log)} errors => still proceeding since"--force {force}" in effect')
         else:

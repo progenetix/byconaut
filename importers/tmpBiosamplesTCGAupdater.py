@@ -6,11 +6,8 @@ from progress.bar import Bar
 import sys, datetime
 
 from bycon import *
+from bycon.services import file_utils
 
-loc_path = path.dirname( path.abspath(__file__) )
-services_lib_path = path.join( loc_path, pardir, "services", "lib" )
-sys.path.append( services_lib_path )
-from file_utils import read_tsv_to_dictlist
 """
 
 """
@@ -57,7 +54,7 @@ def main():
     # create a bios update object with each PMID: [ biosample ids ]
 
     id_coll = {}
-    data, fieldnames = read_tsv_to_dictlist(input_file, int(BYC_PARS.get("limit", 0)))
+    data, fieldnames = file_utils.read_tsv_to_dictlist(input_file, int(BYC_PARS.get("limit", 0)))
     data_no = len(data)
     print(f'=> The input file contains {data_no} items')
     for c, d in enumerate(data):
@@ -101,15 +98,6 @@ def main():
                 })
             else:
                 print(f'... updating {bid}')
-
-
-
-
-    # error object for PMIDs w/o match
-    # for each PMID
-    # retrieve publication data
-    # for each biosample_id => update provenance. & references.pubmed
-
 
 
 

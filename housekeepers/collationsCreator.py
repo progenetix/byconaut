@@ -6,14 +6,11 @@ from pymongo import MongoClient
 from progress.bar import Bar
 
 from bycon import *
+from bycon.services import collation_utils
 
 dir_path = path.dirname( path.abspath(__file__) )
 pkg_path = path.join( dir_path, pardir )
 
-services_lib_path = path.join( pkg_path, "services", "lib" )
-sys.path.append( services_lib_path )
-
-from collation_utils import hierarchy_from_file, set_collation_types
 
 """
 ## `collationsCreator`
@@ -39,7 +36,7 @@ def collations_creator():
 
     print(f'Creating collations for {ds_id}')
 
-    set_collation_types()
+    collation_utils.set_collation_types()
     f_d_s = BYC.get("filter_definitions", {})
 
     for coll_type, coll_defs in f_d_s.items():
@@ -146,7 +143,7 @@ def get_prefix_hierarchy( ds_id, coll_type, pre_h_f):
         print(f'¡¡¡ missing {coll_type} !!!')
         return
 
-    hier = hierarchy_from_file(ds_id, coll_type, pre_h_f)
+    hier = collation_utils.hierarchy_from_file(ds_id, coll_type, pre_h_f)
     no = len(hier.keys())
 
     # now adding terms missing from the tree ###################################

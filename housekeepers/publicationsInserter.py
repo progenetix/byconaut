@@ -6,13 +6,7 @@ from isodate import date_isoformat
 import csv, datetime, requests, sys
 
 from bycon import *
-
-services_conf_path = path.join( path.dirname( path.abspath(__file__) ), "config" )
-services_tmp_path = path.join( path.dirname( path.abspath(__file__) ), pardir, "tmp" )
-services_lib_path = path.join( path.dirname( path.abspath(__file__) ), pardir, "services", "lib" )
-sys.path.append( services_lib_path )
-from service_helpers import read_service_prefs
-from datatable_utils import assign_nested_value
+from bycon.services import datatable_utils, service_helpers
 
 """
 * pubUpdater.py -t 1 -f "../rsrc/publications.txt"
@@ -30,7 +24,7 @@ def main():
 
 def publications_inserter():
     initialize_bycon_service()
-    read_service_prefs("publications_inserter", services_conf_path)
+    service_helpers.read_service_prefs("publications_inserter", services_conf_path)
     
     s_c = BYC.get("service_config", {})
     g_url = s_c["google_spreadsheet_tsv_url"]
@@ -105,7 +99,7 @@ def publications_inserter():
                         continue
                     if v.lower() == "delete":
                         v = ""
-                    assign_nested_value(n_p, k, v)
+                    datatable_utils.assign_nested_value(n_p, k, v)
 
             city_tag = pub.get("provenance_id", "")
             if len(pub["provenance_id"]) > 4:

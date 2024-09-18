@@ -43,11 +43,12 @@ ontologymaps:
 
 pgxsegvariants:
   request_entity_path_id: pgxsegvariants
+  response_entity_id: genomicVariant
+  response_entity_path_id: genomicVariations
   collection: variants
   response_schema: beaconResultsetsResponse
   request_entity_path_aliases:
     - pgxseg
-  response_entity_id: genomicVariant
 
 samplemap:
   request_entity_path_id: samplemap
@@ -82,7 +83,7 @@ uploader:
 
 variantsbedfile:
   request_entity_path_id: variantsbedfile
-  request_entity_id: genomicVariations
+  request_entity_id: genomicVariant
   collection: variants
   response_schema: beaconResultsetsResponse
   response_entity_id: genomicVariant

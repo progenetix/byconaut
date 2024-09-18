@@ -2,13 +2,10 @@
 
 from os import path, pardir, system
 from bycon import *
+from bycon.services import service_helpers
 
 dir_path = path.dirname( path.relpath(__file__) )
 pkg_path = path.join( dir_path, pardir )
-
-services_lib_path = path.join( pkg_path, "services", "lib" )
-sys.path.append( services_lib_path )
-from service_helpers import generate_id
 
 """
 This script uses the `datatable_definitions.yaml` from `bycon` tpo generate import
@@ -49,7 +46,7 @@ def templates_creator():
 
     ids = []
     for i in range(s_no):
-        rid = generate_id()
+        rid = service_helpers.generate_id()
         ids.append({
             "biosample_id": f'{pre}bios-{rid}',
             "analysis_id": f'{pre}ana-{rid}',

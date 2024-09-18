@@ -10,13 +10,7 @@ from progress.bar import Bar
 import time
 
 from bycon import *
-
-services_lib_path = path.join( path.dirname( path.abspath(__file__) ), pardir, "services", "lib" )
-sys.path.append( services_lib_path )
-from bycon_bundler import ByconBundler
-from interval_utils import generate_genome_bins, interval_cnv_arrays, interval_counts_from_callsets
-from collation_utils import set_collation_types
-from service_helpers import ask_limit_reset
+from bycon.services import bycon_bundler, interval_utils, collation_utils, service_helpers
 
 """
 ## `frequencymapsCreator`
@@ -33,15 +27,15 @@ def main():
 
 def frequencymaps_creator():
     initialize_bycon_service()
-    generate_genome_bins()
-    ask_limit_reset()
+    interval_utils.generate_genome_bins()
+    service_helpers.ask_limit_reset()
 
     if len(BYC["BYC_DATASET_IDS"]) > 1:
         print("Please give only one dataset using -d")
         exit()
 
     ds_id = BYC["BYC_DATASET_IDS"][0]
-    set_collation_types()
+    collation_utils.set_collation_types()
     print(f'=> Using data values from {ds_id} for {BYC.get("genomic_interval_count", 0)} intervals...')
 
     data_client = MongoClient(host=DB_MONGOHOST)
@@ -80,7 +74,7 @@ def frequencymaps_creator():
         
         prdbug(f'=> processing {c_id} with limit {BYC_PARS.get("limit")}')
         RSS = ByconResultSets().datasetsResults()
-        pdb = ByconBundler().resultsets_frequencies_bundles(RSS)
+        pdb = bycon_bundler.ByconBundler().resultsets_frequencies_bundles(RSS)
         if_bundles = pdb.get("interval_frequencies_bundles")
 
         if not BYC["TEST_MODE"]:

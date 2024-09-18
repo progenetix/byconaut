@@ -1,7 +1,6 @@
 from config import *
 
 def doc_generator(generated_docs_path):
-
     if path.exists(generated_docs_path):
         file_pars = {
             "plot_defaults":{

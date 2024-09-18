@@ -6,12 +6,10 @@ from pymongo import MongoClient
 from progress.bar import Bar
 
 from bycon import *
+from bycon.services import collation_utils, file_utils, interval_utils, service_helpers
 
-services_lib_path = path.join( path.dirname( path.abspath(__file__) ), pardir, "services", "lib" )
-sys.path.append( services_lib_path )
-from interval_utils import generate_genome_bins, interval_cnv_arrays
-from collation_utils import set_collation_types
-from service_helpers import ask_limit_reset
+loc_path = path.dirname( path.abspath(__file__) )
+log_path = path.join( loc_path, pardir, "logs" )
 
 """
 
@@ -34,15 +32,15 @@ def main():
 
 def analyses_refresher():
     initialize_bycon_service()
-    generate_genome_bins()
-    ask_limit_reset()
+    interval_utils.generate_genome_bins()
+    service_helpers.ask_limit_reset()
 
     if len(BYC["BYC_DATASET_IDS"]) > 1:
         print("Please give only one dataset using -d")
         exit()
 
     ds_id = BYC["BYC_DATASET_IDS"][0]
-    set_collation_types()
+    collation_utils.set_collation_types()
     print(f'=> Using data values from {ds_id} for {BYC.get("genomic_interval_count", 0)} intervals...')
 
     limit = BYC_PARS.get("limit", 0)
@@ -101,7 +99,7 @@ def analyses_refresher():
         cs_update_obj["info"].pop("cnvstatistics", None)
 
         cs_vars = v_coll.find({ "analysis_id": ana_id })
-        maps, cs_cnv_stats, cs_chro_stats = interval_cnv_arrays(cs_vars)
+        maps, cs_cnv_stats, cs_chro_stats = interval_utils.interval_cnv_arrays(cs_vars)
 
         cs_update_obj.update({"cnv_statusmaps": maps})
         cs_update_obj.update({"cnv_stats": cs_cnv_stats})
@@ -123,6 +121,10 @@ def analyses_refresher():
     print(f"{counter} analyses were processed")
     print(f"{no_cnv_type} analyses were not from CNV calling")
     print(f'{updated} analyses were updated for\n    `cnv_statusmaps`\n    `cnv_stats`\n    `cnv_chro_stats`\nusing {BYC["genomic_interval_count"]} bins ({BYC_PARS.get("genome_binning", "")})')
+
+    log = BYC.get("WARNINGS", [])
+    file_utils.write_log(log, path.join( log_path, "analyses_statusmaps" ))
+
 
 ################################################################################
 ################################################################################
