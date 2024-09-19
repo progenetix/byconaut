@@ -1,0 +1,58 @@
+from	to
+Acute myeloid leukemia	AML
+Acute myeloblastic leukemia with maturation	AML
+Acute myeloblastic leukemia without maturation	AML
+Acute myeloblastic leukemia with minimal differentiation	AML
+Acute lymphoblastic leukemia	ALL
+acute lymphoblastic leukemia    ALL
+cell line	CL
+myelodysplastic syndrome	MDS
+Refractory cytopenia with multilineage dysplasia and ring sideroblasts$	MDS [RCMD]
+B-cell chronic lymphocytic leukemia/small lymphocytic lymphoma	CLL
+chronic lymphocytic leukemia	CLL
+myeloid proliferative disorder	MPS
+non-Hodgkins Lymphoma	NHL
+Diffuse large B-cell lymphoma	DLBCL
+classic medulloblastoma	medulloblastoma
+nodular/desmoplastic medulloblastoma	medulloblastoma [N/D]
+Anaplastic pleomorphic xanthoastrocytoma	xanthoastrocytoma [AP]
+colorectal cancer	CRC
+ovarian carcinoma	OvCa
+breast carcinoma	BrCa
+prostate carcinoma	PrCa
+Hepatocellular carcinoma	HepCa
+Myelodysplasia	MDS
+Malignant peripheral nerve sheath tumor	MPNST
+neurofibromatosis	NF
+glioblastoma multiforme	GBM
+glioblastoma$	GBM
+pilocytic astrocytoma	pil. astrocytoma
+Pediatric undifferentiated sarcoma	ped. undiff. sarcoma
+mycosis fungoides	MF
+burkitt lymphoma	BL
+Anaplastic large cell lymphoma	ALCL
+Peripheral T-cell lymphoma	PTNHL
+follicular lymphoma	FCL
+renal cell carcinoma	RCC
+Mantle cell lymphoma	MCL
+Marginal zone lymphoma	MZL
+marginal zone B-cell lymphoma	MZL
+squamous cell carcinoma	SCC
+pancreas ductal adenocarcinoma	PDAC
+gastrointestinal stromal tumor	GIST
+diffuse intrinsic pontine glioma	DIPG
+ Head and neck SCC	HNSCC
+T-cell lymphoblastic lymphoma	T-NHL
+Infant Acute Lymphoblastic Leukaemia	ALL
+Wilms\' Tumor	retinoblastoma
+Unclassified RCC	RCC
+Thyroid Carcinoma	ThyCa
+adenocarcinoma	AdCa
+  	 
+Nasopharyngeal carcinoma	NPC
+microsatellite stable	MSS
+microsatellite unstable	MSI
+Non-small cell carcinoma	NSCC
+primitive neuroectodermal tumor	PNET
+Central nervous system  CNS
+1000 genomes sample  1kG sample
