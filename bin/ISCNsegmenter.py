@@ -5,7 +5,7 @@ from os import path, environ, pardir
 import sys, datetime
 
 from bycon import *
-from bycon.services import cytoband_utils, datatable_utils, export_file_generation, interval_utils
+from byconServiceLibs import cytoband_utils, datatable_utils, export_file_generation, interval_utils
 
 """
 bin/ISCNsegmenter.py -i imports/ccghtest.tab -o exports/cghvars.tsv

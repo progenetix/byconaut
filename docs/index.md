@@ -1,13 +1,13 @@
 # `byconaut`
 
-The `byconaut` package contains scripts for data processing for and based on the
-`bycon` package. The main use cases are:
+!!! warning "Deprecation of `byconaut` dependency for `bycon` Installations"
 
-* generation of utility collections for the standard Progenetix data model
-    - `collations`
-    - `frequencymaps` provide binned CNV frequency values for samples belonging
-      to a given collation code
-* I/O & transformations for `bycon` generated files
+    Since the **bycon v2.0 "Taito City"** release, the `byconaut` project has been
+    reduced to non-standard functionality. Importantly, "beyond Beacon services",
+    installation support, example data and data import functions have been migrated into
+    the `bycon` project itself. The `byconaut` project now mainly serves as a playground
+    for temporary utilities and scripts making use of `bycon` functions for additional
+    tasks.
 
 ## Installation
 
@@ -18,16 +18,6 @@ and the corresponding [documentation site](http://bycon.progenetix.org).
 While there is also a `pip` installation possible over `pip3 install bycon`
 this will _not_ include the local configuration files necessary e.g. for
 processing the databases.
-
-## Test with `examplez` database from <rsrc/mongodump>
-
-1. download <rsrc/mongodump/examplez.zip>
-2. unpack somewhere & restore with (your paths etc.):
-```
-mongosh examplez --eval 'db.dropDatabase()'
-mongorestore --db $database .../mongodump/examplez/
-```
-3. proceed w/ step 4 ... below
 
 ## Create your own databases
 

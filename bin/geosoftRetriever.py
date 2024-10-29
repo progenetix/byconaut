@@ -6,7 +6,7 @@ from progress.bar import Bar
 import sys, datetime
 
 from bycon import *
-from bycon.services import file_utils
+from byconServiceLibs import file_utils
 
 loc_path = path.dirname( path.abspath(__file__) )
 log_path = path.join( loc_path, pardir, "logs" )

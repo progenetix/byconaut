@@ -6,7 +6,7 @@ from isodate import date_isoformat
 import csv, datetime, requests, sys
 
 from bycon import *
-from bycon.services import datatable_utils, service_helpers
+from byconServiceLibs import datatable_utils, service_helpers
 
 """
 * pubUpdater.py -t 1 -f "../rsrc/publications.txt"

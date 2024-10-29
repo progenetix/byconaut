@@ -4,15 +4,10 @@ import re, json, yaml
 from os import path, environ, pardir
 
 from bycon import *
-
-services_lib_path = path.join( path.dirname( path.abspath(__file__) ), pardir, "services", "lib" )
-sys.path.append( services_lib_path )
-from bycon_bundler import ByconBundler
-from bycon_plot import *
-from interval_utils import generate_genome_bins
+from byconServiceLibs import *
 
 """
-./bin/pgxsegPlotter.py -i ./imports/test.pgxseg -o ./exports/test.svg
+./bin/pgxsegPlotter.py -i ./imports/variants.pgxseg -o ./exports/test.svg
 """
 
 ################################################################################
@@ -26,9 +21,6 @@ def main():
 ################################################################################
 
 def pgxseg_plotter():
-    initialize_bycon_service()
-    generate_genome_bins()
-
     input_file = BYC_PARS.get("inputfile")
     output_file = BYC_PARS.get("outputfile")
 

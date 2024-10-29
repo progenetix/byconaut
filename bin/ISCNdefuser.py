@@ -7,7 +7,7 @@ from progress.bar import Bar
 from tabulate import tabulate
 
 from bycon import *
-from bycon.services import bycon_bundler, datatable_utils, file_utils, service_helpers
+from byconServiceLibs import bycon_bundler, datatable_utils, file_utils, service_helpers
 
 loc_path = path.dirname( path.abspath(__file__) )
 services_tmp_path = path.join( loc_path, pardir, "tmp" )
@@ -147,10 +147,13 @@ def main():
                 if not cb_pat.match(i_v_2):
                     print(f'¡¡¡ {l_no} - {bios_id}: {i_v_2} looks strange => skipping !!!')
                     continue
-                cytoBands_1, chro_1, start_1, end_1, error_1 = bands_from_cytobands(i_v_1)
+
+                CB = Cytobands()
+                cytoBands_1, chro_1, start_1, end_1 = CB.bands_from_cytostring(i_v_1)
+                cytoBands_2, chro_2, start_2, end_2 = CB.bands_from_cytostring(i_v_2)
+
                 chroBases_1 = "{}:{}-{}".format(chro_1, start_1, end_1)
                 r_id_1 = chro_names.refseq(chro_1)
-                cytoBands_2, chro_2, start_2, end_2, error_2 = bands_from_cytobands(i_v_2)
                 chroBases_2 = "{}:{}-{}".format(chro_2, start_2, end_2)
                 r_id_2 = chro_names.refseq(chro_2)
 

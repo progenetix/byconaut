@@ -11,10 +11,6 @@ api_web_root: https://progenetix.org
 
 nav:
   - Installation & Overview: /
-  - Data Housekeeping: housekeeping
-  - Utility Applications: applications
-  - Plotting: plotting
-  - Parameters: generated/argument_definitions
   - Changes & To Do: changes-todo
   - bycon Documentation: http://bycon.progenetix.org
   - Progenetix Site: http://progenetix.org
